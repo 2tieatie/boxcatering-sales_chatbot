@@ -734,7 +734,6 @@
         // Load current settings
         async function loadSettings() {
             try {
-                // Try to load from database first
                 const token = localStorage.getItem('access_token');
                 const response = await fetch('/chatbot-config/active', {
                     headers: {
@@ -753,27 +752,15 @@
                         businessDescription: dbSettings.business_context || defaultSettings.businessDescription
                     };
                 } else {
-                    // Fallback to localStorage
-                    const saved = localStorage.getItem('chatbot-settings');
-                    if (saved) {
-                        currentSettings = JSON.parse(saved);
-                    } else {
-                        // Set default values
-                        setDefaults();
-                        return;
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading settings from database:', error);
-                // Fallback to localStorage
-                const saved = localStorage.getItem('chatbot-settings');
-                if (saved) {
-                    currentSettings = JSON.parse(saved);
-                } else {
-                    // Set default values
+                    // No configuration found in database, use defaults
                     setDefaults();
                     return;
                 }
+            } catch (error) {
+                console.error('Error loading settings from database:', error);
+                // Use default values if database is unavailable
+                setDefaults();
+                return;
             }
 
             applySettings();
@@ -848,7 +835,7 @@
                 console.log('Response status:', response.status); // Debug log
 
                 if (response.ok) {
-                    // Save to localStorage as backup
+                    // Update current settings in memory
                     currentSettings = {
                         chatbotLanguage: document.getElementById('chatbot-language').value,
                         forceLanguage: document.getElementById('force-language').checked,
@@ -867,7 +854,6 @@
                         performanceAnalytics: document.getElementById('performance-analytics').checked,
                         errorReporting: document.getElementById('error-reporting').checked
                     };
-                    localStorage.setItem('chatbot-settings', JSON.stringify(currentSettings));
 
                     showAlert('Settings saved successfully to database!', 'success');
                     updateStatus('Configuration saved successfully', 'success');
@@ -907,7 +893,27 @@
 
         // Export settings
         function exportSettings() {
-            const settingsData = JSON.stringify(currentSettings, null, 2);
+            // Collect current form values for export
+            const exportSettings = {
+                chatbotLanguage: document.getElementById('chatbot-language').value,
+                forceLanguage: document.getElementById('force-language').checked,
+                companyName: document.getElementById('company-name').value,
+                businessDescription: document.getElementById('business-description').value,
+                specializations: document.getElementById('specializations').value,
+                friendlyTone: document.getElementById('friendly-tone').checked,
+                professionalStyle: document.getElementById('professional-style').checked,
+                suggestiveResponses: document.getElementById('suggestive-responses').checked,
+                managerHandover: document.getElementById('manager-handover').checked,
+                greetingMessage: document.getElementById('greeting-message').value,
+                fallbackMessage: document.getElementById('fallback-message').value,
+                handoverMessage: document.getElementById('handover-message').value,
+                responseTimeout: parseInt(document.getElementById('response-timeout').value),
+                conversationLogging: document.getElementById('conversation-logging').checked,
+                performanceAnalytics: document.getElementById('performance-analytics').checked,
+                errorReporting: document.getElementById('error-reporting').checked
+            };
+
+            const settingsData = JSON.stringify(exportSettings, null, 2);
             const blob = new Blob([settingsData], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
