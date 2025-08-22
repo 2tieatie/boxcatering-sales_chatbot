@@ -635,34 +635,55 @@
             }
         }
 
-        // Load settings from localStorage
-        function loadSettings() {
-            // OpenAI settings
-            const openaiSettings = JSON.parse(localStorage.getItem('openai_settings') || '{}');
-            if (openaiSettings.api_key) document.getElementById('openai-api-key').value = openaiSettings.api_key;
-            if (openaiSettings.model) document.getElementById('openai-model').value = openaiSettings.model;
-            if (openaiSettings.max_tokens) document.getElementById('openai-max-tokens').value = openaiSettings.max_tokens;
-            if (openaiSettings.temperature) document.getElementById('openai-temperature').value = openaiSettings.temperature;
+        // Load settings from system_config API
+        async function loadSettings() {
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch('/system-config/settings/all', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
 
-            // Telegram settings
-            const telegramSettings = JSON.parse(localStorage.getItem('telegram_settings') || '{}');
-            if (telegramSettings.bot_token) document.getElementById('telegram-bot-token').value = telegramSettings.bot_token;
-            if (telegramSettings.chat_id) document.getElementById('telegram-chat-id').value = telegramSettings.chat_id;
-            if (telegramSettings.notifications) document.getElementById('telegram-notifications').value = telegramSettings.notifications;
+                if (response.ok) {
+                    const settings = await response.json();
 
-            // System settings
-            const systemSettings = JSON.parse(localStorage.getItem('system_settings') || '{}');
-            if (systemSettings.system_name) document.getElementById('system-name').value = systemSettings.system_name;
-            if (systemSettings.timezone) document.getElementById('system-timezone').value = systemSettings.timezone;
-            if (systemSettings.language) document.getElementById('system-language').value = systemSettings.language;
-            if (systemSettings.log_level) document.getElementById('system-log-level').value = systemSettings.log_level;
+                    // Load OpenAI settings
+                    if (settings.openai) {
+                        if (settings.openai.api_key) document.getElementById('openai-api-key').value = settings.openai.api_key;
+                        if (settings.openai.model) document.getElementById('openai-model').value = settings.openai.model;
+                        if (settings.openai.max_tokens) document.getElementById('openai-max-tokens').value = settings.openai.max_tokens;
+                        if (settings.openai.temperature) document.getElementById('openai-temperature').value = settings.openai.temperature;
+                    }
 
-            // Security settings
-            const securitySettings = JSON.parse(localStorage.getItem('security_settings') || '{}');
-            if (securitySettings.jwt_secret) document.getElementById('jwt-secret').value = securitySettings.jwt_secret;
-            if (securitySettings.jwt_expiry) document.getElementById('jwt-expiry').value = securitySettings.jwt_expiry;
-            if (securitySettings.password_min_length) document.getElementById('password-min-length').value = securitySettings.password_min_length;
-            if (securitySettings.session_timeout) document.getElementById('session-timeout').value = securitySettings.session_timeout;
+                    // Load Telegram settings
+                    if (settings.telegram) {
+                        if (settings.telegram.bot_token) document.getElementById('telegram-bot-token').value = settings.telegram.bot_token;
+                        if (settings.telegram.chat_id) document.getElementById('telegram-chat-id').value = settings.telegram.chat_id;
+                        if (settings.telegram.notifications) document.getElementById('telegram-notifications').value = settings.telegram.notifications;
+                    }
+
+                    // Load system settings
+                    if (settings.system) {
+                        if (settings.system.name) document.getElementById('system-name').value = settings.system.name;
+                        if (settings.system.timezone) document.getElementById('system-timezone').value = settings.system.timezone;
+                        if (settings.system.language) document.getElementById('system-language').value = settings.system.language;
+                        if (settings.system.log_level) document.getElementById('system-log-level').value = settings.system.log_level;
+                    }
+
+                    // Load security settings
+                    if (settings.security) {
+                        if (settings.security.jwt_secret) document.getElementById('jwt-secret').value = settings.security.jwt_secret;
+                        if (settings.security.jwt_expiry) document.getElementById('jwt-expiry').value = settings.security.jwt_expiry;
+                        if (settings.security.password_min_length) document.getElementById('password-min-length').value = settings.security.password_min_length;
+                        if (settings.security.session_timeout) document.getElementById('session-timeout').value = settings.security.session_timeout;
+                    }
+                } else {
+                    console.error('Failed to load settings:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
         }
 
         // Toggle password visibility
@@ -766,7 +787,7 @@
         }
 
         // Save OpenAI settings
-        document.getElementById('openai-form').addEventListener('submit', function (e) {
+        document.getElementById('openai-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             const formData = new FormData(e.target);
             const settings = {
@@ -776,12 +797,33 @@
                 temperature: parseFloat(formData.get('temperature'))
             };
 
-            localStorage.setItem('openai_settings', JSON.stringify(settings));
-            alert('OpenAI settings saved successfully!');
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch('/system-config/settings/openai', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    alert('OpenAI settings saved successfully to database!');
+                    console.log('OpenAI settings saved:', result);
+                } else {
+                    const error = await response.json();
+                    alert('Failed to save OpenAI settings: ' + (error.detail || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error saving OpenAI settings:', error);
+                alert('Error saving OpenAI settings: ' + error.message);
+            }
         });
 
         // Save Telegram settings
-        document.getElementById('telegram-form').addEventListener('submit', function (e) {
+        document.getElementById('telegram-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             const formData = new FormData(e.target);
             const settings = {
@@ -790,28 +832,70 @@
                 notifications: formData.get('notifications')
             };
 
-            localStorage.setItem('telegram_settings', JSON.stringify(settings));
-            alert('Telegram settings saved successfully!');
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch('/system-config/settings/telegram', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    alert('Telegram settings saved successfully to database!');
+                    console.log('Telegram settings saved:', result);
+                } else {
+                    const error = await response.json();
+                    alert('Failed to save Telegram settings: ' + (error.detail || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error saving Telegram settings:', error);
+                alert('Error saving Telegram settings: ' + error.message);
+            }
         });
 
         // Save system settings
-        document.getElementById('system-form').addEventListener('submit', function (e) {
+        document.getElementById('system-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             const formData = new FormData(e.target);
             const settings = {
-                system_name: formData.get('system_name'),
+                name: formData.get('system_name'),
                 version: formData.get('version'),
                 timezone: formData.get('timezone'),
                 language: formData.get('language'),
                 log_level: formData.get('log_level')
             };
 
-            localStorage.setItem('system_settings', JSON.stringify(settings));
-            alert('System settings saved successfully!');
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch('/system-config/settings/system', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    alert('System settings saved successfully to database!');
+                    console.log('System settings saved:', result);
+                } else {
+                    const error = await response.json();
+                    alert('Failed to save system settings: ' + (error.detail || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error saving system settings:', error);
+                alert('Error saving system settings: ' + error.message);
+            }
         });
 
         // Save security settings
-        document.getElementById('security-form').addEventListener('submit', function (e) {
+        document.getElementById('security-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             const formData = new FormData(e.target);
             const settings = {
@@ -821,8 +905,29 @@
                 session_timeout: parseInt(formData.get('session_timeout'))
             };
 
-            localStorage.setItem('security_settings', JSON.stringify(settings));
-            alert('Security settings saved successfully!');
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch('/system-config/settings/security', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    alert('Security settings saved successfully to database!');
+                    console.log('Security settings saved:', result);
+                } else {
+                    const error = await response.json();
+                    alert('Failed to save security settings: ' + (error.detail || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error saving security settings:', error);
+                alert('Error saving security settings: ' + error.message);
+            }
         });
 
         // Regenerate JWT secret

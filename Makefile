@@ -35,6 +35,14 @@ db-migrate:  ## Run database migrations
 db-revision:  ## Create new migration (usage: make db-revision msg="description")
 	alembic revision --autogenerate -m "$(msg)"
 
+setup-system-config:  ## Initialize default system configuration values
+	python scripts/setup_system_config.py
+
+test-system-config:  ## Test system configuration API endpoints
+	python scripts/test_system_config.py
+
+setup: db-init db-migrate setup-system-config  ## Complete setup: init DB, run migrations, setup system config
+
 run:  ## Run the development server
 	python start.py
 

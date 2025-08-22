@@ -90,6 +90,12 @@ The system follows a clean architecture pattern with:
    python -m app.main
    ```
 
+7. **Setup system configuration (optional but recommended)**
+   ```bash
+   # Initialize default system configuration values
+   python scripts/setup_system_config.py
+   ```
+
 ## Configuration
 
 ### Environment Variables
@@ -111,6 +117,20 @@ The system uses PostgreSQL with the following connection format:
 postgresql://username:password@host:port/database_name
 ```
 
+### System Configuration
+
+The system now supports persistent configuration storage through the database. Run the setup script to initialize default values:
+
+```bash
+python scripts/setup_system_config.py
+```
+
+This creates default configurations for:
+- **OpenAI**: API key, model, max tokens, temperature
+- **Telegram**: Bot token, chat ID, notification settings
+- **System**: Name, version, timezone, language, log level
+- **Security**: JWT secret, expiry, password requirements, session timeout
+
 ## API Endpoints
 
 ### Chat
@@ -119,25 +139,48 @@ postgresql://username:password@host:port/database_name
 ### Health
 - `GET /health` - Health check endpoint
 
-### Authentication (to be implemented)
+### Authentication
 - `POST /auth/login` - User login
 - `POST /auth/register` - User registration
 
-### Users (to be implemented)
+### Users
 - `GET /users/` - List users
 - `POST /users/` - Create user
 - `PUT /users/{id}` - Update user
 - `DELETE /users/{id}` - Delete user
+- `GET /users/me` - Get current user info
 
-### Conversations (to be implemented)
+### Conversations
 - `GET /conversations/` - List conversations
 - `GET /conversations/{id}` - Get conversation details
 - `PUT /conversations/{id}` - Update conversation
 
-### Orders (to be implemented)
+### Orders
 - `GET /orders/` - List orders
 - `GET /orders/{id}` - Get order details
 - `PUT /orders/{id}` - Update order
+
+### System Configuration
+- `GET /system-config/` - List all system configurations
+- `GET /system-config/{id}` - Get configuration by ID
+- `GET /system-config/key/{key}` - Get configuration by key
+- `POST /system-config/` - Create new configuration
+- `PUT /system-config/{id}` - Update configuration
+- `DELETE /system-config/{id}` - Delete configuration
+- `GET /system-config/settings/all` - Get all settings organized by category
+- `POST /system-config/settings/bulk` - Save multiple settings at once
+- `POST /system-config/settings/openai` - Save OpenAI settings
+- `POST /system-config/settings/telegram` - Save Telegram settings
+- `POST /system-config/settings/system` - Save system settings
+- `POST /system-config/settings/security` - Save security settings
+
+### Chatbot Configuration
+- `GET /chatbot-config/` - List all chatbot configurations
+- `GET /chatbot-config/{id}` - Get configuration by ID
+- `GET /chatbot-config/active` - Get active chatbot configuration
+- `POST /chatbot-config/` - Create new configuration
+- `PUT /chatbot-config/{id}` - Update configuration
+- `DELETE /chatbot-config/{id}` - Delete configuration
 
 ## Usage
 
