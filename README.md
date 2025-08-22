@@ -119,17 +119,19 @@ postgresql://username:password@host:port/database_name
 
 ### System Configuration
 
-The system now supports persistent configuration storage through the database. Run the setup script to initialize default values:
+The system now supports persistent configuration storage through the database. The `make db-init` command automatically creates all necessary initial data:
 
 ```bash
-python scripts/setup_system_config.py
+make db-init
 ```
 
-This creates default configurations for:
-- **OpenAI**: API key, model, max tokens, temperature
-- **Telegram**: Bot token, chat ID, notification settings
-- **System**: Name, version, timezone, language, log level
-- **Security**: JWT secret, expiry, password requirements, session timeout
+This creates:
+- **Database tables** for all models
+- **System administrator user** (admin/admin123)
+- **Default system configurations** for OpenAI, Telegram, System, and Security settings
+- **Default chatbot configuration** with Ukrainian language enforcement
+
+**⚠️ IMPORTANT:** Change the default password after your first login!
 
 ## API Endpoints
 

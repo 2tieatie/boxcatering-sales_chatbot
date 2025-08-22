@@ -47,30 +47,33 @@ Save multiple settings across categories at once.
 
 ## 🔧 Setup Instructions
 
-### 1. Initialize Database
+### 1. Initialize Database (includes all initial data)
 ```bash
 make db-init
 ```
 
-### 2. Run Migrations
+This single command will:
+- Create all database tables
+- Create the system administrator user (admin/admin123)
+- Create default system configurations
+- Create default chatbot configuration
+
+### 2. Run Migrations (if needed)
 ```bash
 make db-migrate
 ```
 
-### 3. Setup System Configuration
-```bash
-make setup-system-config
-```
-
-### 4. Test the API
+### 3. Test the API
 ```bash
 make test-system-config
 ```
 
-### 5. Complete Setup (all steps)
+### 4. Complete Setup (all steps)
 ```bash
 make setup
 ```
+
+**Note:** The `setup-system-config` step is now included in `db-init`, so you don't need to run it separately.
 
 ## 📊 Database Schema
 
@@ -156,17 +159,20 @@ This will test:
 
 ## 🔄 Migration Process
 
-### Step 1: Database Setup
-The migration requires the database to be properly initialized with the `system_configs` table.
+### Step 1: Complete Database Setup
+The `make db-init` command now handles everything:
+- Creates all database tables
+- Creates the system administrator user
+- Creates default system configurations
+- Creates default chatbot configuration
 
-### Step 2: Default Values
-The setup script creates default configuration values for all settings categories.
-
-### Step 3: Frontend Update
+### Step 2: Frontend Update
 The settings.html page now uses API calls instead of localStorage operations.
 
-### Step 4: Testing
+### Step 3: Testing
 Verify that all settings can be saved and loaded correctly through the API.
+
+**That's it!** The migration is now much simpler with a single command.
 
 ## 🚨 Troubleshooting
 
