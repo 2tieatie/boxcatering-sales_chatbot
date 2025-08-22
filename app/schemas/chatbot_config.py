@@ -2,33 +2,32 @@
 
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ChatbotConfigBase(BaseModel):
     """Base chatbot configuration schema."""
-    name: str
-    prompt: str
-    business_context: str
-    language: str = "uk"  # Default to Ukrainian
-    force_language: bool = True  # Default to strict language enforcement
-    is_active: bool = False
+    name: str = Field(..., min_length=1, description="Configuration name")
+    prompt: str = Field(..., min_length=1, description="Chatbot prompt/message")
+    business_context: str = Field(..., min_length=1, description="Business context description")
+    language: str = Field(default="uk", min_length=2, max_length=5, description="Language code")
+    force_language: bool = Field(default=True, description="Whether to enforce language compliance")
+    is_active: bool = Field(default=False, description="Whether this configuration is active")
 
 
 class ChatbotConfigCreate(ChatbotConfigBase):
     """Chatbot configuration creation schema."""
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    pass
 
 
 class ChatbotConfigUpdate(BaseModel):
     """Chatbot configuration update schema."""
-    name: Optional[str] = None
-    prompt: Optional[str] = None
-    business_context: Optional[str] = None
-    language: Optional[str] = None
-    force_language: Optional[bool] = None
-    is_active: Optional[bool] = None
+    name: Optional[str] = Field(None, min_length=1, description="Configuration name")
+    prompt: Optional[str] = Field(None, min_length=1, description="Chatbot prompt/message")
+    business_context: Optional[str] = Field(None, min_length=1, description="Business context description")
+    language: Optional[str] = Field(None, min_length=2, max_length=5, description="Language code")
+    force_language: Optional[bool] = Field(None, description="Whether to enforce language compliance")
+    is_active: Optional[bool] = Field(None, description="Whether this configuration is active")
 
 
 class ChatbotConfigResponse(ChatbotConfigBase):

@@ -808,16 +808,38 @@
         async function saveSettings() {
             try {
                 // Collect all form values
+                const greetingMessage = document.getElementById('greeting-message').value.trim();
+                const businessDescription = document.getElementById('business-description').value.trim();
+                const language = document.getElementById('chatbot-language').value;
+                const forceLanguage = document.getElementById('force-language').checked;
+
+                // Validate required fields
+                if (!greetingMessage) {
+                    showAlert('Welcome Message is required!', 'error');
+                    return;
+                }
+
+                if (!businessDescription) {
+                    showAlert('Business Description is required!', 'error');
+                    return;
+                }
+
                 const settings = {
                     name: "Boxcatering Chatbot Configuration",
-                    prompt: document.getElementById('greeting-message').value,
-                    business_context: document.getElementById('business-description').value,
-                    language: document.getElementById('chatbot-language').value,
-                    force_language: document.getElementById('force-language').checked,
+                    prompt: greetingMessage,
+                    business_context: businessDescription,
+                    language: language,
+                    force_language: forceLanguage,
                     is_active: true
                 };
 
                 console.log('Saving settings:', settings); // Debug log
+                console.log('Field values:', {
+                    greetingMessage,
+                    businessDescription,
+                    language,
+                    forceLanguage
+                });
 
                 // Save to database via API
                 const token = localStorage.getItem('access_token');
@@ -860,7 +882,24 @@
                 } else {
                     const errorData = await response.json();
                     console.error('Error response:', errorData); // Debug log
-                    showAlert(`Failed to save settings: ${errorData.detail || 'Unknown error'}`, 'error');
+                    console.error('Full error details:', {
+                        status: response.status,
+                        statusText: response.statusText,
+                        headers: Object.fromEntries(response.headers.entries()),
+                        errorData
+                    });
+
+                    // Show detailed error information
+                    let errorMessage = 'Failed to save settings';
+                    if (errorData.detail) {
+                        if (Array.isArray(errorData.detail)) {
+                            errorMessage += ': ' + errorData.detail.map(e => e.msg || e.message || 'Unknown error').join(', ');
+                        } else {
+                            errorMessage += ': ' + errorData.detail;
+                        }
+                    }
+
+                    showAlert(errorMessage, 'error');
                     updateStatus('Failed to save configuration', 'error');
                 }
             } catch (error) {

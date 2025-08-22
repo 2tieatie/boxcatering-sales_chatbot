@@ -64,13 +64,21 @@ async def create_chatbot_config(
     current_user: User = Depends(require_admin_or_system_admin)
 ):
     """Create new chatbot configuration (admin and system admin only)."""
+    from datetime import datetime, timezone
+    
     # If this is the first config, make it active
     existing_configs = db.query(ChatbotConfig).count()
     if existing_configs == 0:
         config_data.is_active = True
     
+    # Prepare data with explicit datetime values
+    config_dict = config_data.model_dump()
+    current_time = datetime.now(timezone.utc)
+    config_dict["created_at"] = current_time
+    config_dict["updated_at"] = current_time
+    
     # Create new config
-    db_config = ChatbotConfig(**config_data.model_dump())
+    db_config = ChatbotConfig(**config_dict)
     db.add(db_config)
     db.commit()
     db.refresh(db_config)
