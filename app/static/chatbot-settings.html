@@ -749,7 +749,20 @@
                         chatbotLanguage: dbSettings.language || 'uk',
                         forceLanguage: dbSettings.force_language !== undefined ? dbSettings.force_language : true,
                         greetingMessage: dbSettings.prompt || defaultSettings.greetingMessage,
-                        businessDescription: dbSettings.business_context || defaultSettings.businessDescription
+                        businessDescription: dbSettings.business_context || defaultSettings.businessDescription,
+                        // Additional fields
+                        companyName: dbSettings.company_name || defaultSettings.companyName,
+                        specializations: dbSettings.specializations || defaultSettings.specializations,
+                        friendlyTone: dbSettings.friendly_tone !== undefined ? dbSettings.friendly_tone : defaultSettings.friendlyTone,
+                        professionalStyle: dbSettings.professional_style !== undefined ? dbSettings.professional_style : defaultSettings.professionalStyle,
+                        suggestiveResponses: dbSettings.suggestive_responses !== undefined ? dbSettings.suggestive_responses : defaultSettings.suggestiveResponses,
+                        managerHandover: dbSettings.manager_handover !== undefined ? dbSettings.manager_handover : defaultSettings.managerHandover,
+                        fallbackMessage: dbSettings.fallback_message || defaultSettings.fallbackMessage,
+                        handoverMessage: dbSettings.handover_message || defaultSettings.handoverMessage,
+                        responseTimeout: dbSettings.response_timeout || defaultSettings.responseTimeout,
+                        conversationLogging: dbSettings.conversation_logging !== undefined ? dbSettings.conversation_logging : defaultSettings.conversationLogging,
+                        performanceAnalytics: dbSettings.performance_analytics !== undefined ? dbSettings.performance_analytics : defaultSettings.performanceAnalytics,
+                        errorReporting: dbSettings.error_reporting !== undefined ? dbSettings.error_reporting : defaultSettings.errorReporting
                     };
                 } else {
                     // No configuration found in database, use defaults
@@ -830,7 +843,20 @@
                     business_context: businessDescription,
                     language: language,
                     force_language: forceLanguage,
-                    is_active: true
+                    is_active: true,
+                    // Additional fields
+                    company_name: document.getElementById('company-name').value.trim(),
+                    specializations: document.getElementById('specializations').value.trim(),
+                    friendly_tone: document.getElementById('friendly-tone').checked,
+                    professional_style: document.getElementById('professional-style').checked,
+                    suggestive_responses: document.getElementById('suggestive-responses').checked,
+                    manager_handover: document.getElementById('manager-handover').checked,
+                    fallback_message: document.getElementById('fallback-message').value.trim(),
+                    handover_message: document.getElementById('handover-message').value.trim(),
+                    response_timeout: parseInt(document.getElementById('response-timeout').value) || 30,
+                    conversation_logging: document.getElementById('conversation-logging').checked,
+                    performance_analytics: document.getElementById('performance-analytics').checked,
+                    error_reporting: document.getElementById('error-reporting').checked
                 };
 
                 console.log('Saving settings:', settings); // Debug log
