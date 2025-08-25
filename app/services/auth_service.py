@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app.models import User
-from app.schemas import TokenData, UserInDB, UserResponse, UserBase
+from app.schemas import TokenData, UserInDB, UserBase
 
 
 # class Token(BaseModel):
@@ -115,13 +115,10 @@ class AuthService:
             raise credentials_exception
         return user
     
-    async def get_current_active_user(self, current_user: Annotated[UserResponse, Depends(get_current_user)]) -> UserResponse:
+    async def get_current_active_user(self, current_user: User) -> User:
         """Get current active user."""
 
         if not current_user.is_active:
             raise HTTPException(status_code=400, detail="Inactive user")
         
-        # if current_user.disabled:
-        #     raise HTTPException(status_code=400, detail="Inactive user")
-
         return current_user

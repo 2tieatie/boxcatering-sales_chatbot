@@ -7,12 +7,9 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Order, User
 from app.schemas.order import OrderResponse, OrderUpdate
-from app.services.auth_service import AuthService
-from app.services.role_service import RoleService
+from app.dependencies import get_current_active_user_dependency, role_service
 
 router = APIRouter(prefix="/orders", tags=["orders"])
-auth_service = AuthService()
-role_service = RoleService()
 
 
 @router.get("/", response_model=List[OrderResponse])
@@ -21,7 +18,7 @@ async def get_orders(
     limit: int = 100,
     status: str = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Get list of orders (all authenticated users can view)."""
     query = db.query(Order)
@@ -38,7 +35,7 @@ async def get_orders(
 async def get_order(
     order_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Get order by ID (all authenticated users can view)."""
     order = db.query(Order).filter(Order.id == order_id).first()
@@ -52,7 +49,7 @@ async def update_order(
     order_id: int,
     order_data: OrderUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Update order (managers can only mark as processed, admins can update more fields)."""
     order = db.query(Order).filter(Order.id == order_id).first()
@@ -87,7 +84,7 @@ async def update_order(
 async def mark_order_processed(
     order_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Mark order as processed (managers only)."""
     if current_user.role != "manager":
@@ -112,7 +109,7 @@ async def get_customer_orders(
     skip: int = 0, 
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Get orders for a specific customer (all authenticated users can view)."""
     orders = db.query(Order).filter(

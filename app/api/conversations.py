@@ -7,12 +7,9 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Conversation, User
 from app.schemas.conversation import ConversationResponse, ConversationUpdate
-from app.services.auth_service import AuthService
-from app.services.role_service import RoleService
+from app.dependencies import get_current_active_user_dependency, role_service
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
-auth_service = AuthService()
-role_service = RoleService()
 
 
 @router.get("/", response_model=List[ConversationResponse])
@@ -21,7 +18,7 @@ async def get_conversations(
     limit: int = 100,
     handover_state: str = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Get list of conversations (all authenticated users can view)."""
     query = db.query(Conversation)
@@ -38,7 +35,7 @@ async def get_conversations(
 async def get_conversation(
     conversation_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Get conversation by ID (all authenticated users can view)."""
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
@@ -52,7 +49,7 @@ async def update_conversation(
     conversation_id: int,
     conversation_data: ConversationUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Update conversation (managers can update handover state, admins can update more fields)."""
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
@@ -88,7 +85,7 @@ async def get_pending_handovers(
     skip: int = 0, 
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Get conversations pending handover (all authenticated users can view)."""
     conversations = db.query(Conversation).filter(
@@ -101,7 +98,7 @@ async def get_pending_handovers(
 async def take_conversation(
     conversation_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Take a conversation for handover (managers only)."""
     if current_user.role != "manager":
@@ -133,7 +130,7 @@ async def take_conversation(
 async def resolve_conversation(
     conversation_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Mark conversation as resolved (managers only, and only if assigned to them)."""
     if current_user.role != "manager":

@@ -1,10 +1,9 @@
 """Test router to isolate the self parameter issue."""
 
 from fastapi import APIRouter, Depends, HTTPException
-from app.services.auth_service import AuthService
+from app.dependencies import get_current_active_user_dependency
 
 router = APIRouter(prefix="/test", tags=["test"])
-auth_service = AuthService()
 
 
 @router.get("/")
@@ -20,6 +19,6 @@ async def test_post_endpoint():
 
 
 @router.get("/auth")
-async def test_auth_endpoint(current_user = Depends(auth_service.get_current_active_user)):
+async def test_auth_endpoint(current_user = Depends(get_current_active_user_dependency)):
     """Test endpoint with auth dependency."""
     return {"message": "Auth test endpoint working", "user": current_user.username}

@@ -7,55 +7,11 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import ChatbotConfig, User
 from app.schemas.chatbot_config import ChatbotConfigCreate, ChatbotConfigUpdate, ChatbotConfigResponse
-from app.services.auth_service import AuthService
-from app.services.role_service import RoleService
+from app.dependencies import get_current_active_user_dependency, require_admin_or_system_admin_dependency
 
 router = APIRouter(prefix="/chatbot-config", tags=["chatbot-config"])
-auth_service = AuthService()
-role_service = RoleService()
 
-# def get_current_user_dependency(
-#     token: str = Depends(auth_service.oauth2_scheme),
-#     db: Session = Depends(get_db)
-# ) -> User:
-#     return auth_service.get_current_user(db, token)
 
-# def get_current_active_user_dependency(
-#     current_user: User = Depends(get_current_user_dependency)
-# ) -> User:
-#     return auth_service.ensure_active_user(current_user)
-
-# def require_admin_or_system_admin(current_user: User = Depends(auth_service.get_current_active_user)) -> User:
-#     """Dependency to require admin or system admin role."""
-#     if current_user.role not in ["admin", "system_admin"]:
-#         raise HTTPException(
-#             status_code=status.HTTP_403_FORBIDDEN,
-#             detail="Access denied. Required roles: admin or system_admin"
-#         )
-#     return current_user
-
-def require_admin_or_system_admin(current_user: User = Depends(auth_service.get_current_active_user)) -> User:
-    """Dependency to require admin or system admin role."""
-    return role_service.require_admin_or_system_admin(current_user)
-
-# def require_admin_or_system_admin(
-#     current_user: User = Depends(get_current_active_user_dependency),
-# ) -> User:
-#     """Dependency to require admin or system admin role."""
-#     return role_service.require_admin_or_system_admin(current_user)
-
-# def get_auth_service() -> AuthService:
-#     return AuthService()
-
-# def get_role_service() -> RoleService:
-#     return RoleService()
-
-# def require_admin_or_system_admin(
-#     current_user: User = Depends(lambda: get_auth_service().get_current_active_user()),
-#     role_service: RoleService = Depends(get_role_service)
-# ) -> User:
-#     """Dependency to require admin or system admin role."""
-#     return role_service.require_admin_or_system_admin(current_user)
 
 
 @router.get("/", response_model=List[ChatbotConfigResponse])
@@ -63,7 +19,7 @@ async def get_chatbot_configs(
     skip: int = 0, 
     limit: int = 100, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_system_admin)
+    current_user: User = Depends(require_admin_or_system_admin_dependency)
 ):
     """Get list of chatbot configurations (admin and system admin only)."""
     configs = db.query(ChatbotConfig).offset(skip).limit(limit).all()
@@ -74,7 +30,7 @@ async def get_chatbot_configs(
 async def get_chatbot_config(
     config_id: int, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_system_admin)
+    current_user: User = Depends(require_admin_or_system_admin_dependency)
 ):
     """Get chatbot configuration by ID (admin and system admin only)."""
     config = db.query(ChatbotConfig).filter(ChatbotConfig.id == config_id).first()
@@ -86,8 +42,7 @@ async def get_chatbot_config(
 @router.get("/active", response_model=ChatbotConfigResponse)
 async def get_active_chatbot_config(
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)  # All authenticated users can see active config
-    # current_user: User = Depends(get_current_active_user_dependency)  # All authenticated users can see active config
+    current_user: User = Depends(get_current_active_user_dependency)  # All authenticated users can see active config
 ):
     """Get active chatbot configuration (all authenticated users)."""
     config = db.query(ChatbotConfig).filter(ChatbotConfig.is_active == True).first()
@@ -100,7 +55,7 @@ async def get_active_chatbot_config(
 async def create_chatbot_config(
     config_data: ChatbotConfigCreate, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_system_admin)
+    current_user: User = Depends(require_admin_or_system_admin_dependency)
 ):
     """Create new chatbot configuration (admin and system admin only)."""
     from sqlalchemy.exc import IntegrityError
@@ -136,7 +91,7 @@ async def update_chatbot_config(
     config_id: int,
     config_data: ChatbotConfigUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_system_admin)
+    current_user: User = Depends(require_admin_or_system_admin_dependency)
 ):
     """Update chatbot configuration (admin and system admin only)."""
     config = db.query(ChatbotConfig).filter(ChatbotConfig.id == config_id).first()
@@ -161,7 +116,7 @@ async def update_chatbot_config(
 async def delete_chatbot_config(
     config_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_system_admin)
+    current_user: User = Depends(require_admin_or_system_admin_dependency)
 ):
     """Delete chatbot configuration (admin and system admin only)."""
     config = db.query(ChatbotConfig).filter(ChatbotConfig.id == config_id).first()

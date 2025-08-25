@@ -7,26 +7,9 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import SystemConfig, User
 from app.schemas.system_config import SystemConfigCreate, SystemConfigUpdate, SystemConfigResponse
-from app.services.auth_service import AuthService
-from app.services.role_service import RoleService
+from app.dependencies import require_system_admin_dependency
 
 router = APIRouter(prefix="/system-config", tags=["system-config"])
-auth_service = AuthService()
-role_service = RoleService()
-
-
-# def require_system_admin(current_user: User = Depends(auth_service.get_current_active_user)) -> User:
-#     """Dependency to require system admin role."""
-#     if current_user.role not in ["system_admin"]:
-#         raise HTTPException(
-#             status_code=status.HTTP_403_FORBIDDEN,
-#             detail="Access denied. Required role: system_admin"
-#         )
-#     return current_user
-
-def require_system_admin(current_user: User = Depends(auth_service.get_current_active_user)) -> User:
-    """Dependency to require system admin role."""
-    return role_service.require_system_admin(current_user)
 
 
 @router.get("/", response_model=List[SystemConfigResponse])
@@ -34,7 +17,7 @@ async def get_system_configs(
     skip: int = 0, 
     limit: int = 100, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin)
+    current_user: User = Depends(require_system_admin_dependency)
 ):
     """Get all system configurations (system admin only)."""
     configs = db.query(SystemConfig).offset(skip).limit(limit).all()
@@ -45,7 +28,7 @@ async def get_system_configs(
 async def get_system_config(
     config_id: int, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin)
+    current_user: User = Depends(require_system_admin_dependency)
 ):
     """Get system configuration by ID (system admin only)."""
     config = db.query(SystemConfig).filter(SystemConfig.id == config_id).first()
@@ -58,7 +41,7 @@ async def get_system_config(
 async def get_system_config_by_key(
     key: str, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin)
+    current_user: User = Depends(require_system_admin_dependency)
 ):
     """Get system configuration by key (system admin only)."""
     config = db.query(SystemConfig).filter(SystemConfig.key == key).first()
@@ -71,7 +54,7 @@ async def get_system_config_by_key(
 async def create_system_config(
     config_data: SystemConfigCreate, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin)
+    current_user: User = Depends(require_system_admin_dependency)
 ):
     """Create new system configuration (system admin only)."""
     # Check if key already exists
@@ -93,7 +76,7 @@ async def update_system_config(
     config_id: int,
     config_data: SystemConfigUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin)
+    current_user: User = Depends(require_system_admin_dependency)
 ):
     """Update system configuration (system admin only)."""
     config = db.query(SystemConfig).filter(SystemConfig.id == config_id).first()
@@ -114,7 +97,7 @@ async def update_system_config(
 async def delete_system_config(
     config_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin)
+    current_user: User = Depends(require_system_admin_dependency)
 ):
     """Delete system configuration (system admin only)."""
     config = db.query(SystemConfig).filter(SystemConfig.id == config_id).first()
@@ -130,7 +113,7 @@ async def delete_system_config(
 @router.get("/settings/all", response_model=Dict[str, Any])
 async def get_all_settings(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin)
+    current_user: User = Depends(require_system_admin_dependency)
 ):
     """Get all settings organized by category (system admin only)."""
     configs = db.query(SystemConfig).all()
@@ -160,7 +143,7 @@ async def get_all_settings(
 async def save_bulk_settings(
     settings: Dict[str, Dict[str, Any]],
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin)
+    current_user: User = Depends(require_system_admin_dependency)
 ):
     """Save multiple settings at once (system admin only)."""
     results = {}
@@ -197,7 +180,7 @@ async def save_bulk_settings(
 async def save_openai_settings(
     settings: Dict[str, Any],
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin)
+    current_user: User = Depends(require_system_admin_dependency)
 ):
     """Save OpenAI settings (system admin only)."""
     results = {}
@@ -233,7 +216,7 @@ async def save_openai_settings(
 async def save_telegram_settings(
     settings: Dict[str, Any],
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin)
+    current_user: User = Depends(require_system_admin_dependency)
 ):
     """Save Telegram settings (system admin only)."""
     results = {}
@@ -269,7 +252,7 @@ async def save_telegram_settings(
 async def save_system_settings(
     settings: Dict[str, Any],
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin)
+    current_user: User = Depends(require_system_admin_dependency)
 ):
     """Save system settings (system admin only)."""
     results = {}
@@ -304,7 +287,7 @@ async def save_system_settings(
 async def save_security_settings(
     settings: Dict[str, Any],
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin)
+    current_user: User = Depends(require_system_admin_dependency)
 ):
     """Save security settings (system admin only)."""
     results = {}

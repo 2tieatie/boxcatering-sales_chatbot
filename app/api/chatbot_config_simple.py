@@ -8,12 +8,13 @@ from app.database import get_db
 from app.models import ChatbotConfig, User
 from app.schemas.chatbot_config import ChatbotConfigCreate, ChatbotConfigUpdate, ChatbotConfigResponse
 from app.services.auth_service import AuthService
+from app.dependencies import get_current_active_user_dependency
 
 router = APIRouter(prefix="/chatbot-config", tags=["chatbot-config"])
 auth_service = AuthService()
 
 
-def require_admin_or_system_admin(current_user: User = Depends(auth_service.get_current_active_user)) -> User:
+def require_admin_or_system_admin(current_user: User = Depends(get_current_active_user_dependency)) -> User:
     """Dependency to require admin or system admin role."""
     if current_user.role not in ["admin", "system_admin"]:
         raise HTTPException(
@@ -38,7 +39,7 @@ async def get_chatbot_configs(
 @router.get("/active", response_model=ChatbotConfigResponse)
 async def get_active_chatbot_config(
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Get active chatbot configuration (all authenticated users)."""
     config = db.query(ChatbotConfig).filter(ChatbotConfig.is_active == True).first()

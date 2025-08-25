@@ -1,8 +1,6 @@
-"""Chatbot service for AI interactions."""
-
 import json
-import os
-from typing import Optional
+# import os
+# from typing import Optional
 from openai import OpenAI
 from loguru import logger
 
@@ -15,8 +13,8 @@ class ChatbotService:
     
     def __init__(self):
         # Get API key from environment or use a placeholder
-        api_key = os.getenv("OPENAI_API_KEY") or "placeholder_key"
-        model = os.getenv("OPENAI_MODEL") or "gpt-4o"
+        api_key = settings.openai_api_key
+        model = settings.openai_model
         
         self.client = OpenAI(api_key=api_key)
         self.model = model
