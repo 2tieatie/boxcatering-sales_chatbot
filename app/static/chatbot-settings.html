@@ -930,7 +930,19 @@
                 }
             } catch (error) {
                 console.error('Error saving settings:', error);
-                showAlert('Error saving settings. Please try again.', 'error');
+                let errorMessage = 'Unknown error occurred';
+
+                if (error.detail) {
+                    if (Array.isArray(error.detail)) {
+                        errorMessage = error.detail.map(err => err.msg || err).join(', ');
+                    } else if (typeof error.detail === 'string') {
+                        errorMessage = error.detail;
+                    } else {
+                        errorMessage = JSON.stringify(error.detail);
+                    }
+                }
+
+                showAlert(`Failed to save settings: ${errorMessage}`, 'error');
                 updateStatus('Error saving configuration', 'error');
             }
         }
