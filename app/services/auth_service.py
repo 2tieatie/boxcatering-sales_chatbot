@@ -1,10 +1,10 @@
-"""Authentication service."""
+import jwt
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Optional, Annotated
 from app.config import settings
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+from jose import JWTError
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -38,14 +38,13 @@ class AuthService:
             return None
         return user
     
-    def create_access_token(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    def create_access_token(self, data: dict, expires_delta: timedelta | None = None) -> str:
         """Create JWT access token."""
         to_encode = data.copy()
         if expires_delta:
             expire = datetime.now(timezone.utc) + expires_delta
         else:
             expire = datetime.now(timezone.utc) + timedelta(minutes=self.access_token_expire_minutes)
-        
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
         return encoded_jwt
