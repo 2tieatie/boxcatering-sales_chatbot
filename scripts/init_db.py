@@ -4,7 +4,7 @@
 import os
 import sys
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Add the project root to Python path
 project_root = Path(__file__).parent.parent
@@ -27,7 +27,7 @@ def create_admin_user(db):
             # Update admin user to ensure correct role
             if existing_admin.role != "system_admin":
                 existing_admin.role = "system_admin"
-                existing_admin.updated_at = datetime.now(datetime.UTC)
+                existing_admin.updated_at = datetime.now(timezone.utc)
                 logger.info("✅ Updated admin user role to system_admin")
         else:
             logger.info("👤 Creating default system administrator user...")
@@ -44,8 +44,8 @@ def create_admin_user(db):
                 hashed_password=hashed_password,
                 role="system_admin",
                 is_active=True,
-                created_at=datetime.now(datetime.UTC),
-                updated_at=datetime.now(datetime.UTC)
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc)
             )
             
             db.add(admin_user)
@@ -188,7 +188,7 @@ def create_default_system_configs(db):
                     existing_config.value = config_data["value"]
                     existing_config.description = config_data["description"]
                     existing_config.is_sensitive = config_data["is_sensitive"]
-                    existing_config.updated_at = datetime.now(datetime.UTC)
+                    existing_config.updated_at = datetime.now(timezone.utc)
                     
                     configs_updated += 1
                     logger.debug(f"Updated configuration: {config_data['key']}")
@@ -227,7 +227,7 @@ def create_default_chatbot_config(db):
             # Update existing config to ensure Ukrainian language enforcement
             existing_config.language = "uk"
             existing_config.force_language = True
-            existing_config.updated_at = datetime.now(datetime.UTC)
+            existing_config.updated_at = datetime.now(timezone.utc)
             db.commit()
             logger.info("✅ Updated existing chatbot configuration with Ukrainian language enforcement")
         else:
@@ -244,8 +244,8 @@ def create_default_chatbot_config(db):
                 language="uk",  # Ukrainian
                 force_language=True,  # Strict language enforcement
                 is_active=True,
-                created_at=datetime.now(datetime.UTC),
-                updated_at=datetime.now(datetime.UTC)
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc)
             )
             
             db.add(default_config)
