@@ -1,6 +1,6 @@
 """Users API endpoints."""
 
-from typing import List
+from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -31,8 +31,9 @@ async def get_users(
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_current_user(current_user: User = Depends(auth_service.get_current_active_user)):
+async def get_current_user(current_user: Annotated[UserResponse, Depends(auth_service.get_current_active_user)]):
     """Get current user information."""
+
     return current_user
 
 
