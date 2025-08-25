@@ -96,6 +96,46 @@ The system follows a clean architecture pattern with:
    python scripts/setup_system_config.py
    ```
 
+### Windows Users
+
+If you're on Windows and don't have `make` installed, you can use the provided PowerShell or batch scripts:
+
+**PowerShell (Recommended):**
+```powershell
+# Show available commands
+.\run.ps1 help
+
+# Install dependencies
+.\run.ps1 install
+
+# Run development server
+.\run.ps1 run
+
+# Initialize database
+.\run.ps1 db-init
+```
+
+**Batch File:**
+```cmd
+# Show available commands
+run.bat help
+
+# Install dependencies
+run.bat install
+
+# Run development server
+run.bat run
+
+# Initialize database
+run.bat db-init
+```
+
+**Alternative: Install Make for Windows**
+You can also install `make` on Windows using:
+- **Chocolatey**: `choco install make`
+- **Scoop**: `scoop install make`
+- **WSL**: Use Windows Subsystem for Linux
+
 ## Configuration
 
 ### Environment Variables
@@ -119,10 +159,16 @@ postgresql://username:password@host:port/database_name
 
 ### System Configuration
 
-The system now supports persistent configuration storage through the database. The `make db-init` command automatically creates all necessary initial data:
+The system now supports persistent configuration storage through the database. The `make db-init` command (or `.\run.ps1 db-init` on Windows) automatically creates all necessary initial data:
 
+**Linux/macOS:**
 ```bash
 make db-init
+```
+
+**Windows:**
+```powershell
+.\run.ps1 db-init
 ```
 
 This creates:
