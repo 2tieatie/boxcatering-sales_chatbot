@@ -1,7 +1,7 @@
 """System configuration API endpoints."""
 
 from typing import List, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -15,14 +15,18 @@ auth_service = AuthService()
 role_service = RoleService()
 
 
+# def require_system_admin(current_user: User = Depends(auth_service.get_current_active_user)) -> User:
+#     """Dependency to require system admin role."""
+#     if current_user.role not in ["system_admin"]:
+#         raise HTTPException(
+#             status_code=status.HTTP_403_FORBIDDEN,
+#             detail="Access denied. Required role: system_admin"
+#         )
+#     return current_user
+
 def require_system_admin(current_user: User = Depends(auth_service.get_current_active_user)) -> User:
     """Dependency to require system admin role."""
-    if current_user.role not in ["system_admin"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied. Required role: system_admin"
-        )
-    return current_user
+    return role_service.require_system_admin(current_user)
 
 
 @router.get("/", response_model=List[SystemConfigResponse])
