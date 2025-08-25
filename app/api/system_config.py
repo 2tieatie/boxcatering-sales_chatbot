@@ -17,7 +17,12 @@ role_service = RoleService()
 
 def require_system_admin(current_user: User = Depends(auth_service.get_current_active_user)) -> User:
     """Dependency to require system admin role."""
-    return role_service.require_system_admin(current_user)
+    if current_user.role not in ["system_admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. Required role: system_admin"
+        )
+    return current_user
 
 
 @router.get("/", response_model=List[SystemConfigResponse])
