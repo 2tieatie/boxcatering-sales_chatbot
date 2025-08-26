@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boxcatering Chatbot - Settings</title>
+    <title>Box Catering Chatbot - Settings</title>
     <style>
         * {
             margin: 0;
@@ -359,6 +359,31 @@
             font-size: 14px;
         }
 
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -392,7 +417,7 @@
 
 <body>
     <div class="header">
-        <h1>Boxcatering Chatbot</h1>
+        <h1>Box Catering Chatbot</h1>
         <div class="nav-links">
             <a href="/dashboard" class="nav-link">Dashboard</a>
             <a href="/chatbot-test" class="nav-link">Chatbot Test</a>
@@ -413,6 +438,8 @@
             <h2>⚙️ System Settings</h2>
             <p>Configure API keys, system parameters, and application settings</p>
         </div>
+
+        <div id="alert-container"></div>
 
         <div class="settings-grid">
             <!-- OpenAI Configuration -->
@@ -443,8 +470,8 @@
                         </div>
                         <div class="form-group">
                             <label for="openai-max-tokens">Max Tokens</label>
-                            <input type="number" id="openai-max-tokens" name="max_tokens" value="1000" min="100"
-                                max="4000">
+                            <input type="number" id="openai-max-tokens" name="max_tokens" value="3000" min="1000"
+                                max="10000">
                         </div>
                     </div>
                     <div class="form-group">
@@ -519,7 +546,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="system-name">System Name</label>
-                            <input type="text" id="system-name" name="system_name" value="Boxcatering Chatbot">
+                            <input type="text" id="system-name" name="system_name" value="Box Catering Chatbot">
                         </div>
                         <div class="form-group">
                             <label for="system-version">Version</label>
@@ -709,7 +736,7 @@
         async function testOpenAI() {
             const apiKey = document.getElementById('openai-api-key').value;
             if (!apiKey) {
-                alert('Please enter an API key first');
+                showAlert('Please enter an API key first', 'error');
                 return;
             }
 
@@ -752,7 +779,7 @@
         async function testTelegram() {
             const botToken = document.getElementById('telegram-bot-token').value;
             if (!botToken) {
-                alert('Please enter a bot token first');
+                showAlert('Please enter a bot token first', 'error');
                 return;
             }
 
@@ -815,15 +842,15 @@
 
                 if (response.ok) {
                     const result = await response.json();
-                    alert('OpenAI settings saved successfully to database!');
+                    showAlert('OpenAI settings saved successfully to database!', 'success');
                     console.log('OpenAI settings saved:', result);
                 } else {
                     const error = await response.json();
-                    alert('Failed to save OpenAI settings: ' + (error.detail || 'Unknown error'));
+                    showAlert('Failed to save OpenAI settings: ' + (error.detail || 'Unknown error'), 'error');
                 }
             } catch (error) {
                 console.error('Error saving OpenAI settings:', error);
-                alert('Error saving OpenAI settings: ' + error.message);
+                showAlert('Error saving OpenAI settings: ' + error.message, 'error');
             }
         });
 
@@ -867,15 +894,15 @@
 
                 if (response.ok) {
                     const result = await response.json();
-                    alert('Telegram settings saved successfully to database!');
+                    showAlert('Telegram settings saved successfully to database!', 'success');
                     console.log('Telegram settings saved:', result);
                 } else {
                     const error = await response.json();
-                    alert('Failed to save Telegram settings: ' + (error.detail || 'Unknown error'));
+                    showAlert('Failed to save Telegram settings: ' + (error.detail || 'Unknown error'), 'error');
                 }
             } catch (error) {
                 console.error('Error saving Telegram settings:', error);
-                alert('Error saving Telegram settings: ' + error.message);
+                showAlert('Error saving Telegram settings: ' + error.message, 'error');
             }
         });
 
@@ -904,15 +931,15 @@
 
                 if (response.ok) {
                     const result = await response.json();
-                    alert('System settings saved successfully to database!');
+                    showAlert('System settings saved successfully to database!', 'success');
                     console.log('System settings saved:', result);
                 } else {
                     const error = await response.json();
-                    alert('Failed to save system settings: ' + (error.detail || 'Unknown error'));
+                    showAlert('Failed to save system settings: ' + (error.detail || 'Unknown error'), 'error');
                 }
             } catch (error) {
                 console.error('Error saving system settings:', error);
-                alert('Error saving system settings: ' + error.message);
+                showAlert('Error saving system settings: ' + error.message, 'error');
             }
         });
 
@@ -940,15 +967,15 @@
 
                 if (response.ok) {
                     const result = await response.json();
-                    alert('Security settings saved successfully to database!');
+                    showAlert('Security settings saved successfully to database!', 'success');
                     console.log('Security settings saved:', result);
                 } else {
                     const error = await response.json();
-                    alert('Failed to save security settings: ' + (error.detail || 'Unknown error'));
+                    showAlert('Failed to save security settings: ' + (error.detail || 'Unknown error'), 'error');
                 }
             } catch (error) {
                 console.error('Error saving security settings:', error);
-                alert('Error saving security settings: ' + error.message);
+                showAlert('Error saving security settings: ' + error.message, 'error');
             }
         });
 
@@ -957,8 +984,24 @@
             if (confirm('Are you sure you want to regenerate the JWT secret? This will invalidate all existing sessions.')) {
                 const newSecret = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
                 document.getElementById('jwt-secret').value = newSecret;
-                alert('New JWT secret generated. Please save the security settings to apply the change.');
+                showAlert('New JWT secret generated. Please save the security settings to apply the change.', 'success');
             }
+        }
+
+        // Show alert message (shared pattern with chatbot-settings.html)
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alert-container');
+            if (!alertContainer) return;
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+
+            alertContainer.appendChild(alertDiv);
+            alertDiv.style.display = 'block';
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
         }
 
         // Logout function

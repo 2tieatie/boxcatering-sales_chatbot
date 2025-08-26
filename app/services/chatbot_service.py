@@ -96,15 +96,22 @@ class ChatbotService:
             
             # Extract the response
             ai_response = (response.choices[0].message.content or "")
+            logger.debug(f"AI response: {ai_response}")
+            logger.debug(f"Response: {response}")
 
             # Parse the response to check for handover
             parsed_response = self._parse_ai_response(ai_response)
+            logger.debug(f"Parsed response: {parsed_response}")
 
             # Backend safety net: never return empty customer-visible text
             user_text = (parsed_response.get("response") or ai_response or "").strip()
+            logger.debug(f"User text: {user_text}")
             needs_handover = bool(parsed_response.get("handover_to_manager", False))
+            logger.debug(f"Needs handover: {needs_handover}")
             handover_reason = parsed_response.get("handover_reason")
+            logger.debug(f"Handover reason: {handover_reason}")
             handover_desc = parsed_response.get("handover_reason_description")
+            logger.debug(f"Handover description: {handover_desc}")
 
             # Messages from configuration or localized defaults
             default_fallback = (
@@ -197,7 +204,9 @@ class ChatbotService:
             logger.error(f"Error processing message: {e}")
             # Return a fallback response
             return ChatResponse(
-                response="I apologize, but I'm experiencing technical difficulties. Please try again later.",
+                response=("Перепрошую, але в мене виникли технічні проблеми. Будь ласка, спробуйте пізніше." 
+                          if language == "uk" 
+                          else "I apologize, but I'm experiencing technical difficulties. Please try again later."),
                 handover_to_manager=True,
                 handover_reason=HandoverReason.TECH_OR_FINANCIAL_LIMITATION,
                 handover_reason_description="Technical error in AI service"
