@@ -734,101 +734,8 @@
     </div>
 
     <script>
-        // Sample conversation data
-        let conversations = [
-            {
-                id: 1,
-                customer: {
-                    name: "John Smith",
-                    email: "john.smith@email.com"
-                },
-                preview: "Hi, I'm looking for catering for a corporate event next week. We need food for about 50 people...",
-                status: "active",
-                priority: "high",
-                started: "2024-01-15 09:30",
-                lastActivity: "2024-01-15 14:45",
-                messageCount: 12,
-                handoverState: null,
-                messages: [
-                    { sender: "customer", content: "Hi, I'm looking for catering for a corporate event next week. We need food for about 50 people.", timestamp: "09:30" },
-                    { sender: "bot", content: "Hello! I'd be happy to help you with your corporate catering needs. What type of event is this?", timestamp: "09:31" },
-                    { sender: "customer", content: "It's a product launch event. We need both appetizers and main courses.", timestamp: "09:32" },
-                    { sender: "bot", content: "Perfect! For a product launch, I'd recommend our premium corporate package. This includes...", timestamp: "09:33" }
-                ]
-            },
-            {
-                id: 2,
-                customer: {
-                    name: "Sarah Johnson",
-                    email: "sarah.j@company.com"
-                },
-                preview: "I have a question about dietary restrictions. Do you offer gluten-free options for wedding catering?",
-                status: "completed",
-                priority: "medium",
-                started: "2024-01-14 11:15",
-                lastActivity: "2024-01-14 16:20",
-                messageCount: 8,
-                handoverState: null,
-                messages: [
-                    { sender: "customer", content: "I have a question about dietary restrictions. Do you offer gluten-free options for wedding catering?", timestamp: "11:15" },
-                    { sender: "bot", content: "Absolutely! We specialize in accommodating dietary restrictions. Our gluten-free options include...", timestamp: "11:16" }
-                ]
-            },
-            {
-                id: 3,
-                customer: {
-                    name: "Mike Wilson",
-                    email: "mike.w@business.net"
-                },
-                preview: "I need urgent catering for tomorrow. This is very important and I need to speak with someone immediately.",
-                status: "handover",
-                priority: "high",
-                started: "2024-01-15 16:00",
-                lastActivity: "2024-01-15 16:05",
-                messageCount: 3,
-                handoverState: "urgent_request",
-                messages: [
-                    { sender: "customer", content: "I need urgent catering for tomorrow. This is very important and I need to speak with someone immediately.", timestamp: "16:00" },
-                    { sender: "bot", content: "I understand this is urgent. Let me connect you with one of our catering specialists who can provide immediate assistance.", timestamp: "16:01" }
-                ]
-            },
-            {
-                id: 4,
-                customer: {
-                    name: "Emily Davis",
-                    email: "emily.d@events.com"
-                },
-                preview: "What are your delivery options for a wedding venue that's about 30 miles from your location?",
-                status: "active",
-                priority: "medium",
-                started: "2024-01-15 10:00",
-                lastActivity: "2024-01-15 13:30",
-                messageCount: 15,
-                handoverState: null,
-                messages: [
-                    { sender: "customer", content: "What are your delivery options for a wedding venue that's about 30 miles from your location?", timestamp: "10:00" },
-                    { sender: "bot", content: "Great question! We do offer delivery to venues within 30 miles. Our delivery service includes...", timestamp: "10:01" }
-                ]
-            },
-            {
-                id: 5,
-                customer: {
-                    name: "David Brown",
-                    email: "david.b@corporate.org"
-                },
-                preview: "Can you provide a quote for a quarterly team meeting? We need breakfast and lunch for 25 people.",
-                status: "completed",
-                priority: "low",
-                started: "2024-01-13 14:30",
-                lastActivity: "2024-01-13 17:45",
-                messageCount: 10,
-                handoverState: null,
-                messages: [
-                    { sender: "customer", content: "Can you provide a quote for a quarterly team meeting? We need breakfast and lunch for 25 people.", timestamp: "14:30" },
-                    { sender: "bot", content: "I'd be happy to help with your quarterly team meeting! For 25 people, I'd recommend our corporate breakfast and lunch package...", timestamp: "14:31" }
-                ]
-            }
-        ];
+        // Conversations will be loaded from the API
+        let conversations = [];
 
         let currentPage = 1;
         const itemsPerPage = 10;
@@ -865,12 +772,64 @@
             }
         }
 
-        // Load conversations
-        function loadConversations() {
-            filteredConversations = [...conversations];
-            updateStatistics();
-            renderConversations();
-            renderPagination();
+        // Auth helper
+        function authHeaders() {
+            const token = localStorage.getItem('access_token');
+            return token ? { 'Authorization': `Bearer ${token}` } : {};
+        }
+
+        async function fetchJSON(url) {
+            const res = await fetch(url, { headers: { 'Content-Type': 'application/json', ...authHeaders() } });
+            if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+            return res.json();
+        }
+
+        // Load conversations from API
+        async function loadConversations() {
+            try {
+                const data = await fetchJSON('/conversations/?limit=200');
+                // Map backend data to UI format
+                conversations = (data || []).map((c) => ({
+                    id: c.id,
+                    sessionId: c.session_id,
+                    customer: { name: c.session_id, email: '' },
+                    preview: '',
+                    status: mapStatus(c.handover_state),
+                    priority: 'low',
+                    started: formatDateTime(c.created_at),
+                    lastActivity: formatDateTime(c.updated_at || c.created_at),
+                    messageCount: 0,
+                    handoverState: c.handover_state
+                }));
+                filteredConversations = [...conversations];
+                updateStatistics();
+                renderConversations();
+                renderPagination();
+            } catch (e) {
+                console.error('Failed to load conversations', e);
+            }
+        }
+
+        function mapStatus(handoverState) {
+            if (!handoverState || handoverState === 'none') return 'active';
+            if (handoverState === 'handover_pending' || handoverState === 'handover_in_progress') return 'handover';
+            if (handoverState === 'resolved_by_manager') return 'completed';
+            return 'active';
+        }
+
+        function formatDateTime(value) {
+            if (!value) return '';
+            try {
+                const d = new Date(value);
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                const hh = String(d.getHours()).padStart(2, '0');
+                const mi = String(d.getMinutes()).padStart(2, '0');
+                return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+            } catch {
+                return String(value);
+            }
         }
 
         // Update statistics
@@ -923,7 +882,7 @@
                     </td>
                     <td>${conversation.started}</td>
                     <td>${conversation.lastActivity}</td>
-                    <td>${conversation.messageCount}</td>
+                    <td>${conversation.messageCount ?? ''}</td>
                     <td>
                         <div class="action-buttons">
                             <button class="btn btn-sm btn-view" onclick="viewConversation(${conversation.id})">👁️ View</button>
@@ -1019,62 +978,63 @@
         }
 
         // View conversation details
-        function viewConversation(id) {
-            const conversation = conversations.find(c => c.id === id);
-            if (!conversation) return;
-
+        async function viewConversation(id) {
+            const base = conversations.find(c => c.id === id);
+            if (!base) return;
             const modal = document.getElementById('conversation-modal');
             const modalContent = document.getElementById('modal-content');
 
-            modalContent.innerHTML = `
+            try {
+                const [details, messages] = await Promise.all([
+                    fetchJSON(`/conversations/${id}`),
+                    fetchJSON(`/conversations/${id}/messages?limit=500`)
+                ]);
+
+                const mappedMessages = (messages || []).map(m => ({
+                    sender: m.sender === 'user' ? 'customer' : (m.sender === 'bot' ? 'bot' : 'manager'),
+                    content: m.text,
+                    timestamp: formatDateTime(m.timestamp)
+                }));
+
+                modalContent.innerHTML = `
                 <div class="conversation-details">
                     <div class="detail-row">
-                        <span class="detail-label">Customer Name:</span>
-                        <span class="detail-value">${conversation.customer.name}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Email:</span>
-                        <span class="detail-value">${conversation.customer.email}</span>
+                        <span class="detail-label">Session ID:</span>
+                        <span class="detail-value">${details.session_id}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Status:</span>
                         <span class="detail-value">
-                            <span class="status-badge status-${conversation.status}">
-                                ${conversation.status.charAt(0).toUpperCase() + conversation.status.slice(1)}
-                            </span>
-                        </span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Priority:</span>
-                        <span class="detail-value">
-                            <span class="priority-badge priority-${conversation.priority}">
-                                ${conversation.priority.charAt(0).toUpperCase() + conversation.priority.slice(1)}
+                            <span class="status-badge status-${mapStatus(details.handover_state)}">
+                                ${mapStatus(details.handover_state).charAt(0).toUpperCase() + mapStatus(details.handover_state).slice(1)}
                             </span>
                         </span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Started:</span>
-                        <span class="detail-value">${conversation.started}</span>
+                        <span class="detail-value">${formatDateTime(details.created_at)}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Last Activity:</span>
-                        <span class="detail-value">${conversation.lastActivity}</span>
+                        <span class="detail-value">${formatDateTime(details.updated_at || details.created_at)}</span>
                     </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Total Messages:</span>
-                        <span class="detail-value">${conversation.messageCount}</span>
-                    </div>
-                    ${conversation.handoverState ? `
+                    ${details.handover_reason ? `
                         <div class="detail-row">
                             <span class="detail-label">Handover Reason:</span>
-                            <span class="detail-value">${conversation.handoverState}</span>
+                            <span class="detail-value">${details.handover_reason}</span>
+                        </div>
+                    ` : ''}
+                    ${details.handover_reason_description ? `
+                        <div class="detail-row">
+                            <span class="detail-label">Handover Description:</span>
+                            <span class="detail-value">${details.handover_reason_description}</span>
                         </div>
                     ` : ''}
                 </div>
 
                 <h4>Message History</h4>
                 <div class="messages-container">
-                    ${conversation.messages.map(message => `
+                    ${mappedMessages.map(message => `
                         <div class="message-item message ${message.sender}">
                             <div class="message-header">
                                 <span class="message-sender">${message.sender === 'customer' ? '👤 Customer' : '🤖 Bot'}</span>
@@ -1083,10 +1043,12 @@
                             <div class="message-content">${message.content}</div>
                         </div>
                     `).join('')}
-                </div>
-            `;
+                </div>`;
 
-            modal.style.display = 'block';
+                modal.style.display = 'block';
+            } catch (e) {
+                console.error('Failed to load conversation details', e);
+            }
         }
 
         // Close modal
@@ -1101,10 +1063,7 @@
 
         // Delete conversation
         function deleteConversation(id) {
-            if (confirm('Are you sure you want to delete this conversation? This action cannot be undone.')) {
-                conversations = conversations.filter(c => c.id !== id);
-                loadConversations();
-            }
+            alert('Deleting conversations is not supported yet.');
         }
 
         // Export conversations
@@ -1121,18 +1080,15 @@
 
         // Generate CSV content
         function generateCSV(data) {
-            const headers = ['Customer Name', 'Email', 'Status', 'Priority', 'Started', 'Last Activity', 'Message Count'];
+            const headers = ['Session ID', 'Status', 'Started', 'Last Activity'];
             const csvRows = [headers.join(',')];
 
             data.forEach(conversation => {
                 const row = [
-                    conversation.customer.name,
-                    conversation.customer.email,
+                    conversation.sessionId || conversation.customer.name,
                     conversation.status,
-                    conversation.priority,
                     conversation.started,
-                    conversation.lastActivity,
-                    conversation.messageCount
+                    conversation.lastActivity
                 ];
                 csvRows.push(row.join(','));
             });

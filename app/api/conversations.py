@@ -5,9 +5,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Conversation, User
+from app.models import Conversation, User, Message
 from app.schemas.conversation import ConversationResponse, ConversationUpdate
+from app.schemas.message import MessageResponse
 from app.dependencies import get_current_active_user_dependency, role_service
+from app.models.conversation import HandoverState
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
 
@@ -25,7 +27,15 @@ async def get_conversations(
     
     # Filter by handover state if specified
     if handover_state:
-        query = query.filter(Conversation.handover_state == handover_state)
+        # Accept either enum name or value; normalize to value
+        normalized = handover_state
+        try:
+            # Try map from enum name like 'HANDOVER_PENDING'
+            normalized = HandoverState[handover_state].value
+        except Exception:
+            # Could already be a value like 'handover_pending'
+            normalized = handover_state
+        query = query.filter(Conversation.handover_state == normalized)
     
     conversations = query.offset(skip).limit(limit).all()
     return conversations
@@ -111,7 +121,7 @@ async def take_conversation(
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     
-    if conversation.handover_state != "HANDOVER_PENDING":
+    if conversation.handover_state != HandoverState.HANDOVER_PENDING:
         raise HTTPException(
             status_code=400, 
             detail="Conversation is not pending handover"
@@ -119,7 +129,7 @@ async def take_conversation(
     
     # Assign conversation to current user
     conversation.assigned_to = current_user.id
-    conversation.handover_state = "HANDOVER_IN_PROGRESS"
+    conversation.handover_state = HandoverState.HANDOVER_IN_PROGRESS
     
     db.commit()
     db.refresh(conversation)
@@ -149,14 +159,38 @@ async def resolve_conversation(
             detail="Can only resolve conversations assigned to you"
         )
     
-    if conversation.handover_state != "HANDOVER_IN_PROGRESS":
+    if conversation.handover_state != HandoverState.HANDOVER_IN_PROGRESS:
         raise HTTPException(
             status_code=400, 
             detail="Conversation must be in progress to resolve"
         )
     
-    conversation.handover_state = "RESOLVED_BY_MANAGER"
+    conversation.handover_state = HandoverState.RESOLVED_BY_MANAGER
     
     db.commit()
     db.refresh(conversation)
     return conversation
+
+
+@router.get("/{conversation_id}/messages", response_model=List[MessageResponse])
+async def get_conversation_messages(
+    conversation_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user_dependency),
+):
+    """Get messages for a conversation."""
+    # Ensure conversation exists
+    conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    messages = (
+        db.query(Message)
+        .filter(Message.chat_id == conversation_id)
+        .order_by(Message.timestamp.asc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return messages

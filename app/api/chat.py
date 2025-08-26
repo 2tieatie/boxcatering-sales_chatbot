@@ -10,6 +10,9 @@ from app.database import get_db
 from app.services.chatbot_service import ChatbotService
 from app.services.telegram_service import TelegramService
 from app.schemas.chat import ChatRequest, ChatResponse
+from app.models import Conversation
+from app.models.conversation import HandoverState
+from app.models.message import Message, MessageSender, MessageChannel
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -37,6 +40,35 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 message=chat_data.get("message"),
                 timestamp=datetime.fromisoformat(chat_data.get("timestamp"))
             )
+            
+            # Find or create conversation by session_id
+            conversation = (
+                db.query(Conversation)
+                .filter(Conversation.session_id == chat_request.session_id)
+                .first()
+            )
+            if conversation is None:
+                conversation = Conversation(session_id=chat_request.session_id)
+                db.add(conversation)
+                db.commit()
+                db.refresh(conversation)
+                logger.debug(f"Created new conversation for session_id={chat_request.session_id}")
+            
+            # Persist incoming user message
+            try:
+                user_message = Message(
+                    chat_id=conversation.id,
+                    sender=MessageSender.USER,
+                    channel=MessageChannel.WEB,
+                    text=chat_request.message,
+                    timestamp=chat_request.timestamp,
+                )
+                db.add(user_message)
+                db.commit()
+            except Exception as msg_err:
+                db.rollback()
+                logger.error(f"Failed to save user message: {msg_err}")
+                # Continue processing; DB failure shouldn't break user chat entirely
             
             # Get active chatbot configuration
             from app.models.chatbot_config import ChatbotConfig
@@ -75,6 +107,38 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 debug=debug_enabled,
             )
             
+            # Persist bot response and update conversation state
+            try:
+                bot_message = Message(
+                    chat_id=conversation.id,
+                    sender=MessageSender.BOT,
+                    channel=MessageChannel.WEB,
+                    text=chat_response.response,
+                )
+                db.add(bot_message)
+
+                # Update conversation handover fields when applicable
+                if chat_response.handover_to_manager:
+                    # If already in progress, keep it; otherwise mark as pending
+                    if conversation.handover_state not in {HandoverState.HANDOVER_IN_PROGRESS}:
+                        conversation.handover_state = HandoverState.HANDOVER_PENDING
+                    # Persist handover metadata
+                    conversation.handover_reason = (
+                        (chat_response.handover_reason.value if hasattr(chat_response.handover_reason, "value") else str(chat_response.handover_reason))
+                        if chat_response.handover_reason is not None else conversation.handover_reason
+                    )
+                    conversation.handover_reason_description = chat_response.handover_reason_description or conversation.handover_reason_description
+                else:
+                    # Do not override if a manager is already involved; otherwise remain NONE
+                    if conversation.handover_state in {None, HandoverState.NONE}:
+                        conversation.handover_state = HandoverState.NONE
+
+                db.commit()
+                db.refresh(conversation)
+            except Exception as save_err:
+                db.rollback()
+                logger.error(f"Failed to save bot message or update conversation: {save_err}")
+
             # Send response back to client
             await websocket.send_text(json.dumps(chat_response.model_dump()))
             
@@ -85,9 +149,6 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                     chat_request.message,
                     chat_response
                 )
-                
-                # TODO: Update conversation state in database
-                # TODO: Log message in database
                 
     except WebSocketDisconnect:
         logger.info("WebSocket connection closed")
