@@ -432,7 +432,8 @@
                         <div class="form-group">
                             <label for="openai-model">Model</label>
                             <select id="openai-model" name="model">
-                                <option value="gpt-5">GPT-5 (Latest & Most Advanced)</option>
+                                <option value="gpt-5" selected>GPT-5 (Latest & Most Advanced)</option>
+                                <option value="gpt-5-chat">GPT-5-chat (Conversational)</option>
                                 <option value="gpt-4o">GPT-4o (Latest & Fastest)</option>
                                 <option value="gpt-4o-mini">GPT-4o Mini (Fast & Efficient)</option>
                                 <option value="gpt-4">GPT-4 (Recommended)</option>
@@ -450,6 +451,8 @@
                         <label for="openai-temperature">Temperature</label>
                         <input type="range" id="openai-temperature" name="temperature" min="0" max="2" step="0.1"
                             value="0.7">
+                        <div id="temperature-disabled-note" class="help-text" style="display:none;">Temperature is not
+                            supported for the selected model.</div>
                         <div class="help-text">0.0 = deterministic, 2.0 = very creative</div>
                     </div>
                     <div class="form-actions">
@@ -651,9 +654,11 @@
                     // Load OpenAI settings
                     if (settings.openai) {
                         if (settings.openai.api_key) document.getElementById('openai-api-key').value = settings.openai.api_key;
-                        if (settings.openai.model) document.getElementById('openai-model').value = settings.openai.model;
+                        // Default model is gpt-5
+                        document.getElementById('openai-model').value = settings.openai.model || 'gpt-5';
                         if (settings.openai.max_tokens) document.getElementById('openai-max-tokens').value = settings.openai.max_tokens;
                         if (settings.openai.temperature) document.getElementById('openai-temperature').value = settings.openai.temperature;
+                        updateTemperatureAvailability();
                     }
 
                     // Load Telegram settings
@@ -821,6 +826,23 @@
                 alert('Error saving OpenAI settings: ' + error.message);
             }
         });
+
+        // Disable/enable temperature based on model support
+        function modelSupportsTemperature(model) {
+            // By requirement: gpt-5 does not; chat and others do
+            return model && model !== 'gpt-5';
+        }
+
+        function updateTemperatureAvailability() {
+            const model = document.getElementById('openai-model').value;
+            const slider = document.getElementById('openai-temperature');
+            const note = document.getElementById('temperature-disabled-note');
+            const supported = modelSupportsTemperature(model);
+            slider.disabled = !supported;
+            note.style.display = supported ? 'none' : 'block';
+        }
+
+        document.getElementById('openai-model').addEventListener('change', updateTemperatureAvailability);
 
         // Save Telegram settings
         document.getElementById('telegram-form').addEventListener('submit', async function (e) {

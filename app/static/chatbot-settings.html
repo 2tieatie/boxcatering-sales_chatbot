@@ -748,7 +748,7 @@
                         ...defaultSettings,
                         chatbotLanguage: dbSettings.language || 'uk',
                         forceLanguage: dbSettings.force_language !== undefined ? dbSettings.force_language : true,
-                        greetingMessage: dbSettings.prompt || defaultSettings.greetingMessage,
+                        greetingMessage: dbSettings.welcome_message || defaultSettings.greetingMessage,
                         businessDescription: dbSettings.business_context || defaultSettings.businessDescription,
                         // Additional fields
                         companyName: dbSettings.company_name || defaultSettings.companyName,
@@ -839,7 +839,7 @@
 
                 const settings = {
                     name: "Boxcatering Chatbot Configuration",
-                    prompt: greetingMessage,
+                    welcome_message: greetingMessage,
                     business_context: businessDescription,
                     language: language,
                     force_language: forceLanguage,

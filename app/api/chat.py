@@ -50,11 +50,24 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 language = active_config.language
                 force_language = active_config.force_language
             
-            # Process message with AI
+            # Load OpenAI settings from system configs if present
+            from app.models.system_config import SystemConfig
+            cfg = {c.key: c.value for c in db.query(SystemConfig).all()}
+            selected_model = cfg.get("openai_model") or None
+            max_tokens = int(cfg.get("openai_max_tokens") or 0) or None
+            try:
+                temp_val = float(cfg.get("openai_temperature")) if cfg.get("openai_temperature") is not None else None
+            except Exception:
+                temp_val = None
+
+            # Process message with AI (respect model capabilities)
             chat_response = await chatbot_service.process_message(
-                chat_request, 
-                language=language, 
-                force_language=force_language
+                chat_request,
+                language=language,
+                force_language=force_language,
+                model=selected_model,
+                temperature=temp_val,
+                max_tokens=max_tokens,
             )
             
             # Send response back to client

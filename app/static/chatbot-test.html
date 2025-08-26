@@ -442,14 +442,7 @@
             <div class="message bot">
                 <div class="message-avatar">🤖</div>
                 <div class="message-content">
-                    <div>Hello! I'm your AI-powered boxcatering assistant. I can help you with:</div>
-                    <div style="margin-top: 10px;">
-                        • Menu inquiries and recommendations<br>
-                        • Order placement and tracking<br>
-                        • Pricing and availability<br>
-                        • Dietary restrictions and allergies<br>
-                        • Event planning and catering services
-                    </div>
+                    <div id="bot-welcome-content">Завантаження привітання…</div>
                     <div class="message-time" id="bot-welcome-time"></div>
                 </div>
             </div>
@@ -492,6 +485,21 @@
         // Initialize chat
         let chatHistory = [];
         let isTyping = false;
+        let ws = null;
+        let reconnectTimer = null;
+        const RECONNECT_DELAY_MS = 1500;
+
+        // Session management
+        function getOrCreateSessionId() {
+            const key = 'chat_session_id';
+            let id = localStorage.getItem(key);
+            if (!id) {
+                id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+                localStorage.setItem(key, id);
+            }
+            return id;
+        }
+        let sessionId = getOrCreateSessionId();
 
         // Set initial message time
         document.getElementById('bot-welcome-time').textContent = new Date().toLocaleTimeString();
@@ -520,9 +528,32 @@
                     const user = await response.json();
                     document.getElementById('username').textContent = user.full_name || user.username;
                     document.getElementById('user-avatar').textContent = (user.full_name || user.username).charAt(0).toUpperCase();
+                    // After auth, load active chatbot welcome message
+                    await fetchActiveChatbotConfig();
                 }
             } catch (error) {
                 console.error('Error fetching user info:', error);
+            }
+        }
+
+        // Fetch active chatbot configuration and show welcome message
+        async function fetchActiveChatbotConfig() {
+            try {
+                const token = localStorage.getItem('access_token');
+                const resp = await fetch('/chatbot-config/active', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const cfg = await resp.json();
+                const welcome = cfg.welcome_message || cfg.handover_message || 'Вітаю! Чим можу допомогти?';
+                const node = document.getElementById('bot-welcome-content');
+                if (node) node.textContent = welcome;
+                document.getElementById('bot-welcome-time').textContent = new Date().toLocaleTimeString();
+            } catch (e) {
+                console.warn('Failed to load active chatbot config:', e);
+                const node = document.getElementById('bot-welcome-content');
+                if (node) node.textContent = 'Вітаю! Чим можу допомогти?';
+                document.getElementById('bot-welcome-time').textContent = new Date().toLocaleTimeString();
             }
         }
 
@@ -566,54 +597,78 @@
             document.getElementById('typing-indicator').style.display = 'none';
         }
 
-        // Simulate AI response
-        async function simulateAIResponse(userMessage) {
-            showTypingIndicator();
-
-            // Simulate processing time
-            await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
-
-            hideTypingIndicator();
-
-            // Generate contextual response based on user input
-            let response = generateContextualResponse(userMessage);
-            addMessage(response);
+        // WebSocket helpers
+        function setStatus(status, cssClass) {
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+            dot.classList.remove('offline', 'connecting');
+            if (cssClass) dot.classList.add(cssClass);
+            text.textContent = status;
         }
 
-        // Generate contextual response
-        function generateContextualResponse(userMessage) {
-            const message = userMessage.toLowerCase();
+        function connectWebSocket() {
+            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
 
-            if (message.includes('menu') || message.includes('food') || message.includes('dish')) {
-                return `Great question! Our current menu includes:\n\n🍽️ **Appetizers**: Fresh spring rolls, crispy calamari, bruschetta\n🍖 **Main Courses**: Grilled salmon, beef tenderloin, vegetarian pasta\n🍰 **Desserts**: Chocolate lava cake, tiramisu, fruit platters\n\nWould you like specific details about any dish or dietary options?`;
+            const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+            const url = `${protocol}://${location.host}/chat/ws`;
+            setStatus('Connecting to AI Service…', 'connecting');
+
+            ws = new WebSocket(url);
+
+            ws.onopen = () => {
+                setStatus('Connected to AI Service', '');
+                if (reconnectTimer) {
+                    clearTimeout(reconnectTimer);
+                    reconnectTimer = null;
+                }
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    hideTypingIndicator();
+                    addMessage(data.response);
+
+                    if (data.handover_to_manager) {
+                        showHandoverNotice(data);
+                    }
+                } catch (err) {
+                    console.error('Failed to parse message:', err);
+                }
+            };
+
+            ws.onerror = () => {
+                setStatus('Connection error. Reconnecting…', 'connecting');
+            };
+
+            ws.onclose = () => {
+                setStatus('Disconnected. Reconnecting…', 'offline');
+                reconnectTimer = setTimeout(connectWebSocket, RECONNECT_DELAY_MS);
+            };
+        }
+
+        function sendToWebSocket(payload) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                connectWebSocket();
+                // Small delay to allow connection, then retry once
+                setTimeout(() => {
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify(payload));
+                    } else {
+                        hideTypingIndicator();
+                        addMessage('Не вдалось підключитись до AI сервісу. Спробуйте ще раз пізніше.');
+                    }
+                }, 500);
+                return;
             }
+            ws.send(JSON.stringify(payload));
+        }
 
-            if (message.includes('price') || message.includes('cost') || message.includes('how much')) {
-                return `Our pricing varies based on your needs:\n\n💰 **Per Person**: $25-45 depending on menu selection\n🎉 **Events**: Custom quotes for weddings, corporate events\n📦 **Delivery**: Free delivery within 10 miles, $2/mile beyond\n\nI can provide a detailed quote if you tell me more about your event!`;
-            }
-
-            if (message.includes('order') || message.includes('book') || message.includes('reserve')) {
-                return `Perfect! To place an order, I'll need:\n\n📅 **Date and time** of your event\n👥 **Number of guests**\n📍 **Delivery address**\n🍽️ **Menu preferences**\n\nWould you like me to connect you with our catering manager for detailed planning?`;
-            }
-
-            if (message.includes('allergy') || message.includes('dietary') || message.includes('vegetarian')) {
-                return `We take dietary restrictions seriously! We offer:\n\n🥬 **Vegetarian & Vegan** options\n🌾 **Gluten-free** alternatives\n🥜 **Nut-free** preparation areas\n🐟 **Seafood-free** options\n\nAll our ingredients are clearly labeled. What specific dietary needs should we accommodate?`;
-            }
-
-            if (message.includes('delivery') || message.includes('pickup') || message.includes('timing')) {
-                return `Our delivery and pickup options:\n\n🚚 **Delivery**: 2-3 hours before event start time\n📦 **Pickup**: Available at our kitchen (123 Main St)\n⏰ **Hours**: 7 AM - 9 PM daily\n🌍 **Coverage**: Within 25 miles of downtown\n\nWhat works best for your schedule?`;
-            }
-
-            // Default response
-            const responses = [
-                "That's a great question! Let me help you with that.",
-                "I'd be happy to assist you with your catering needs.",
-                "That's an interesting inquiry. Here's what I can tell you...",
-                "Thanks for asking! Let me provide you with some information.",
-                "I understand you're looking for information about our services."
-            ];
-
-            return responses[Math.floor(Math.random() * responses.length)] + "\n\nHow can I help you further with your boxcatering needs?";
+        function showHandoverNotice(data) {
+            const reason = data.handover_reason || 'HANDOVER';
+            const desc = data.handover_reason_description || '';
+            const notice = `Передаю розмову менеджеру (${reason}). ${desc}`.trim();
+            addMessage(notice);
         }
 
         // Handle form submission
@@ -632,8 +687,18 @@
             input.value = '';
             input.style.height = 'auto';
 
-            // Simulate AI response
-            simulateAIResponse(message);
+            // Build payload per backend schema (avoid 'Z' for Python fromisoformat)
+            const timestamp = new Date().toISOString().replace('Z', '+00:00');
+            const payload = {
+                session_id: sessionId,
+                sender: 'user',
+                message: message,
+                timestamp: timestamp
+            };
+
+            // Show typing while awaiting response
+            showTypingIndicator();
+            sendToWebSocket(payload);
         });
 
         // Auto-resize textarea
@@ -656,6 +721,18 @@
                     </div>
                 `;
                 chatHistory = [];
+                // Start a new conversation session (new UUID)
+                try {
+                    const newId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+                    localStorage.setItem('chat_session_id', newId);
+                    sessionId = newId;
+                } catch (e) {
+                    sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+                    localStorage.setItem('chat_session_id', sessionId);
+                }
+                // Reconnect to ensure a fresh state
+                try { if (ws) ws.close(); } catch (e) { }
+                connectWebSocket();
             }
         }
 
@@ -686,7 +763,10 @@
         }
 
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', checkAuth);
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            connectWebSocket();
+        });
     </script>
 </body>
 

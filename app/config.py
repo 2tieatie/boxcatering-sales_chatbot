@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     # OpenAI
     openai_api_key: str = Field(..., env="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-5", env="OPENAI_MODEL")
+    openai_temperature: float = Field(default=0.7, env="OPENAI_TEMPERATURE")
+    openai_max_tokens: int = Field(default=500, env="OPENAI_MAX_TOKENS")
     
     # Telegram
     telegram_bot_token: Optional[str] = Field(None, env="TELEGRAM_BOT_TOKEN")

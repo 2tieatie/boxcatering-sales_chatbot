@@ -13,7 +13,7 @@ class ChatbotConfig(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    prompt = Column(Text, nullable=False)
+    welcome_message = Column(Text, nullable=False)
     business_context = Column(Text, nullable=False)
     language = Column(String, default="uk", nullable=False)  # Default to Ukrainian
     force_language = Column(Boolean, default=True, nullable=False)  # Default to strict language enforcement

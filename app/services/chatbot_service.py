@@ -19,22 +19,77 @@ class ChatbotService:
         self.client = OpenAI(api_key=api_key)
         self.model = model
     
-    async def process_message(self, chat_request: ChatRequest, language: str = "uk", force_language: bool = True) -> ChatResponse:
+    async def process_message(
+        self,
+        chat_request: ChatRequest,
+        language: str = "uk",
+        force_language: bool = True,
+        model: str | None = None,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+    ) -> ChatResponse:
         """Process a chat message and return response."""
         try:
             # Build the system prompt with language settings
             system_prompt = self._build_system_prompt(language, force_language)
             
             # Create the chat completion
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
+            chosen_model = model or self.model
+            request_kwargs = {
+                "model": chosen_model,
+                "messages": [
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": chat_request.message}
+                    {"role": "user", "content": chat_request.message},
                 ],
-                temperature=0.7,
-                max_tokens=500
-            )
+            }
+
+            # Respect model capabilities: only send temperature if supported
+            if self._model_supports_temperature(chosen_model):
+                request_kwargs["temperature"] = (
+                    temperature if temperature is not None else getattr(settings, "openai_temperature", 0.7)
+                )
+
+            # Use correct parameter name for token limit based on model
+            token_limit = max_tokens if max_tokens is not None else getattr(settings, "openai_max_tokens", 500)
+            if self._model_requires_max_completion_tokens(chosen_model):
+                request_kwargs["max_completion_tokens"] = token_limit
+            else:
+                request_kwargs["max_tokens"] = token_limit
+
+            try:
+                response = self.client.chat.completions.create(**request_kwargs)
+            except Exception as api_error:
+                error_text = str(api_error)
+                default_model = self.model
+                # If selected model is unavailable, retry once with default model
+                if (
+                    ("model_not_found" in error_text or "does not exist" in error_text)
+                    and chosen_model != default_model
+                ):
+                    logger.warning(
+                        f"Model '{chosen_model}' unavailable. Falling back to default model '{default_model}'."
+                    )
+                    fallback_kwargs = {
+                        "model": default_model,
+                        "messages": request_kwargs["messages"],
+                    }
+                    # Only include temperature if supported by fallback model
+                    if self._model_supports_temperature(default_model):
+                        fallback_kwargs["temperature"] = request_kwargs.get("temperature")
+                    # Token limit parameter per fallback model
+                    token_limit = (
+                        request_kwargs.get("max_tokens")
+                        or request_kwargs.get("max_completion_tokens")
+                        or getattr(settings, "openai_max_tokens", 500)
+                    )
+                    if self._model_requires_max_completion_tokens(default_model):
+                        fallback_kwargs["max_completion_tokens"] = token_limit
+                    else:
+                        fallback_kwargs["max_tokens"] = token_limit
+
+                    response = self.client.chat.completions.create(**fallback_kwargs)
+                else:
+                    raise
             
             # Extract the response
             ai_response = response.choices[0].message.content
@@ -114,3 +169,14 @@ class ChatbotService:
         
         # If not JSON, return as regular response
         return {"response": response, "handover_to_manager": False}
+
+    def _model_supports_temperature(self, model_name: str) -> bool:
+        """Return True if temperature is supported for the given model."""
+        # Per current assumption: 'gpt-5' doesn't support temperature; 'gpt-5-chat' and others do
+        unsupported = {"gpt-5"}
+        return model_name not in unsupported
+
+    def _model_requires_max_completion_tokens(self, model_name: str) -> bool:
+        """Return True if the model expects 'max_completion_tokens' instead of 'max_tokens'."""
+        # Based on error message and current assumptions for GPT-5 family
+        return model_name.startswith("gpt-5")

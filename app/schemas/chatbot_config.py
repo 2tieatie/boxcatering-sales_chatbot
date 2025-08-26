@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 class ChatbotConfigBase(BaseModel):
     """Base chatbot configuration schema."""
     name: str = Field(..., min_length=1, description="Configuration name")
-    prompt: str = Field(..., min_length=1, description="Chatbot prompt/message")
+    welcome_message: str = Field(..., min_length=1, description="Chatbot welcome message")
     business_context: str = Field(..., min_length=1, description="Business context description")
     language: str = Field(default="uk", min_length=2, max_length=5, description="Language code")
     force_language: bool = Field(default=True, description="Whether to enforce language compliance")
@@ -32,7 +32,7 @@ class ChatbotConfigBase(BaseModel):
 class ChatbotConfigCreate(BaseModel):
     """Chatbot configuration creation schema."""
     name: str = Field(..., min_length=1, description="Configuration name")
-    prompt: str = Field(..., min_length=1, description="Chatbot prompt/message")
+    welcome_message: str = Field(..., min_length=1, description="Chatbot welcome message")
     business_context: str = Field(..., min_length=1, description="Business context description")
     language: str = Field(default="uk", min_length=2, max_length=5, description="Language code")
     force_language: bool = Field(default=True, description="Whether to enforce language compliance")
@@ -56,7 +56,7 @@ class ChatbotConfigCreate(BaseModel):
 class ChatbotConfigUpdate(BaseModel):
     """Chatbot configuration update schema."""
     name: Optional[str] = Field(None, min_length=1, description="Configuration name")
-    prompt: Optional[str] = Field(None, min_length=1, description="Chatbot prompt/message")
+    welcome_message: Optional[str] = Field(None, min_length=1, description="Chatbot welcome message")
     business_context: Optional[str] = Field(None, min_length=1, description="Business context description")
     language: Optional[str] = Field(None, min_length=2, max_length=5, description="Language code")
     force_language: Optional[bool] = Field(None, description="Whether to enforce language compliance")
