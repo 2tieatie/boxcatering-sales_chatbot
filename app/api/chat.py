@@ -53,23 +53,6 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 db.commit()
                 db.refresh(conversation)
                 logger.debug(f"Created new conversation for session_id={chat_request.session_id}")
-            
-            # Persist incoming user message
-            try:
-                user_message = Message(
-                    chat_id=conversation.id,
-                    sender=MessageSender.USER,
-                    channel=MessageChannel.WEB,
-                    text=chat_request.message,
-                    timestamp=chat_request.timestamp,
-                )
-                db.add(user_message)
-                db.commit()
-            except Exception as msg_err:
-                db.rollback()
-                logger.error(f"Failed to save user message: {msg_err}")
-                # Continue processing; DB failure shouldn't break user chat entirely
-            
             # Get active chatbot configuration
             from app.models.chatbot_config import ChatbotConfig
             active_config = db.query(ChatbotConfig).filter(ChatbotConfig.is_active == True).first()
@@ -96,6 +79,26 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
             qs = websocket.query_params
             debug_enabled = str(qs.get("debug", "0")).lower() in {"1", "true", "yes"}
 
+            # Persist incoming user message (respect conversation_logging flag)
+            try:
+                should_log = True
+                if active_config and active_config.conversation_logging is not None:
+                    should_log = bool(active_config.conversation_logging)
+                if should_log:
+                    user_message = Message(
+                        chat_id=conversation.id,
+                        sender=MessageSender.USER,
+                        channel=MessageChannel.WEB,
+                        text=chat_request.message,
+                        timestamp=chat_request.timestamp,
+                    )
+                    db.add(user_message)
+                    db.commit()
+            except Exception as msg_err:
+                db.rollback()
+                logger.error(f"Failed to save user message: {msg_err}")
+                # Continue processing; DB failure shouldn't break user chat entirely
+
             # Process message with AI (respect model capabilities)
             chat_response = await chatbot_service.process_message(
                 chat_request,
@@ -105,17 +108,36 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 temperature=temp_val,
                 max_tokens=max_tokens,
                 debug=debug_enabled,
+                config=(
+                    {
+                        "company_name": active_config.company_name,
+                        "business_context": active_config.business_context,
+                        "specializations": active_config.specializations,
+                        "friendly_tone": active_config.friendly_tone,
+                        "professional_style": active_config.professional_style,
+                        "suggestive_responses": active_config.suggestive_responses,
+                        "manager_handover": active_config.manager_handover,
+                        "fallback_message": active_config.fallback_message,
+                        "handover_message": active_config.handover_message,
+                    }
+                    if active_config
+                    else None
+                ),
             )
             
             # Persist bot response and update conversation state
             try:
-                bot_message = Message(
-                    chat_id=conversation.id,
-                    sender=MessageSender.BOT,
-                    channel=MessageChannel.WEB,
-                    text=chat_response.response,
-                )
-                db.add(bot_message)
+                should_log = True
+                if active_config and active_config.conversation_logging is not None:
+                    should_log = bool(active_config.conversation_logging)
+                if should_log:
+                    bot_message = Message(
+                        chat_id=conversation.id,
+                        sender=MessageSender.BOT,
+                        channel=MessageChannel.WEB,
+                        text=chat_response.response,
+                    )
+                    db.add(bot_message)
 
                 # Update conversation handover fields when applicable
                 if chat_response.handover_to_manager:

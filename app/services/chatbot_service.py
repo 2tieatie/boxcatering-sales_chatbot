@@ -1,6 +1,5 @@
 import json
-# import os
-# from typing import Optional
+from typing import Optional, Dict, Any
 from openai import OpenAI
 from loguru import logger
 
@@ -28,11 +27,12 @@ class ChatbotService:
         temperature: float | None = None,
         max_tokens: int | None = None,
         debug: bool = False,
+        config: Optional[Dict[str, Any]] = None,
     ) -> ChatResponse:
         """Process a chat message and return response."""
         try:
             # Build the system prompt with language settings
-            system_prompt = self._build_system_prompt(language, force_language)
+            system_prompt = self._build_system_prompt(language, force_language, config)
             
             # Create the chat completion
             chosen_model = model or self.model
@@ -106,26 +106,56 @@ class ChatbotService:
             handover_reason = parsed_response.get("handover_reason")
             handover_desc = parsed_response.get("handover_reason_description")
 
-            # Localized default apology
-            default_apology = (
-                "Вибачте, я не маю потрібної інформації. Передаю запит менеджеру."
-                if language == "uk"
-                else "I'm sorry, I don't have the required information. Let me forward your request to the manager."
+            # Messages from configuration or localized defaults
+            default_fallback = (
+                (config or {}).get("fallback_message")
+                or (
+                    "Перепрошую, я не зовсім зрозумів. Будь ласка, перефразуйте, я залюбки допоможу."
+                    if language == "uk"
+                    else "I apologize, I didn't quite understand. Could you please rephrase? I'm happy to help."
+                )
+            )
+            default_handover_msg = (
+                (config or {}).get("handover_message")
+                or (
+                    "Вибачте, я не маю потрібної інформації. Передаю запит менеджеру."
+                    if language == "uk"
+                    else "I'm sorry, I don't have the required information. Let me forward your request to the manager."
+                )
             )
 
             if not user_text:
                 # If model responded with empty text, force a graceful handover
+                allow_handover = bool((config or {}).get("manager_handover", True))
+                if allow_handover:
+                    return ChatResponse(
+                        response=default_handover_msg,
+                        handover_to_manager=True,
+                        handover_reason=HandoverReason.OUT_OF_SCOPE,
+                        handover_reason_description=(handover_desc or "Model returned empty response"),
+                        debug=(
+                            {
+                                "model": request_kwargs.get("model"),
+                                "temperature": request_kwargs.get("temperature"),
+                                "max_tokens": request_kwargs.get("max_tokens") or request_kwargs.get("max_completion_tokens"),
+                                "reason": "empty_text_fallback",
+                            }
+                            if debug
+                            else None
+                        ),
+                    )
+                # If handover disabled, use fallback message without handover
                 return ChatResponse(
-                    response=default_apology,
-                    handover_to_manager=True,
-                    handover_reason=HandoverReason.OUT_OF_SCOPE,
+                    response=default_fallback,
+                    handover_to_manager=False,
+                    handover_reason=None,
                     handover_reason_description=(handover_desc or "Model returned empty response"),
                     debug=(
                         {
                             "model": request_kwargs.get("model"),
                             "temperature": request_kwargs.get("temperature"),
                             "max_tokens": request_kwargs.get("max_tokens") or request_kwargs.get("max_completion_tokens"),
-                            "reason": "empty_text_fallback",
+                            "reason": "empty_text_no_handover",
                         }
                         if debug
                         else None
@@ -134,11 +164,17 @@ class ChatbotService:
 
             # If handover requested but without a message, include an apology
             if needs_handover and not (parsed_response.get("response") or "").strip():
-                user_text = default_apology
+                user_text = default_handover_msg
                 if not handover_reason:
                     handover_reason = HandoverReason.OUT_OF_SCOPE
                 if not handover_desc:
                     handover_desc = "Handover requested without a user message"
+
+            # Respect manager_handover flag
+            if needs_handover and not bool((config or {}).get("manager_handover", True)):
+                needs_handover = False
+                if not user_text:
+                    user_text = default_fallback
 
             return ChatResponse(
                 response=user_text,
@@ -167,8 +203,13 @@ class ChatbotService:
                 handover_reason_description="Technical error in AI service"
             )
     
-    def _build_system_prompt(self, language: str = "uk", force_language: bool = True) -> str:
-        """Build the system prompt for the AI."""
+    def _build_system_prompt(
+        self,
+        language: str = "uk",
+        force_language: bool = True,
+        config: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """Build the system prompt for the AI using chatbot settings."""
 
         language_instruction = ""
         if language == "uk":
@@ -183,16 +224,36 @@ class ChatbotService:
         Never use other languages, even if the customer writes in a different language.
         All your responses must be in {language}.
         """
-        
-        return f"""
-        You are a helpful AI assistant for a box catering business. Your role is to:
-        1. Answer customer questions about our services, menus, and pricing
-        2. Help customers place orders
-        3. Provide information about discounts and special offers
-        4. Handle basic customer service inquiries
-        
-        {language_instruction}
-        
+
+        company_name = (config or {}).get("company_name")
+        business_context = (config or {}).get("business_context")
+        specializations = (config or {}).get("specializations")
+        friendly_tone = bool((config or {}).get("friendly_tone", True))
+        professional_style = bool((config or {}).get("professional_style", True))
+        suggestive_responses = bool((config or {}).get("suggestive_responses", True))
+        manager_handover = bool((config or {}).get("manager_handover", True))
+
+        context_lines = []
+        if company_name:
+            context_lines.append(f"Company: {company_name}")
+        if business_context:
+            context_lines.append(f"Business Context: {business_context}")
+        if specializations:
+            context_lines.append(f"Specializations: {specializations}")
+
+        style_lines = []
+        if friendly_tone:
+            style_lines.append("Use a friendly and welcoming tone.")
+        if professional_style:
+            style_lines.append("Maintain professional, concise communication.")
+        if suggestive_responses:
+            style_lines.append(
+                "When appropriate, suggest 1-3 short next steps or options to the customer."
+            )
+
+        handover_block = ""
+        if manager_handover:
+            handover_block = """
         If you encounter any of the following situations, you should request a handover to a human manager.
         Assign a reason code to the handover:
 
@@ -201,15 +262,36 @@ class ChatbotService:
         - "SENSITIVE_CASE" - Sensitive cases like complaints or VIP customers
         - "TECH_OR_FINANCIAL_LIMITATION" - Technical or financial limitations
         - "USER_REQUEST_MANAGER" - Customer directly requests to speak with a manager
-        
+
         When requesting handover, respond in this JSON format:
-        {{
+        {
             "response": "Your response to the customer",
             "handover_to_manager": true,
             "handover_reason": "<REASON_CODE>",
             "handover_reason_description": "Brief description of why handover is needed"
-        }}
-        
+        }
+            """
+        else:
+            handover_block = """
+        Do not request a handover to a human manager. Provide your best, most helpful answer directly to the customer.
+            """
+
+        return f"""
+        You are a helpful AI assistant for a box catering business.
+        {language_instruction}
+
+        {('\n'.join(context_lines)) if context_lines else ''}
+
+        Your role is to:
+        1. Answer customer questions about services, menus, and pricing
+        2. Help customers place orders
+        3. Provide information about discounts and special offers
+        4. Handle basic customer service inquiries
+
+        {' '.join(style_lines)}
+
+        {handover_block}
+
         Otherwise, respond normally with just your message to the customer.
         """
     
