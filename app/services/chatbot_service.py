@@ -27,6 +27,7 @@ class ChatbotService:
         model: str | None = None,
         temperature: float | None = None,
         max_tokens: int | None = None,
+        debug: bool = False,
     ) -> ChatResponse:
         """Process a chat message and return response."""
         try:
@@ -88,20 +89,72 @@ class ChatbotService:
                         fallback_kwargs["max_tokens"] = token_limit
 
                     response = self.client.chat.completions.create(**fallback_kwargs)
+                    if debug:
+                        request_kwargs = fallback_kwargs
                 else:
                     raise
             
             # Extract the response
-            ai_response = response.choices[0].message.content
-            
+            ai_response = (response.choices[0].message.content or "")
+
             # Parse the response to check for handover
             parsed_response = self._parse_ai_response(ai_response)
-            
+
+            # Backend safety net: never return empty customer-visible text
+            user_text = (parsed_response.get("response") or ai_response or "").strip()
+            needs_handover = bool(parsed_response.get("handover_to_manager", False))
+            handover_reason = parsed_response.get("handover_reason")
+            handover_desc = parsed_response.get("handover_reason_description")
+
+            # Localized default apology
+            default_apology = (
+                "Вибачте, я не маю потрібної інформації. Передаю запит менеджеру."
+                if language == "uk"
+                else "I'm sorry, I don't have the required information. Let me forward your request to the manager."
+            )
+
+            if not user_text:
+                # If model responded with empty text, force a graceful handover
+                return ChatResponse(
+                    response=default_apology,
+                    handover_to_manager=True,
+                    handover_reason=HandoverReason.OUT_OF_SCOPE,
+                    handover_reason_description=(handover_desc or "Model returned empty response"),
+                    debug=(
+                        {
+                            "model": request_kwargs.get("model"),
+                            "temperature": request_kwargs.get("temperature"),
+                            "max_tokens": request_kwargs.get("max_tokens") or request_kwargs.get("max_completion_tokens"),
+                            "reason": "empty_text_fallback",
+                        }
+                        if debug
+                        else None
+                    ),
+                )
+
+            # If handover requested but without a message, include an apology
+            if needs_handover and not (parsed_response.get("response") or "").strip():
+                user_text = default_apology
+                if not handover_reason:
+                    handover_reason = HandoverReason.OUT_OF_SCOPE
+                if not handover_desc:
+                    handover_desc = "Handover requested without a user message"
+
             return ChatResponse(
-                response=parsed_response.get("response", ai_response),
-                handover_to_manager=parsed_response.get("handover_to_manager", False),
-                handover_reason=parsed_response.get("handover_reason"),
-                handover_reason_description=parsed_response.get("handover_reason_description")
+                response=user_text,
+                handover_to_manager=needs_handover,
+                handover_reason=handover_reason,
+                handover_reason_description=handover_desc,
+                debug=(
+                    {
+                        "model": request_kwargs.get("model"),
+                        "temperature": request_kwargs.get("temperature"),
+                        "max_tokens": request_kwargs.get("max_tokens") or request_kwargs.get("max_completion_tokens"),
+                        "handover": needs_handover,
+                    }
+                    if debug
+                    else None
+                ),
             )
             
         except Exception as e:
@@ -116,6 +169,7 @@ class ChatbotService:
     
     def _build_system_prompt(self, language: str = "uk", force_language: bool = True) -> str:
         """Build the system prompt for the AI."""
+
         language_instruction = ""
         if language == "uk":
             language_instruction = """
@@ -139,18 +193,20 @@ class ChatbotService:
         
         {language_instruction}
         
-        If you encounter any of the following situations, you should request a handover to a human manager:
-        - You're not confident in your answer (LOW_CONFIDENCE)
-        - The request is outside your scope (OUT_OF_SCOPE)
-        - Sensitive cases like complaints or VIP customers (SENSITIVE_CASE)
-        - Technical or financial limitations (TECH_OR_FINANCIAL_LIMITATION)
-        - Customer directly requests to speak with a manager (USER_REQUEST_MANAGER)
+        If you encounter any of the following situations, you should request a handover to a human manager.
+        Assign a reason code to the handover:
+
+        - "LOW_CONFIDENCE" - You're not confident in your answer
+        - "OUT_OF_SCOPE" - The request is outside your scope (you don't have the information)
+        - "SENSITIVE_CASE" - Sensitive cases like complaints or VIP customers
+        - "TECH_OR_FINANCIAL_LIMITATION" - Technical or financial limitations
+        - "USER_REQUEST_MANAGER" - Customer directly requests to speak with a manager
         
         When requesting handover, respond in this JSON format:
         {{
             "response": "Your response to the customer",
             "handover_to_manager": true,
-            "handover_reason": "REASON_CODE",
+            "handover_reason": "<REASON_CODE>",
             "handover_reason_description": "Brief description of why handover is needed"
         }}
         

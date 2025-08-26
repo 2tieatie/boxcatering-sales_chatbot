@@ -60,6 +60,10 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
             except Exception:
                 temp_val = None
 
+            # Debug flag propagated via query string (?debug=1)
+            qs = websocket.query_params
+            debug_enabled = str(qs.get("debug", "0")).lower() in {"1", "true", "yes"}
+
             # Process message with AI (respect model capabilities)
             chat_response = await chatbot_service.process_message(
                 chat_request,
@@ -68,6 +72,7 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 model=selected_model,
                 temperature=temp_val,
                 max_tokens=max_tokens,
+                debug=debug_enabled,
             )
             
             # Send response back to client

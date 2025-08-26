@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boxcatering Chatbot - Test Interface</title>
+    <title>Box Catering Chatbot - Test Interface</title>
     <style>
         * {
             margin: 0;
@@ -415,7 +415,7 @@
 
 <body>
     <div class="header">
-        <h1>Boxcatering Chatbot</h1>
+        <h1>Box Catering Chatbot</h1>
         <div class="nav-links">
             <a href="/dashboard" class="nav-link">Dashboard</a>
             <a href="/chatbot-test" class="nav-link active">Chatbot Test</a>
@@ -435,12 +435,12 @@
     <div class="chat-container">
         <div class="chat-header">
             <h2>💬 Тест-чат з Марічкою</h2>
-            <p>Test and interact with your AI-powered boxcatering chatbot</p>
+            <p>Test and interact with your AI-powered chatbot</p>
         </div>
 
         <div class="chat-messages" id="chat-messages">
             <div class="message bot">
-                <div class="message-avatar">🤖</div>
+                <div class="message-avatar">👩</div>
                 <div class="message-content">
                     <div id="bot-welcome-content">Завантаження привітання…</div>
                     <div class="message-time" id="bot-welcome-time"></div>
@@ -563,7 +563,7 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
 
-            const avatar = isUser ? '👤' : '🤖';
+            const avatar = isUser ? '👤' : '👩';
             const time = timestamp || new Date().toLocaleTimeString();
 
             messageDiv.innerHTML = `
@@ -610,7 +610,7 @@
             if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
 
             const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-            const url = `${protocol}://${location.host}/chat/ws`;
+            const url = `${protocol}://${location.host}/chat/ws${location.search || ''}`;
             setStatus('Connecting to AI Service…', 'connecting');
 
             ws = new WebSocket(url);
@@ -627,10 +627,20 @@
                 try {
                     const data = JSON.parse(event.data);
                     hideTypingIndicator();
-                    addMessage(data.response);
+                    const text = (data && typeof data.response === 'string') ? data.response.trim() : '';
+                    if (text) {
+                        addMessage(text);
+                    } else {
+                        addMessage('Вибачте, сталася помилка. Спробуйте ще раз пізніше.');
+                    }
 
                     if (data.handover_to_manager) {
                         showHandoverNotice(data);
+                    }
+
+                    // Optional debug logging when enabled via ?debug=1
+                    if (data.debug) {
+                        console.log('AI Debug:', data.debug);
                     }
                 } catch (err) {
                     console.error('Failed to parse message:', err);
@@ -713,7 +723,7 @@
                 const messagesContainer = document.getElementById('chat-messages');
                 messagesContainer.innerHTML = `
                     <div class="message bot">
-                        <div class="message-avatar">🤖</div>
+                        <div class="message-avatar">👩</div>
                         <div class="message-content">
                             <div>Chat history cleared. How can I help you today?</div>
                             <div class="message-time">${new Date().toLocaleTimeString()}</div>
