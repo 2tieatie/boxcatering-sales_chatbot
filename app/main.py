@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from loguru import logger
 
 from app.api import (
@@ -119,6 +119,18 @@ async def settings_page():
 async def change_password_page():
     """Serve the change password page."""
     return FileResponse("app/static/change-password.html")
+
+
+@app.head("/.well-known/appspecific/com.chrome.devtools.json")
+async def chrome_devtools_probe_head() -> Response:
+    """Respond to Chrome DevTools discovery HEAD probe without 404 noise."""
+    return Response(status_code=204)
+
+
+@app.get("/.well-known/appspecific/com.chrome.devtools.json")
+async def chrome_devtools_probe_get() -> JSONResponse:
+    """Respond to Chrome DevTools discovery GET probe with empty config."""
+    return JSONResponse(content={})
 
 
 if __name__ == "__main__":
