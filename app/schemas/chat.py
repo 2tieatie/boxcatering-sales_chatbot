@@ -30,3 +30,7 @@ class ChatResponse(BaseModel):
     handover_reason: Optional[HandoverReason] = None
     handover_reason_description: Optional[str] = None
     debug: Optional[Dict[str, Any]] = None
+    # Optional action to instruct the app to perform something (e.g., create order)
+    action: Optional[str] = None
+    # Optional payload for actions, free-form to allow incremental evolution
+    data: Optional[Dict[str, Any]] = None

@@ -186,17 +186,39 @@ class ChatbotService:
                 if not user_text:
                     user_text = default_fallback
 
+            # Prepare optional action/data if model requested structured action (e.g., create order)
+            action = None
+            data = None
+            try:
+                if isinstance(parsed_response, dict):
+                    action = parsed_response.get("action")
+                    payload = parsed_response.get("data")
+                    if action and isinstance(payload, dict):
+                        data = payload
+                    # Backward-compat alias: allow { create_order: {...} }
+                    if not action and "create_order" in parsed_response:
+                        action = "create_order"
+                        maybe_payload = parsed_response.get("create_order")
+                        if isinstance(maybe_payload, dict):
+                            data = maybe_payload
+            except Exception:
+                action = None
+                data = None
+
             return ChatResponse(
                 response=user_text,
                 handover_to_manager=needs_handover,
                 handover_reason=handover_reason,
                 handover_reason_description=handover_desc,
+                action=action,
+                data=data,
                 debug=(
                     {
                         "model": request_kwargs.get("model"),
                         "temperature": request_kwargs.get("temperature"),
                         "max_tokens": request_kwargs.get("max_tokens") or request_kwargs.get("max_completion_tokens"),
                         "handover": needs_handover,
+                        **({"action": action} if action else {}),
                     }
                     if debug
                     else None
@@ -305,6 +327,32 @@ class ChatbotService:
         {' '.join(style_lines)}
 
         {handover_block}
+
+        If the customer clearly wants to place an order, ask for the customer's
+        name and phone number, customer address and menu items to include in the order,
+        then emit a JSON object with `create_order` action, followed by a short human-friendly
+        confirmation message. Use this format exactly:
+
+        {{
+            "response": "<your short confirmation to the user in {language}>",
+            "action": "create_order",
+            "data": {{
+                "customer_name": "<name>",
+                "customer_phone": "<phone>",
+                "customer_email": "<optional email>",
+                "customer_address": "<address>",
+                "menu_items": "<menu items>",
+                "total_amount": <number>,
+                "delivery_date": "<date in ISO format YYYY-MM-DD>",
+                "delivery_time": "<time>",
+                "notes": "<optional notes>",
+                "currency": "UAH",
+            }}
+        }}
+
+        If some required details are missing (like name or phone number), ask a
+        concise follow-up question instead of emitting the action. When all non-optional
+        info is gathered, emit the `create_order` action as above.
 
         {context_docs_block}
 

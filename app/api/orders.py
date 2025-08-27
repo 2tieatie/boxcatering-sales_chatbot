@@ -1,12 +1,13 @@
 """Orders API endpoints."""
 
 from typing import List
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Order, User
-from app.schemas.order import OrderResponse, OrderUpdate
+from app.schemas.order import OrderResponse, OrderUpdate, OrderCreate
 from app.dependencies import get_current_active_user_dependency, role_service
 
 router = APIRouter(prefix="/orders", tags=["orders"])
@@ -23,9 +24,9 @@ async def get_orders(
     """Get list of orders (all authenticated users can view)."""
     query = db.query(Order)
     
-    # Filter by status if specified
+    # Filter by status if specified (using state)
     if status:
-        query = query.filter(Order.status == status)
+        query = query.filter(Order.state == status)
     
     orders = query.offset(skip).limit(limit).all()
     return orders
@@ -116,3 +117,74 @@ async def get_customer_orders(
         Order.customer_id == customer_id
     ).offset(skip).limit(limit).all()
     return orders
+
+
+@router.post("/", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
+async def create_order(
+    order_data: OrderCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user_dependency),
+):
+    """Create a new order.
+
+    Allowed for Manager, Admin, or System Admin. Generates a sequential order number.
+    """
+    role_service.require_manager_or_higher(current_user)
+
+    # Generate a simple order number: ORD-YYYYMMDD-<increment>
+    today_prefix = datetime.now(timezone.utc).strftime("%Y%m%d")
+    base_prefix = f"ORD-{today_prefix}-"
+    last = (
+        db.query(Order)
+        .filter(Order.order_number.like(f"{base_prefix}%"))
+        .order_by(Order.id.desc())
+        .first()
+    )
+    try:
+        last_seq = int((last.order_number or "").split("-")[-1]) if last else 0
+    except Exception:
+        last_seq = 0
+    next_seq = last_seq + 1
+    order_number = f"{base_prefix}{next_seq:04d}"
+
+    # Resolve or create customer if customer_id is not provided
+    customer_id = order_data.customer_id
+    if customer_id is None:
+        from app.models import Customer
+        # Try find by email, then by phone
+        customer = None
+        if order_data.customer_email:
+            customer = db.query(Customer).filter(Customer.email == order_data.customer_email).first()
+        if not customer and order_data.customer_phone:
+            customer = db.query(Customer).filter(Customer.phone == order_data.customer_phone).first()
+        if not customer and order_data.customer_name:
+            # Create minimal customer record
+            customer = Customer(
+                name=order_data.customer_name,
+                email=order_data.customer_email,
+                phone=order_data.customer_phone,
+                address=order_data.customer_address,
+            )
+            db.add(customer)
+            db.commit()
+            db.refresh(customer)
+        if not customer:
+            raise HTTPException(status_code=400, detail="Customer info is required to create an order")
+        customer_id = customer.id
+
+    new_order = Order(
+        order_number=order_number,
+        customer_id=customer_id,
+        conversation_id=order_data.conversation_id,
+        state=order_data.state or getattr(Order, 'state').default.arg,  # default to model default
+        total_amount=order_data.total_amount or 0,
+        currency=order_data.currency or "UAH",
+        delivery_date=order_data.delivery_date,
+        delivery_time=order_data.delivery_time,
+        menu_items=order_data.menu_items,
+        notes=order_data.notes,
+    )
+    db.add(new_order)
+    db.commit()
+    db.refresh(new_order)
+    return new_order

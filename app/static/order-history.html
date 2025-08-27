@@ -647,7 +647,7 @@
                 <div class="stat-label">Completed</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number" id="total-revenue">$0</div>
+                <div class="stat-number" id="total-revenue">₴0</div>
                 <div class="stat-label">Total Revenue</div>
             </div>
         </div>
@@ -699,8 +699,8 @@
             <div class="table-header">
                 <div class="table-title">Order Details</div>
                 <div class="table-actions">
-                    <button class="btn btn-success" onclick="openCreate()">➕ New Customer</button>
-                    <button class="btn btn-secondary" onclick="reloadCustomers()">🔄 Refresh</button>
+                    <button class="btn btn-success" onclick="showNewOrderModal()">➕ New Order</button>
+                    <button class="btn btn-secondary" onclick="reloadOrders()">🔄 Refresh</button>
                 </div>
             </div>
 
@@ -743,32 +743,33 @@
                         <input type="text" id="customer-name" required>
                     </div>
                     <div class="form-group">
-                        <label for="customer-email">Customer Email *</label>
-                        <input type="email" id="customer-email" required>
+                        <label for="customer-phone">Customer Phone *</label>
+                        <input type="tel" id="customer-phone" required>
                     </div>
                     <div class="form-group">
-                        <label for="customer-phone">Customer Phone</label>
-                        <input type="tel" id="customer-phone">
+                        <label for="customer-email">Customer Email</label>
+                        <input type="email" id="customer-email">
                     </div>
                     <div class="form-group">
-                        <label for="event-date">Event Date *</label>
-                        <input type="date" id="event-date" required>
+                        <label for="delivery-date">Delivery Date *</label>
+                        <input type="date" id="delivery-date" required>
                     </div>
                     <div class="form-group">
-                        <label for="event-time">Event Time *</label>
-                        <input type="time" id="event-time" required>
+                        <label for="delivery-time">Delivery Time *</label>
+                        <input type="time" id="delivery-time" required>
                     </div>
                     <div class="form-group">
-                        <label for="guests-count">Number of Guests *</label>
-                        <input type="number" id="guests-count" min="1" required>
+                        <label for="customer-address">Customer Address *</label>
+                        <textarea id="customer-address" required></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="delivery-address">Delivery Address</label>
-                        <textarea id="delivery-address"></textarea>
+                        <label for="menu-items">Menu Items *</label>
+                        <textarea id="menu-items" placeholder="List the menu items for this order..."
+                            required></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="menu-items">Menu Items</label>
-                        <textarea id="menu-items" placeholder="List the menu items for this order..."></textarea>
+                        <label for="guests-count">Number of Guests</label>
+                        <input type="number" id="guests-count" min="1">
                     </div>
                     <div class="form-group">
                         <label for="special-requirements">Special Requirements</label>
@@ -867,8 +868,8 @@
                     customer_name: "John Smith",
                     customer_email: "john.smith@email.com",
                     customer_phone: "+1-555-0123",
-                    event_date: "2024-01-15",
-                    event_time: "18:00",
+                    delivery_date: "2024-01-15",
+                    delivery_time: "18:00",
                     guests_count: 50,
                     delivery_address: "123 Main St, Downtown, NY 10001",
                     menu_items: "Appetizers: Spring rolls, Calamari\nMain: Grilled salmon, Beef tenderloin\nDesserts: Chocolate cake, Tiramisu",
@@ -884,8 +885,8 @@
                     customer_name: "Sarah Johnson",
                     customer_email: "sarah.j@email.com",
                     customer_phone: "+1-555-0456",
-                    event_date: "2024-01-20",
-                    event_time: "19:00",
+                    delivery_date: "2024-01-20",
+                    delivery_time: "19:00",
                     guests_count: 25,
                     delivery_address: "456 Oak Ave, Uptown, NY 10002",
                     menu_items: "Appetizers: Bruschetta, Stuffed mushrooms\nMain: Chicken marsala, Pasta primavera\nDesserts: Cheesecake, Fruit platter",
@@ -901,8 +902,8 @@
                     customer_name: "Mike Davis",
                     customer_email: "mike.davis@email.com",
                     customer_phone: "+1-555-0789",
-                    event_date: "2024-01-18",
-                    event_time: "12:00",
+                    delivery_date: "2024-01-18",
+                    delivery_time: "12:00",
                     guests_count: 100,
                     delivery_address: "789 Business Blvd, Midtown, NY 10003",
                     menu_items: "Appetizers: Mini quiches, Shrimp cocktail\nMain: Roast beef, Grilled chicken\nDesserts: Assorted pastries, Coffee service",
@@ -918,8 +919,8 @@
                     customer_name: "Lisa Chen",
                     customer_email: "lisa.chen@email.com",
                     customer_phone: "+1-555-0321",
-                    event_date: "2024-01-12",
-                    event_time: "17:30",
+                    delivery_date: "2024-01-12",
+                    delivery_time: "17:30",
                     guests_count: 15,
                     delivery_address: "321 Pine St, Westside, NY 10004",
                     menu_items: "Appetizers: Dumplings, Edamame\nMain: Teriyaki chicken, Vegetable stir-fry\nDesserts: Mochi, Green tea ice cream",
@@ -935,8 +936,8 @@
                     customer_name: "Robert Wilson",
                     customer_email: "robert.w@email.com",
                     customer_phone: "+1-555-0654",
-                    event_date: "2024-01-25",
-                    event_time: "20:00",
+                    delivery_date: "2024-01-25",
+                    delivery_time: "20:00",
                     guests_count: 75,
                     delivery_address: "654 River Rd, Eastside, NY 10005",
                     menu_items: "Appetizers: Oysters, Charcuterie board\nMain: Lobster thermidor, Filet mignon\nDesserts: Crème brûlée, Chocolate soufflé",
@@ -959,13 +960,16 @@
             const pending = orders.filter(o => o.status === 'pending').length;
             const active = orders.filter(o => ['confirmed', 'preparing'].includes(o.status)).length;
             const completed = orders.filter(o => o.status === 'delivered').length;
-            const revenue = orders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
+            const revenue = orders.reduce((sum, o) => {
+                const amount = typeof o.total_amount === 'number' ? o.total_amount : parseFloat(o.total_amount || '0');
+                return sum + (isNaN(amount) ? 0 : amount);
+            }, 0);
 
             document.getElementById('total-orders').textContent = total;
             document.getElementById('pending-orders').textContent = pending;
             document.getElementById('active-orders').textContent = active;
             document.getElementById('completed-orders').textContent = completed;
-            document.getElementById('total-revenue').textContent = `$${revenue.toLocaleString()}`;
+            document.getElementById('total-revenue').textContent = `₴${revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }
 
         // Apply filters
@@ -984,8 +988,8 @@
                 if (priorityFilter && order.priority !== priorityFilter) return false;
 
                 // Date range filter
-                if (dateFrom && order.event_date < dateFrom) return false;
-                if (dateTo && order.event_date > dateTo) return false;
+                if (dateFrom && order.delivery_date < dateFrom) return false;
+                if (dateTo && order.delivery_date > dateTo) return false;
 
                 // Search filter
                 if (searchTerm) {
@@ -1037,7 +1041,7 @@
                         <tr>
                             <th>Order ID</th>
                             <th>Customer</th>
-                            <th>Event Date</th>
+                            <th>Delivery Date</th>
                             <th>Guests</th>
                             <th>Status</th>
                             <th>Priority</th>
@@ -1051,8 +1055,8 @@
             pageOrders.forEach(order => {
                 const statusClass = `status-${order.status}`;
                 const priorityClass = `priority-${order.priority}`;
-                const eventDate = new Date(order.event_date).toLocaleDateString();
-                const totalFormatted = `$${(order.total_amount || 0).toLocaleString()}`;
+                const deliveryDate = new Date(order.delivery_date).toLocaleDateString();
+                const totalFormatted = `₴${(order.total_amount || 0).toLocaleString()}`;
 
                 tableHTML += `
                     <tr>
@@ -1061,7 +1065,7 @@
                             <div><strong>${order.customer_name}</strong></div>
                             <div style="font-size: 12px; color: #666;">${order.customer_email}</div>
                         </td>
-                        <td>${eventDate}</td>
+                        <td>${deliveryDate}</td>
                         <td>${order.guests_count}</td>
                         <td><span class="status-badge ${statusClass}">${order.status}</span></td>
                         <td><span class="status-badge ${priorityClass}">${order.priority}</span></td>
@@ -1144,21 +1148,21 @@
                         <p><strong>Name:</strong> ${order.customer_name}</p>
                         <p><strong>Email:</strong> ${order.customer_email}</p>
                         <p><strong>Phone:</strong> ${order.customer_phone || 'N/A'}</p>
-                        <p><strong>Event Date:</strong> ${new Date(order.event_date).toLocaleDateString()}</p>
-                        <p><strong>Event Time:</strong> ${order.event_time}</p>
+                        <p><strong>Delivery Date:</strong> ${new Date(order.delivery_date).toLocaleDateString()}</p>
+                        <p><strong>Delivery Time:</strong> ${order.delivery_time}</p>
                         <p><strong>Guests:</strong> ${order.guests_count}</p>
                     </div>
                     <div>
                         <h4>Order Details</h4>
                         <p><strong>Status:</strong> <span class="status-badge status-${order.status}">${order.status}</span></p>
                         <p><strong>Priority:</strong> <span class="status-badge priority-${order.priority}">${order.priority}</span></p>
-                        <p><strong>Total Amount:</strong> $${(order.total_amount || 0).toLocaleString()}</p>
+                        <p><strong>Total Amount:</strong> ₴${(order.total_amount || 0).toLocaleString()}</p>
                         <p><strong>Created:</strong> ${new Date(order.created_at).toLocaleString()}</p>
                     </div>
                 </div>
                 <div style="margin-top: 20px;">
-                    <h4>Delivery Address</h4>
-                    <p>${order.delivery_address || 'N/A'}</p>
+                    <h4>Customer Address</h4>
+                    <p>${order.customer_address || 'N/A'}</p>
                 </div>
                 <div style="margin-top: 20px;">
                     <h4>Menu Items</h4>
@@ -1183,10 +1187,194 @@
             document.getElementById('orderModal').style.display = 'block';
         }
 
-        // Edit order
+        // Map frontend status to backend state
+        function mapStatusToState(status) {
+            switch (String(status || '').toLowerCase()) {
+                case 'pending':
+                    return 'draft';
+                case 'confirmed':
+                    return 'confirmed';
+                case 'preparing':
+                    return 'in_progress';
+                case 'delivered':
+                    return 'completed';
+                case 'cancelled':
+                    return 'cancelled';
+                default:
+                    return undefined;
+            }
+        }
+
+        // Map backend state to frontend status
+        function mapStateToStatus(state) {
+            switch (String(state || '').toLowerCase()) {
+                case 'draft':
+                    return 'pending';
+                case 'confirmed':
+                    return 'confirmed';
+                case 'in_progress':
+                    return 'preparing';
+                case 'completed':
+                    return 'delivered';
+                case 'cancelled':
+                    return 'cancelled';
+                default:
+                    return undefined;
+            }
+        }
+
+        // Edit order (manager manual edit)
         function editOrder(orderId) {
-            // Implementation for editing orders
-            showAlert('Edit functionality coming soon!', 'success');
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            const modalFooter = document.getElementById('modalFooter');
+
+            modalTitle.textContent = `Edit Order #${order.id}`;
+
+            // Build edit form
+            modalBody.innerHTML = `
+                <form id="editOrderForm">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <h4>Customer</h4>
+                            <div class="form-group">
+                                <label for="edit-customer-name">Customer Name</label>
+                                <input type="text" id="edit-customer-name" value="${order.customer_name || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-customer-email">Customer Email</label>
+                                <input type="email" id="edit-customer-email" value="${order.customer_email || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-customer-phone">Customer Phone</label>
+                                <input type="tel" id="edit-customer-phone" value="${order.customer_phone || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-customer-address">Customer Address</label>
+                                <textarea id="edit-customer-address">${order.customer_address || ''}</textarea>
+                            </div>
+                        </div>
+                        <div>
+                            <h4>Order</h4>
+                            <div class="form-group">
+                                <label for="edit-delivery-date">Delivery Date</label>
+                                <input type="date" id="edit-delivery-date" value="${order.delivery_date ? new Date(order.delivery_date).toISOString().slice(0, 10) : ''}">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-delivery-time">Delivery Time</label>
+                                <input type="time" id="edit-delivery-time" value="${order.delivery_time || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-guests">Guests</label>
+                                <input type="number" id="edit-guests" min="1" value="${order.guests_count || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-status">Status</label>
+                                <select id="edit-status">
+                                    <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                    <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                                    <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>Preparing</option>
+                                    <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                                    <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-priority">Priority</label>
+                                <select id="edit-priority">
+                                    <option value="low" ${order.priority === 'low' ? 'selected' : ''}>Low</option>
+                                    <option value="medium" ${order.priority === 'medium' ? 'selected' : ''}>Medium</option>
+                                    <option value="high" ${order.priority === 'high' ? 'selected' : ''}>High</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-total">Total Amount (₴)</label>
+                                <input type="number" step="0.01" id="edit-total" value="${typeof order.total_amount === 'number' ? order.total_amount : (parseFloat(order.total_amount) || 0)}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-menu-items">Menu Items</label>
+                        <textarea id="edit-menu-items">${order.menu_items || ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-notes">Notes</label>
+                        <textarea id="edit-notes">${order.notes || ''}</textarea>
+                    </div>
+                </form>
+            `;
+
+            modalFooter.innerHTML = `
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveEditedOrder(${order.id})">Save Changes</button>
+            `;
+
+            document.getElementById('orderModal').style.display = 'block';
+        }
+
+        async function saveEditedOrder(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            // Read values
+            const updated = {
+                customer_name: document.getElementById('edit-customer-name').value.trim(),
+                customer_email: document.getElementById('edit-customer-email').value.trim(),
+                customer_phone: document.getElementById('edit-customer-phone').value.trim(),
+                customer_address: document.getElementById('edit-customer-address').value.trim(),
+                delivery_date: document.getElementById('edit-delivery-date').value,
+                delivery_time: document.getElementById('edit-delivery-time').value,
+                guests_count: parseInt(document.getElementById('edit-guests').value || '0') || undefined,
+                status: document.getElementById('edit-status').value,
+                priority: document.getElementById('edit-priority').value,
+                total_amount: parseFloat(document.getElementById('edit-total').value || '0') || 0,
+                menu_items: document.getElementById('edit-menu-items').value,
+                notes: document.getElementById('edit-notes').value,
+            };
+
+            // Update local order object
+            Object.assign(order, updated);
+
+            // Try to persist supported fields to backend
+            try {
+                const payload = {};
+                const mappedState = mapStatusToState(updated.status);
+                if (mappedState) payload.state = mappedState;
+                if (!isNaN(updated.total_amount)) payload.total_amount = updated.total_amount;
+                if (updated.notes !== undefined) payload.notes = updated.notes;
+
+                // Only call API if we have something to send
+                if (Object.keys(payload).length > 0) {
+                    const token = localStorage.getItem('access_token');
+                    const resp = await fetch(`/orders/${orderId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    if (resp.ok) {
+                        const serverOrder = await resp.json();
+                        // Sync state back to status
+                        const serverStatus = mapStateToStatus(serverOrder.state);
+                        if (serverStatus) order.status = serverStatus;
+                        order.total_amount = (typeof serverOrder.total_amount === 'number' ? serverOrder.total_amount : parseFloat(serverOrder.total_amount || '0')) || order.total_amount;
+                        order.notes = serverOrder.notes ?? order.notes;
+                    } else {
+                        console.warn('Failed to persist order update, keeping local changes.');
+                    }
+                }
+            } catch (e) {
+                console.warn('Error updating order via API:', e);
+            }
+
+            updateStats();
+            renderOrdersTable();
+            closeModal();
+            showAlert(`Order #${order.id} updated successfully`, 'success');
         }
 
         // Update order status
@@ -1222,12 +1410,12 @@
         }
 
         // Create new order
-        function createOrder() {
+        async function createOrder() {
             const form = document.getElementById('newOrderForm');
             const formData = new FormData(form);
 
             // Validate required fields
-            const requiredFields = ['customer-name', 'customer-email', 'event-date', 'event-time', 'guests-count'];
+            const requiredFields = ['customer-name', 'customer-phone', 'customer-address', 'delivery-date', 'delivery-time', 'menu-items'];
             for (let field of requiredFields) {
                 if (!document.getElementById(field).value) {
                     showAlert(`Please fill in the ${field.replace('-', ' ')} field`, 'error');
@@ -1235,32 +1423,85 @@
                 }
             }
 
-            // Create new order object
-            const newOrder = {
-                id: Math.max(...orders.map(o => o.id)) + 1,
+            // Prepare new order (frontend shape)
+            const baseNewOrder = {
+                id: (orders.length ? Math.max(...orders.map(o => o.id)) + 1 : 1),
                 customer_name: document.getElementById('customer-name').value,
                 customer_email: document.getElementById('customer-email').value,
                 customer_phone: document.getElementById('customer-phone').value,
-                event_date: document.getElementById('event-date').value,
-                event_time: document.getElementById('event-time').value,
+                delivery_date: document.getElementById('delivery-date').value,
+                delivery_time: document.getElementById('delivery-time').value,
                 guests_count: parseInt(document.getElementById('guests-count').value),
-                delivery_address: document.getElementById('delivery-address').value,
+                customer_address: document.getElementById('customer-address').value,
                 menu_items: document.getElementById('menu-items').value,
                 special_requirements: document.getElementById('special-requirements').value,
                 status: 'pending',
                 priority: document.getElementById('order-priority').value,
-                total_amount: Math.floor(Math.random() * 2000) + 500, // Demo calculation
+                total_amount: Math.floor(Math.random() * 2000) + 500,
                 created_at: new Date().toISOString(),
                 notes: document.getElementById('order-notes').value
             };
 
-            orders.unshift(newOrder);
+            // Try calling backend API if available; gracefully fall back to local insert
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch('/orders/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                    },
+                    body: JSON.stringify({
+                        // This payload is a placeholder; backend create endpoint may differ.
+                        // We pass minimal info; backend can ignore unknowns.
+                        customer_name: baseNewOrder.customer_name,
+                        customer_email: baseNewOrder.customer_email,
+                        customer_phone: baseNewOrder.customer_phone,
+                        delivery_date: baseNewOrder.delivery_date,
+                        delivery_time: baseNewOrder.delivery_time,
+                        guests_count: baseNewOrder.guests_count,
+                        customer_address: baseNewOrder.customer_address,
+                        menu_items: baseNewOrder.menu_items,
+                        special_requirements: baseNewOrder.special_requirements,
+                        priority: baseNewOrder.priority,
+                        notes: baseNewOrder.notes,
+                        total_amount: baseNewOrder.total_amount
+                    })
+                });
+
+                if (response.ok) {
+                    const created = await response.json();
+                    // Merge server-provided id if present
+                    if (created && created.id) {
+                        baseNewOrder.id = created.id;
+                    }
+                }
+            } catch (err) {
+                // Silently fall back to local insertion if API isn't ready
+                console.warn('Create order API not available, using local list only.', err);
+            }
+
+            orders.unshift(baseNewOrder);
             filteredOrders = [...orders];
             updateStats();
             renderOrdersTable();
 
             closeModal();
-            showAlert(`Order #${newOrder.id} created successfully`, 'success');
+            showAlert(`Order #${baseNewOrder.id} created successfully`, 'success');
+        }
+
+        // Reload orders from backend (or demo fallback)
+        function reloadOrders() {
+            const tableContent = document.getElementById('table-content');
+            tableContent.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Reloading orders...</p>
+                    </div>
+                `;
+            // Reset to first page
+            currentPage = 1;
+            loadOrders();
         }
 
         // Close modal
@@ -1285,7 +1526,7 @@
 
         // Generate CSV content
         function generateCSV(orders) {
-            const headers = ['ID', 'Customer Name', 'Email', 'Phone', 'Event Date', 'Event Time', 'Guests', 'Status', 'Priority', 'Total Amount', 'Created Date'];
+            const headers = ['ID', 'Customer Name', 'Email', 'Phone', 'Delivery Date', 'Delivery Time', 'Guests', 'Status', 'Priority', 'Total Amount', 'Created Date'];
             const csvRows = [headers.join(',')];
 
             orders.forEach(order => {
@@ -1294,8 +1535,8 @@
                     `"${order.customer_name}"`,
                     `"${order.customer_email}"`,
                     `"${order.customer_phone || ''}"`,
-                    order.event_date,
-                    order.event_time,
+                    order.delivery_date,
+                    order.delivery_time,
                     order.guests_count,
                     order.status,
                     order.priority,

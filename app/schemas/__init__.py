@@ -4,7 +4,7 @@ from .chat import ChatRequest, ChatResponse, HandoverReason
 from .user import UserCreate, UserUpdate, UserResponse, UserLogin, Token, TokenData, PasswordChange, UserBase, UserInDB
 from .conversation import ConversationResponse, ConversationUpdate
 from .message import MessageResponse
-from .order import OrderResponse, OrderUpdate
+from .order import OrderResponse, OrderUpdate, OrderCreate
 from .customer import CustomerCreate, CustomerUpdate, CustomerResponse
 
 from .chatbot_config import ChatbotConfigCreate, ChatbotConfigUpdate, ChatbotConfigResponse
@@ -28,6 +28,7 @@ __all__ = [
     "MessageResponse",
     "OrderResponse",
     "OrderUpdate",
+    "OrderCreate",
     "CustomerCreate",
     "CustomerResponse",
     "CustomerUpdate",

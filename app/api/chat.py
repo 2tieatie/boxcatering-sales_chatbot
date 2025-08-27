@@ -1,7 +1,7 @@
 """Chat WebSocket endpoint."""
 
 import json
-from datetime import datetime
+from datetime import datetime, date, timezone
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from sqlalchemy.orm import Session
 from loguru import logger
@@ -10,6 +10,8 @@ from app.database import get_db
 from app.services.chatbot_service import ChatbotService
 from app.services.telegram_service import TelegramService
 from app.schemas.chat import ChatRequest, ChatResponse
+from app.schemas.order import OrderCreate
+from app.models import Order
 from app.models import Conversation
 from app.models.conversation import HandoverState
 from app.models.message import Message, MessageSender, MessageChannel
@@ -181,8 +183,138 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 db.rollback()
                 logger.error(f"Failed to save bot message or update conversation: {save_err}")
 
-            # Send response back to client
-            await websocket.send_text(json.dumps(chat_response.model_dump()))
+            # If AI requested an actionable task, execute it before replying
+            try:
+                if chat_response.action == "create_order" and isinstance(chat_response.data, dict):
+                    # Minimal mapping: require customer_id; optional conversation link
+                    payload = chat_response.data
+                    # Attach conversation id if not provided
+                    if "conversation_id" not in payload or payload.get("conversation_id") is None:
+                        payload["conversation_id"] = conversation.id
+
+                    # Helpers to parse and normalize incoming data
+                    def parse_delivery_date(value):
+                        if value is None:
+                            return None
+                        if isinstance(value, datetime):
+                            return value
+                        if isinstance(value, date):
+                            return datetime(value.year, value.month, value.day, tzinfo=timezone.utc)
+                        if isinstance(value, str):
+                            value = value.strip()
+                            # Try ISO first
+                            for fmt in ("%Y-%m-%d", "%Y.%m.%d"):
+                                try:
+                                    dt = datetime.strptime(value, fmt)
+                                    return dt.replace(tzinfo=timezone.utc)
+                                except Exception:
+                                    pass
+                            # Try common European formats like DD.MM.YYYY and DD/MM/YYYY
+                            for fmt in ("%d.%m.%Y", "%d/%m/%Y"):
+                                try:
+                                    dt = datetime.strptime(value, fmt)
+                                    return dt.replace(tzinfo=timezone.utc)
+                                except Exception:
+                                    pass
+                        return None
+
+                    normalized_delivery_date = parse_delivery_date(payload.get("delivery_date"))
+
+                    # Coerce/validate fields accepted by OrderCreate
+                    order_create = OrderCreate(
+                        customer_id=(int(payload["customer_id"]) if payload.get("customer_id") is not None else None),
+                        customer_name=payload.get("customer_name"),
+                        customer_email=payload.get("customer_email"),
+                        customer_phone=payload.get("customer_phone"),
+                        customer_address=payload.get("customer_address"),
+                        delivery_date=normalized_delivery_date,
+                        delivery_time=payload.get("delivery_time"),
+                        menu_items=payload.get("menu_items"),
+                        conversation_id=payload.get("conversation_id"),
+                        state=payload.get("state"),
+                        total_amount=payload.get("total_amount"),
+                        currency=payload.get("currency"),
+                        notes=payload.get("notes"),
+                    )
+
+                    # Generate an order number similarly to POST /orders
+                    today_prefix = datetime.now(timezone.utc).strftime("%Y%m%d")
+                    base_prefix = f"ORD-{today_prefix}-"
+                    last = (
+                        db.query(Order)
+                        .filter(Order.order_number.like(f"{base_prefix}%"))
+                        .order_by(Order.id.desc())
+                        .first()
+                    )
+                    try:
+                        last_seq = int((last.order_number or "").split("-")[-1]) if last else 0
+                    except Exception:
+                        last_seq = 0
+                    next_seq = last_seq + 1
+                    order_number = f"{base_prefix}{next_seq:04d}"
+
+                    # Resolve or create customer if needed (reuse logic similar to POST /orders)
+                    customer_id = order_create.customer_id
+                    if customer_id is None:
+                        from app.models import Customer
+                        customer = None
+                        if order_create.customer_email:
+                            customer = db.query(Customer).filter(Customer.email == order_create.customer_email).first()
+                        if not customer and order_create.customer_phone:
+                            customer = db.query(Customer).filter(Customer.phone == order_create.customer_phone).first()
+                        if not customer and order_create.customer_name:
+                            customer = Customer(
+                                name=order_create.customer_name,
+                                email=order_create.customer_email,
+                                phone=order_create.customer_phone,
+                                address=order_create.customer_address,
+                            )
+                            db.add(customer)
+                            db.commit()
+                            db.refresh(customer)
+                        if not customer:
+                            raise ValueError("Customer info is required to create an order")
+                        customer_id = customer.id
+
+                    new_order = Order(
+                        order_number=order_number,
+                        customer_id=customer_id,
+                        conversation_id=order_create.conversation_id,
+                        state=order_create.state or getattr(Order, 'state').default.arg,
+                        total_amount=order_create.total_amount or 0,
+                        currency=order_create.currency or "UAH",
+                        notes=order_create.notes,
+                        delivery_date=order_create.delivery_date,
+                        delivery_time=order_create.delivery_time,
+                        menu_items=order_create.menu_items,
+                    )
+                    db.add(new_order)
+                    db.commit()
+                    db.refresh(new_order)
+
+                    # Augment response with created order id/number for the frontend
+                    resp_dict = chat_response.model_dump()
+                    data = dict(resp_dict.get("data") or {})
+                    data.update({"order_id": new_order.id, "order_number": new_order.order_number})
+                    resp_dict["data"] = data
+                    await websocket.send_text(json.dumps(resp_dict))
+                else:
+                    # Send response back to client
+                    await websocket.send_text(json.dumps(chat_response.model_dump()))
+            except Exception as action_err:
+                db.rollback()
+                logger.error(f"Failed to execute chat action: {action_err}")
+                # Send a clear error message back to user instead of a false confirmation
+                error_msg = (
+                    "Не вдалося створити замовлення: перевірте дату доставки у форматі YYYY-MM-DD, "
+                    "або надайте коректні дані і спробуйте ще раз."
+                )
+                fallback = {
+                    "response": error_msg,
+                    "handover_to_manager": False,
+                    "debug": {"error": str(action_err)} if debug_enabled else None,
+                }
+                await websocket.send_text(json.dumps(fallback))
             
             # If handover is needed, send Telegram notification
             if chat_response.handover_to_manager:
