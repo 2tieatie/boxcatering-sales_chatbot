@@ -806,9 +806,43 @@
                 updateStatistics();
                 renderConversations();
                 renderPagination();
+                // Load message counts asynchronously after initial render
+                loadMessageCounts();
             } catch (e) {
                 console.error('Failed to load conversations', e);
             }
+        }
+
+        // Fetch message count for a conversation (bounded limit)
+        async function fetchMessageCount(conversationId) {
+            try {
+                const msgs = await fetchJSON(`/conversations/${conversationId}/messages?limit=1000`);
+                return Array.isArray(msgs) ? msgs.length : 0;
+            } catch (err) {
+                console.warn('Failed to fetch message count for', conversationId, err);
+                return 0;
+            }
+        }
+
+        // Load message counts with limited concurrency to avoid flooding the API
+        async function loadMessageCounts() {
+            const ids = conversations.map(c => c.id);
+            const concurrency = 6;
+            let nextIndex = 0;
+
+            async function worker() {
+                while (nextIndex < ids.length) {
+                    const i = nextIndex++;
+                    const id = ids[i];
+                    const count = await fetchMessageCount(id);
+                    const conv = conversations.find(c => c.id === id);
+                    if (conv) conv.messageCount = count;
+                }
+            }
+
+            await Promise.all(Array.from({ length: Math.min(concurrency, ids.length) }, () => worker()));
+            // Re-render once after all counts are loaded
+            renderConversations();
         }
 
         function mapStatus(handoverState) {
@@ -1066,6 +1100,13 @@
                 </div>`;
 
                 modal.style.display = 'block';
+
+                // Update message count based on fetched messages for accuracy
+                const conv = conversations.find(c => c.id === id);
+                if (conv) {
+                    conv.messageCount = Array.isArray(messages) ? messages.length : conv.messageCount;
+                    renderConversations();
+                }
             } catch (e) {
                 console.error('Failed to load conversation details', e);
             }
