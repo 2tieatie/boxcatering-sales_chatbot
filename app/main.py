@@ -71,6 +71,12 @@ async def root():
     return FileResponse("app/static/login.html")
 
 
+@app.get("/favicon.ico")
+async def favicon() -> FileResponse:
+    """Serve the favicon to avoid 404s from browsers requesting /favicon.ico."""
+    return FileResponse("app/static/favicon.ico")
+
+
 @app.get("/login")
 async def login_page():
     """Serve the login page."""
