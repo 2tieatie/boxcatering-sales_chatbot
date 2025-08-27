@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from typing import Optional, Dict, Any
 from openai import OpenAI
 from loguru import logger
@@ -17,6 +18,8 @@ class ChatbotService:
         
         self.client = OpenAI(api_key=api_key)
         self.model = model
+        # Cache combined context by cache key (absolute_dir|max_chars)
+        self._context_docs_cache: Dict[str, str] = {}
     
     async def process_message(
         self,
@@ -31,7 +34,7 @@ class ChatbotService:
     ) -> ChatResponse:
         """Process a chat message and return response."""
         try:
-            # Build the system prompt with language settings
+            # Build the system prompt with language settings and context docs
             system_prompt = self._build_system_prompt(language, force_language, config)
             
             # Create the chat completion
@@ -285,6 +288,8 @@ class ChatbotService:
         Do not request a handover to a human manager. Provide your best, most helpful answer directly to the customer.
             """
 
+        context_docs_block = self._get_context_block(config)
+
         return f"""
         You are a helpful AI assistant for a box catering business.
         {language_instruction}
@@ -301,9 +306,100 @@ class ChatbotService:
 
         {handover_block}
 
+        {context_docs_block}
+
         Otherwise, respond normally with just your message to the customer.
         """
     
+    def _get_context_block(self, config: Optional[Dict[str, Any]] = None) -> str:
+        """Return a formatted context block built from local documents.
+
+        Reads and caches files from the directory configured by
+        settings or per-request overrides in `config` when enabled.
+        Content is trimmed to the provided max chars to keep prompts
+        within reasonable limits.
+        """
+        try:
+            enabled_override = None
+            if config is not None:
+                enabled_override = config.get("context_docs_enabled")
+            enabled = (
+                bool(enabled_override)
+                if enabled_override is not None
+                else bool(getattr(settings, "context_docs_enabled", True))
+            )
+            if not enabled:
+                return ""
+
+            dir_override = (config or {}).get("context_docs_dir") if config else None
+            max_chars_override = (config or {}).get("context_docs_max_chars") if config else None
+
+            docs_dir = Path(dir_override or getattr(settings, "context_docs_dir", "agent_context_documents"))
+            if not docs_dir.is_absolute():
+                docs_dir = Path.cwd() / docs_dir
+
+            try:
+                max_chars = int(max_chars_override) if max_chars_override is not None else int(getattr(settings, "context_docs_max_chars", 4000))
+            except Exception:
+                max_chars = int(getattr(settings, "context_docs_max_chars", 4000))
+
+            cache_key = f"{str(docs_dir)}|{max_chars}"
+            combined = self._context_docs_cache.get(cache_key)
+            if combined is None:
+                combined = self._load_context_documents(docs_dir, max_chars)
+                # Cache even empty string so we don't keep hitting disk
+                self._context_docs_cache[cache_key] = combined
+
+            if not combined:
+                return ""
+            return (
+                "Use the following Business Knowledge Base when answering. "
+                "Prefer it over assumptions. If the information is not in the "
+                "knowledge base, answer politely based on your general knowledge "
+                "and indicate limitations when appropriate.\n\n"
+                "[Business Knowledge Base]\n" + combined
+            )
+        except Exception as e:
+            logger.warning(f"Failed to build context block: {e}")
+            return ""
+
+    def _load_context_documents(self, docs_dir: Path, max_chars: int) -> str:
+        """Load context documents from disk and return a combined string.
+
+        Returns an empty string on error or when no documents are found.
+        Only `.md` and `.txt` files are considered. Files are concatenated in
+        name-sorted order.
+        """
+        try:
+            if not docs_dir.exists() or not docs_dir.is_dir():
+                logger.info(f"Context docs directory not found: {docs_dir}")
+                return ""
+
+            parts: list[str] = []
+            for path in sorted(docs_dir.rglob("*")):
+                if not path.is_file():
+                    continue
+                if path.suffix.lower() not in {".md", ".txt"}:
+                    continue
+                try:
+                    text = path.read_text(encoding="utf-8")
+                    if text.strip():
+                        # Add a lightweight header with the filename for model context
+                        parts.append(f"## {path.stem}\n\n{text.strip()}\n")
+                except Exception as read_err:
+                    logger.warning(f"Failed to read context file {path}: {read_err}")
+
+            combined = "\n\n".join(parts).strip()
+            if not combined:
+                return ""
+
+            if max_chars and len(combined) > max_chars:
+                combined = combined[:max_chars]
+            return combined
+        except Exception as e:
+            logger.warning(f"Failed loading context documents: {e}")
+            return ""
+
     def _parse_ai_response(self, response: str) -> dict:
         """Parse AI response to extract handover information."""
         try:

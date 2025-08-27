@@ -662,6 +662,35 @@
                     </label>
                 </div>
             </div>
+
+            <!-- Context Documents -->
+            <div class="settings-card">
+                <h3><span class="icon">📚</span>Context Documents</h3>
+
+                <div class="toggle-group">
+                    <div class="toggle-label">
+                        <span class="title">Enable Context Documents</span>
+                        <span class="description">Include knowledge from /agent_context_documents in AI prompt</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="context-docs-enabled" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="context-docs-dir">Context Docs Directory</label>
+                    <input type="text" id="context-docs-dir" placeholder="agent_context_documents"
+                        value="agent_context_documents">
+                    <div class="help-text">Relative to project root. Only .md and .txt files are used.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="context-docs-max-chars">Max Characters in Prompt</label>
+                    <input type="number" id="context-docs-max-chars" min="1000" step="500" value="4000">
+                    <div class="help-text">Upper limit of concatenated context injected into the model prompt.</div>
+                </div>
+            </div>
         </div>
 
         <div class="action-buttons">
@@ -698,7 +727,11 @@
             responseTimeout: 30,
             conversationLogging: true,
             performanceAnalytics: true,
-            errorReporting: true
+            errorReporting: true,
+            // Context Documents defaults
+            contextDocsEnabled: true,
+            contextDocsDir: 'agent_context_documents',
+            contextDocsMaxChars: 4000
         };
 
         // Check authentication
@@ -776,7 +809,31 @@
                 setDefaults();
                 return;
             }
-
+            // Load system settings for context documents
+            try {
+                const token = localStorage.getItem('access_token');
+                const sysResp = await fetch('/system-config/settings/all', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (sysResp.ok) {
+                    const sysSettings = await sysResp.json();
+                    const system = sysSettings.system || {};
+                    if (system.context_docs_enabled !== undefined) {
+                        currentSettings.contextDocsEnabled = system.context_docs_enabled === true || system.context_docs_enabled === 'true';
+                    }
+                    if (system.context_docs_dir) {
+                        currentSettings.contextDocsDir = system.context_docs_dir;
+                    }
+                    if (system.context_docs_max_chars) {
+                        const n = parseInt(system.context_docs_max_chars);
+                        if (!isNaN(n)) currentSettings.contextDocsMaxChars = n;
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not load system settings:', e);
+            }
             applySettings();
         }
 
@@ -816,6 +873,14 @@
             document.getElementById('conversation-logging').checked = currentSettings.conversationLogging;
             document.getElementById('performance-analytics').checked = currentSettings.performanceAnalytics;
             document.getElementById('error-reporting').checked = currentSettings.errorReporting;
+
+            // Context Documents
+            const ctxEnabledEl = document.getElementById('context-docs-enabled');
+            const ctxDirEl = document.getElementById('context-docs-dir');
+            const ctxMaxEl = document.getElementById('context-docs-max-chars');
+            if (ctxEnabledEl) ctxEnabledEl.checked = currentSettings.contextDocsEnabled;
+            if (ctxDirEl) ctxDirEl.value = currentSettings.contextDocsDir;
+            if (ctxMaxEl) ctxMaxEl.value = currentSettings.contextDocsMaxChars;
         }
 
         // Save settings
@@ -906,6 +971,25 @@
 
                     showAlert('Settings saved successfully to database!', 'success');
                     updateStatus('Configuration saved successfully', 'success');
+                    // Save system settings for context documents
+                    try {
+                        const systemSettings = {
+                            context_docs_enabled: document.getElementById('context-docs-enabled').checked,
+                            context_docs_dir: document.getElementById('context-docs-dir').value.trim() || 'agent_context_documents',
+                            context_docs_max_chars: parseInt(document.getElementById('context-docs-max-chars').value) || 4000
+                        };
+                        const sysToken = localStorage.getItem('access_token');
+                        await fetch('/system-config/settings/system', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${sysToken}`
+                            },
+                            body: JSON.stringify(systemSettings)
+                        });
+                    } catch (e) {
+                        console.warn('Failed to save system settings:', e);
+                    }
                 } else {
                     const errorData = await response.json();
                     console.error('Error response:', errorData); // Debug log
@@ -988,7 +1072,11 @@
                 responseTimeout: parseInt(document.getElementById('response-timeout').value),
                 conversationLogging: document.getElementById('conversation-logging').checked,
                 performanceAnalytics: document.getElementById('performance-analytics').checked,
-                errorReporting: document.getElementById('error-reporting').checked
+                errorReporting: document.getElementById('error-reporting').checked,
+                // Context Documents
+                contextDocsEnabled: document.getElementById('context-docs-enabled').checked,
+                contextDocsDir: document.getElementById('context-docs-dir').value,
+                contextDocsMaxChars: parseInt(document.getElementById('context-docs-max-chars').value)
             };
 
             const settingsData = JSON.stringify(exportSettings, null, 2);

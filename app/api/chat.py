@@ -65,7 +65,7 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 language = active_config.language
                 force_language = active_config.force_language
             
-            # Load OpenAI settings from system configs if present
+            # Load OpenAI and system settings from system configs if present
             from app.models.system_config import SystemConfig
             cfg = {c.key: c.value for c in db.query(SystemConfig).all()}
             selected_model = cfg.get("openai_model") or None
@@ -74,6 +74,22 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 temp_val = float(cfg.get("openai_temperature")) if cfg.get("openai_temperature") is not None else None
             except Exception:
                 temp_val = None
+
+            # Context documents runtime overrides
+            def parse_bool(v):
+                if v is None:
+                    return None
+                if isinstance(v, bool):
+                    return v
+                s = str(v).lower().strip()
+                return s in {"1", "true", "yes", "on"}
+
+            ctx_enabled = parse_bool(cfg.get("system_context_docs_enabled"))
+            ctx_dir = cfg.get("system_context_docs_dir") or None
+            try:
+                ctx_max_chars = int(cfg.get("system_context_docs_max_chars")) if cfg.get("system_context_docs_max_chars") is not None else None
+            except Exception:
+                ctx_max_chars = None
 
             # Debug flag propagated via query string (?debug=1)
             qs = websocket.query_params
@@ -119,6 +135,10 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                         "manager_handover": active_config.manager_handover,
                         "fallback_message": active_config.fallback_message,
                         "handover_message": active_config.handover_message,
+                        # Context docs overrides
+                        "context_docs_enabled": ctx_enabled if ctx_enabled is not None else None,
+                        "context_docs_dir": ctx_dir,
+                        "context_docs_max_chars": ctx_max_chars,
                     }
                     if active_config
                     else None
