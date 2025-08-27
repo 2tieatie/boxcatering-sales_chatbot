@@ -779,8 +779,9 @@
             return token ? { 'Authorization': `Bearer ${token}` } : {};
         }
 
-        async function fetchJSON(url) {
-            const res = await fetch(url, { headers: { 'Content-Type': 'application/json', ...authHeaders() } });
+        async function fetchJSON(url, options = {}) {
+            const headers = { 'Content-Type': 'application/json', ...authHeaders(), ...(options.headers || {}) };
+            const res = await fetch(url, { ...options, headers });
             if (!res.ok) throw new Error(`Request failed: ${res.status}`);
             return res.json();
         }
@@ -938,14 +939,25 @@
                     <td>${conversation.lastActivity}</td>
                     <td>${conversation.messageCount ?? ''}</td>
                     <td>
-                        <div class="action-buttons">
-                            <button class="btn btn-sm btn-view" onclick="viewConversation(${conversation.id})">👁️ View</button>
-                            <button class="btn btn-sm btn-edit" onclick="editConversation(${conversation.id})">✏️ Edit</button>
-                            <button class="btn btn-sm btn-delete" onclick="deleteConversation(${conversation.id})">🗑️ Delete</button>
-                        </div>
+                        <div class="action-buttons">${renderActionButtons(conversation)}</div>
                     </td>
                 </tr>
             `).join('');
+        }
+
+        // Build action buttons HTML per row
+        function renderActionButtons(conversation) {
+            const buttons = [];
+            buttons.push(`<button class="btn btn-sm btn-view" onclick="viewConversation(${conversation.id})">👁️ View</button>`);
+            const state = String(conversation.handoverState || '').toLowerCase();
+            if (state === 'handover_pending') {
+                buttons.push(`<button class="btn btn-sm btn-edit" onclick="takeConversation(${conversation.id})">🚀 In progress</button>`);
+            }
+            if (state === 'handover_in_progress') {
+                buttons.push(`<button class="btn btn-sm btn-edit" onclick="resolveConversation(${conversation.id})">✅ Mark as resolved</button>`);
+            }
+            buttons.push(`<button class="btn btn-sm btn-delete" onclick="deleteConversation(${conversation.id})">🗑️ Delete</button>`);
+            return buttons.join('');
         }
 
         // Render pagination
@@ -1117,14 +1129,57 @@
             document.getElementById('conversation-modal').style.display = 'none';
         }
 
-        // Edit conversation
-        function editConversation(id) {
-            alert(`Edit conversation ${id} - This feature would open an edit form`);
+        // Take conversation into progress (handover_pending -> handover_in_progress)
+        async function takeConversation(id) {
+            try {
+                const updated = await fetchJSON(`/conversations/${id}/take`, { method: 'POST' });
+                // Update local state
+                const conv = conversations.find(c => c.id === id);
+                if (conv) {
+                    conv.handoverState = updated.handover_state;
+                    conv.status = mapStatus(updated.handover_state);
+                    conv.lastActivity = formatDateTime(updated.updated_at || updated.created_at);
+                }
+                renderConversations();
+            } catch (e) {
+                console.error('Failed to take conversation', e);
+                alert('Failed to set conversation In progress.');
+            }
         }
 
-        // Delete conversation
-        function deleteConversation(id) {
-            alert('Deleting conversations is not supported yet.');
+        // Resolve conversation (handover_in_progress -> resolved_by_manager)
+        async function resolveConversation(id) {
+            try {
+                const updated = await fetchJSON(`/conversations/${id}/resolve`, { method: 'POST' });
+                const conv = conversations.find(c => c.id === id);
+                if (conv) {
+                    conv.handoverState = updated.handover_state;
+                    conv.status = mapStatus(updated.handover_state);
+                    conv.lastActivity = formatDateTime(updated.updated_at || updated.created_at);
+                }
+                renderConversations();
+            } catch (e) {
+                console.error('Failed to resolve conversation', e);
+                alert('Failed to mark conversation as resolved.');
+            }
+        }
+
+        // Delete conversation (requires backend support)
+        async function deleteConversation(id) {
+            if (!confirm('Are you sure you want to delete this conversation?')) return;
+            try {
+                // Attempt DELETE endpoint; if not implemented, this will fail and fall back
+                await fetchJSON(`/conversations/${id}`, { method: 'DELETE' });
+                // Remove locally
+                conversations = conversations.filter(c => c.id !== id);
+                filteredConversations = filteredConversations.filter(c => c.id !== id);
+                updateStatistics();
+                renderConversations();
+                renderPagination();
+            } catch (e) {
+                console.warn('Delete API not available or failed', e);
+                alert('Deleting conversations is not supported by the server yet.');
+            }
         }
 
         // Export conversations

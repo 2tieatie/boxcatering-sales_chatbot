@@ -110,12 +110,8 @@ async def take_conversation(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user_dependency)
 ):
-    """Take a conversation for handover (managers only)."""
-    if current_user.role != "manager":
-        raise HTTPException(
-            status_code=403, 
-            detail="Only managers can take conversations for handover"
-        )
+    """Take a conversation for handover (manager or higher)."""
+    role_service.require_manager_or_higher(current_user)
     
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if conversation is None:
@@ -142,12 +138,8 @@ async def resolve_conversation(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user_dependency)
 ):
-    """Mark conversation as resolved (managers only, and only if assigned to them)."""
-    if current_user.role != "manager":
-        raise HTTPException(
-            status_code=403, 
-            detail="Only managers can resolve conversations"
-        )
+    """Mark conversation as resolved (manager or higher, only if assigned to them)."""
+    role_service.require_manager_or_higher(current_user)
     
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if conversation is None:
