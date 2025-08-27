@@ -813,9 +813,28 @@
 
         function mapStatus(handoverState) {
             if (!handoverState || handoverState === 'none') return 'active';
-            if (handoverState === 'handover_pending' || handoverState === 'handover_in_progress') return 'handover';
+            if (handoverState === 'handover_pending') return 'handover pending';
+            if (handoverState === 'handover_in_progress') return 'handover in progress';
             if (handoverState === 'resolved_by_manager') return 'completed';
             return 'active';
+        }
+
+        // Helper to check if a conversation matches a given status filter value
+        function conversationMatchesStatus(conversation, statusFilter) {
+            if (!statusFilter) return true;
+            const state = (conversation.handoverState || 'none').toLowerCase();
+            switch (statusFilter) {
+                case 'active':
+                    return state === 'none';
+                case 'completed':
+                    return state === 'resolved_by_manager';
+                case 'handover':
+                    return state === 'handover_pending' || state === 'handover_in_progress';
+                case 'archived':
+                    return state === 'archived';
+                default:
+                    return (conversation.status || '').toLowerCase() === statusFilter;
+            }
         }
 
         function formatDateTime(value) {
@@ -836,8 +855,8 @@
         // Update statistics
         function updateStatistics() {
             const total = conversations.length;
-            const active = conversations.filter(c => c.status === 'active').length;
-            const handover = conversations.filter(c => c.status === 'handover').length;
+            const active = conversations.filter(c => conversationMatchesStatus(c, 'active')).length;
+            const handover = conversations.filter(c => conversationMatchesStatus(c, 'handover')).length;
             const avgResponseTime = calculateAverageResponseTime();
 
             document.getElementById('total-conversations').textContent = total;
@@ -941,7 +960,7 @@
 
             filteredConversations = conversations.filter(conversation => {
                 // Status filter
-                if (statusFilter && conversation.status !== statusFilter) return false;
+                if (!conversationMatchesStatus(conversation, statusFilter)) return false;
 
                 // Priority filter
                 if (priorityFilter && conversation.priority !== priorityFilter) return false;
