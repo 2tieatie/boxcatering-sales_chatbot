@@ -461,11 +461,10 @@
                         <div class="form-group">
                             <label for="openai-model">Model</label>
                             <select id="openai-model" name="model">
-                                <option value="gpt-5" selected>GPT-5 (Latest & Most Advanced)</option>
-                                <option value="gpt-5-chat">GPT-5-chat (Conversational)</option>
-                                <option value="gpt-4o">GPT-4o (Latest & Fastest)</option>
-                                <option value="gpt-4o-mini">GPT-4o Mini (Fast & Efficient)</option>
-                                <option value="gpt-4">GPT-4 (Recommended)</option>
+                                <option value="gpt-5" selected>GPT-5</option>
+                                <option value="gpt-4o">GPT-4o</option>
+                                <option value="gpt-4o-mini">GPT-4o Mini</option>
+                                <option value="gpt-4">GPT-4</option>
                                 <option value="gpt-4-turbo">GPT-4 Turbo</option>
                                 <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
                             </select>
@@ -514,7 +513,7 @@
                     </div>
                     <div class="form-group">
                         <label for="telegram-chat-id">Chat ID</label>
-                        <input type="text" id="telegram-chat-id" name="chat_id" placeholder="e.g., -1001234567890">
+                        <input type="text" id="telegram-chat-id" name="chat_id" placeholder="e.g., 1001234567890">
                         <div class="help-text">Chat ID for notifications (group or channel)</div>
                     </div>
                     <div class="form-group">
@@ -737,6 +736,9 @@
         // Test OpenAI connection
         async function testOpenAI() {
             const apiKey = document.getElementById('openai-api-key').value;
+            const model = document.getElementById('openai-model').value;
+            const maxTokens = parseInt(document.getElementById('openai-max-tokens').value || '0', 10);
+            const temperature = parseFloat(document.getElementById('openai-temperature').value || '0');
             if (!apiKey) {
                 showAlert('Please enter an API key first', 'error');
                 return;
@@ -752,22 +754,33 @@
             result.textContent = 'Testing OpenAI connection...';
 
             try {
-                // Simulate API test
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                const token = localStorage.getItem('access_token');
+                const response = await fetch('/system-config/settings/openai/test', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        api_key: apiKey,
+                        model: model,
+                        // keep request tiny server-side; pass along current values for consistency
+                        max_tokens: Math.min(Math.max(maxTokens || 1, 1), 5),
+                        temperature: modelSupportsTemperature(model) ? temperature : undefined
+                    })
+                });
 
-                // In a real app, this would make an actual API call
-                const success = Math.random() > 0.3; // 70% success rate for demo
-
-                if (success) {
+                const data = await response.json();
+                if (response.ok && data.success) {
                     status.className = 'status-indicator status-connected';
                     status.innerHTML = '<span>🟢</span> Connected';
                     result.className = 'test-result test-success';
-                    result.textContent = '✅ OpenAI connection successful! API key is valid.';
+                    result.textContent = '✅ OpenAI connection successful!';
                 } else {
                     status.className = 'status-indicator status-disconnected';
                     status.innerHTML = '<span>🔴</span> Disconnected';
                     result.className = 'test-result test-error';
-                    result.textContent = '❌ OpenAI connection failed. Please check your API key.';
+                    result.textContent = '❌ OpenAI connection failed: ' + (data.message || data.detail || 'Unknown error');
                 }
             } catch (error) {
                 status.className = 'status-indicator status-disconnected';
@@ -780,6 +793,7 @@
         // Test Telegram bot
         async function testTelegram() {
             const botToken = document.getElementById('telegram-bot-token').value;
+            const chatId = document.getElementById('telegram-chat-id').value;
             if (!botToken) {
                 showAlert('Please enter a bot token first', 'error');
                 return;
@@ -795,22 +809,29 @@
             result.textContent = 'Testing Telegram bot...';
 
             try {
-                // Simulate bot test
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                const token = localStorage.getItem('access_token');
+                const response = await fetch('/system-config/settings/telegram/test', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ bot_token: botToken, chat_id: chatId || undefined })
+                });
+                const data = await response.json();
 
-                // In a real app, this would make an actual API call to Telegram
-                const success = Math.random() > 0.3; // 70% success rate for demo
-
-                if (success) {
+                if (response.ok && data.success) {
                     status.className = 'status-indicator status-connected';
                     status.innerHTML = '<span>🟢</span> Connected';
                     result.className = 'test-result test-success';
-                    result.textContent = '✅ Telegram bot connection successful! Bot is active.';
+                    result.textContent = data.sent
+                        ? '✅ Telegram test successful! Message sent to chat.'
+                        : '✅ Telegram bot token is valid!';
                 } else {
                     status.className = 'status-indicator status-disconnected';
                     status.innerHTML = '<span>🔴</span> Disconnected';
                     result.className = 'test-result test-error';
-                    result.textContent = '❌ Telegram bot connection failed. Please check your bot token.';
+                    result.textContent = '❌ Telegram test failed: ' + (data.message || data.detail || 'Unknown error');
                 }
             } catch (error) {
                 status.className = 'status-indicator status-disconnected';

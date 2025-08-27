@@ -286,24 +286,32 @@ class ChatbotService:
             )
 
         handover_block = ""
+        
         if manager_handover:
             handover_block = """
         If you encounter any of the following situations, you should request a handover to a human manager.
         Assign a reason code to the handover:
-
+        
         - "LOW_CONFIDENCE" - You're not confident in your answer
         - "OUT_OF_SCOPE" - The request is outside your scope (you don't have the information)
         - "SENSITIVE_CASE" - Sensitive cases like complaints or VIP customers
         - "TECH_OR_FINANCIAL_LIMITATION" - Technical or financial limitations
         - "USER_REQUEST_MANAGER" - Customer directly requests to speak with a manager
-
+        
         When requesting handover, respond in this JSON format:
+        
         {
             "response": "Your response to the customer",
             "handover_to_manager": true,
             "handover_reason": "<REASON_CODE>",
             "handover_reason_description": "Brief description of why handover is needed"
         }
+
+        Important:
+        - Only the value of "response" will be shown to the customer.
+        - The other JSON fields are used internally to notify a manager (e.g., via Telegram) and will not be visible to the customer.
+        - Craft "response" as a short, polite message informing the customer that a manager will take over soon. Do not include the JSON itself or technical details in "response".
+        - Keep any sensitive or operational details in the JSON fields, not in the "response" text.
             """
         else:
             handover_block = """

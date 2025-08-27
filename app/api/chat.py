@@ -315,9 +315,25 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                     "debug": {"error": str(action_err)} if debug_enabled else None,
                 }
                 await websocket.send_text(json.dumps(fallback))
+
+                # Notify errors to Telegram when configured
+                try:
+                    notif_pref = str(cfg.get("telegram_notifications") or "").strip().lower()
+                except Exception:
+                    notif_pref = ""
+                if notif_pref in {"all", "errors"}:
+                    await telegram_service.send_error_notification(
+                        chat_request.session_id,
+                        f"Order action failed: {action_err}",
+                    )
             
-            # If handover is needed, send Telegram notification
-            if chat_response.handover_to_manager:
+            # If handover is needed, send Telegram notification based on settings
+            try:
+                notif_pref = str(cfg.get("telegram_notifications") or "").strip().lower()
+            except Exception:
+                notif_pref = ""
+            should_notify_handover = notif_pref in {"all", "handovers"}
+            if chat_response.handover_to_manager and should_notify_handover:
                 await telegram_service.send_handover_notification(
                     chat_request.session_id,
                     chat_request.message,
@@ -328,4 +344,15 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
         logger.info("WebSocket connection closed")
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
+        # Attempt to notify on generic WebSocket-level errors when configured
+        try:
+            # cfg might not be available if error happens very early; guard usage
+            notif_pref = str((locals().get("cfg") or {}).get("telegram_notifications") or "").strip().lower()
+        except Exception:
+            notif_pref = ""
+        if notif_pref in {"all", "errors"}:
+            try:
+                await telegram_service.send_error_notification(None, f"WebSocket error: {e}")
+            except Exception:
+                pass
         await websocket.close()
