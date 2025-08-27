@@ -10,6 +10,7 @@ from .health import router as health_router
 from .chatbot_config import router as chatbot_config_router
 from .system_config import router as system_config_router
 from .stats import router as stats_router
+from .customers import router as customers_router
 
 __all__ = [
     "chat_router",
@@ -21,4 +22,5 @@ __all__ = [
     "chatbot_config_router",
     "system_config_router",
     "stats_router",
+    "customers_router",
 ]

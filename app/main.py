@@ -17,6 +17,7 @@ from app.api import (
     chatbot_config_router,
     system_config_router,
     stats_router,
+    customers_router,
 )
 # from app.api.test_router import router as test_router
 # from app.api.chatbot_config_simple import router as chatbot_config_simple_router
@@ -60,6 +61,7 @@ app.include_router(orders_router)
 app.include_router(chatbot_config_router)
 app.include_router(system_config_router)
 app.include_router(stats_router)
+app.include_router(customers_router)
 # app.include_router(test_router)
 # app.include_router(chatbot_config_simple_router)
 
@@ -115,6 +117,12 @@ async def user_management_page():
 async def settings_page():
     """Serve the settings page."""
     return FileResponse("app/static/settings.html")
+
+
+@app.get("/customers")
+async def customers_page():
+    """Serve the customers page."""
+    return FileResponse("app/static/customers.html")
 
 
 @app.get("/change-password")

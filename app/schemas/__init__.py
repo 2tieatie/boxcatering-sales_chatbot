@@ -5,7 +5,7 @@ from .user import UserCreate, UserUpdate, UserResponse, UserLogin, Token, TokenD
 from .conversation import ConversationResponse, ConversationUpdate
 from .message import MessageResponse
 from .order import OrderResponse, OrderUpdate
-from .customer import CustomerCreate, CustomerResponse
+from .customer import CustomerCreate, CustomerUpdate, CustomerResponse
 
 from .chatbot_config import ChatbotConfigCreate, ChatbotConfigUpdate, ChatbotConfigResponse
 from .system_config import SystemConfigCreate, SystemConfigUpdate, SystemConfigResponse
@@ -30,6 +30,7 @@ __all__ = [
     "OrderUpdate",
     "CustomerCreate",
     "CustomerResponse",
+    "CustomerUpdate",
     "ChatbotConfigCreate",
     "ChatbotConfigUpdate",
     "ChatbotConfigResponse",
