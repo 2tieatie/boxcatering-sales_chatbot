@@ -247,7 +247,6 @@
             <a href="/chatbot-test" class="nav-link">Chatbot Test</a>
             <a href="/chatbot-settings" class="nav-link">Chatbot Settings</a>
             <a href="/settings" class="nav-link">Settings</a>
-
             <a href="/order-history" class="nav-link">Orders</a>
             <a href="/conversation-history" class="nav-link">Conversations</a>
             <a href="/user-management" class="nav-link">Users</a>
@@ -287,7 +286,7 @@
 
         <div class="actions-grid">
             <div class="action-card">
-                <h3>🤖 Chatbot Testing</h3>
+                <h3>👩 Chatbot Testing</h3>
                 <p>Test and interact with your AI-powered chatbot, simulate customer conversations, and validate
                     responses.</p>
                 <button class="action-btn" onclick="window.location.href='/chatbot-test'">Test Chatbot</button>
@@ -295,12 +294,12 @@
             <div class="action-card">
                 <h3>Chat Management</h3>
                 <p>Monitor and manage ongoing conversations, review chat history, and handle customer inquiries.</p>
-                <button class="action-btn" onclick="alert('Chat management feature coming soon!')">Manage Chats</button>
+                <button class="action-btn" onclick="window.location.href='/conversation-history'">Manage Chats</button>
             </div>
             <div class="action-card">
                 <h3>Order Management</h3>
                 <p>Track orders, update statuses, manage inventory, and ensure timely delivery to customers.</p>
-                <button class="action-btn" onclick="alert('Order management feature coming soon!')">Manage
+                <button class="action-btn" onclick="window.location.href='/order-history'">Manage
                     Orders</button>
             </div>
             <div class="action-card">
@@ -351,15 +350,23 @@
 
         // Fetch dashboard statistics
         async function fetchDashboardStats() {
+            const token = localStorage.getItem('access_token');
             try {
-                // Skip API calls for now due to 422 errors
-                // Set placeholder values
-                document.getElementById('total-conversations').textContent = '0';
-                document.getElementById('active-orders').textContent = '0';
-                document.getElementById('total-customers').textContent = '0';
-                document.getElementById('handovers').textContent = '0';
+                const response = await fetch('/stats/summary', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+                if (!response.ok) {
+                    throw new Error(`Failed to load stats: ${response.status}`);
+                }
+                const data = await response.json();
+                document.getElementById('total-conversations').textContent = String(data.total_conversations ?? 0);
+                document.getElementById('active-orders').textContent = String(data.active_orders ?? 0);
+                document.getElementById('total-customers').textContent = String(data.total_customers ?? 0);
+                document.getElementById('handovers').textContent = String(data.handovers ?? 0);
             } catch (error) {
-                console.error('Error setting dashboard stats:', error);
+                console.error('Error loading dashboard stats:', error);
             }
         }
 

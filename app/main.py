@@ -16,6 +16,7 @@ from app.api import (
     health_router,
     chatbot_config_router,
     system_config_router,
+    stats_router,
 )
 # from app.api.test_router import router as test_router
 # from app.api.chatbot_config_simple import router as chatbot_config_simple_router
@@ -58,6 +59,7 @@ app.include_router(conversations_router)
 app.include_router(orders_router)
 app.include_router(chatbot_config_router)
 app.include_router(system_config_router)
+app.include_router(stats_router)
 # app.include_router(test_router)
 # app.include_router(chatbot_config_simple_router)
 
