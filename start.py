@@ -24,7 +24,7 @@ if __name__ == "__main__":
         
         print("🚀 Starting Boxcatering Chatbot...")
         print("📖 API Documentation: http://localhost:8000/docs")
-        print("🔌 WebSocket endpoint: http://localhost:8000/chat/ws")
+        print("🔌 WebSocket endpoint: ws://localhost:8000/chat/ws")
         print("💚 Health check: http://localhost:8000/health")
         print()
         

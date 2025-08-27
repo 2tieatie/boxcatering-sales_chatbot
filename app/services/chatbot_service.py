@@ -117,7 +117,7 @@ class ChatbotService:
             default_fallback = (
                 (config or {}).get("fallback_message")
                 or (
-                    "Перепрошую, я не зовсім зрозумів. Будь ласка, перефразуйте, я залюбки допоможу."
+                    "Перепрошую, я не зовсім зрозуміла. Будь ласка, перефразуйте, я залюбки допоможу."
                     if language == "uk"
                     else "I apologize, I didn't quite understand. Could you please rephrase? I'm happy to help."
                 )
