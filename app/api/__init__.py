@@ -11,6 +11,7 @@ from .chatbot_config import router as chatbot_config_router
 from .system_config import router as system_config_router
 from .stats import router as stats_router
 from .customers import router as customers_router
+from .context_docs import router as context_docs_router
 
 __all__ = [
     "chat_router",
@@ -23,4 +24,5 @@ __all__ = [
     "system_config_router",
     "stats_router",
     "customers_router",
+    "context_docs_router",
 ]

@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 from typing import Optional, Dict, Any
+import io
+import csv
 from openai import OpenAI
 from loguru import logger
 
@@ -423,8 +425,8 @@ class ChatbotService:
         """Load context documents from disk and return a combined string.
 
         Returns an empty string on error or when no documents are found.
-        Only `.md` and `.txt` files are considered. Files are concatenated in
-        name-sorted order.
+        Supports `.md`, `.txt`, `.pdf`, `.docx`, `.csv`. Files are concatenated
+        in name-sorted order.
         """
         try:
             if not docs_dir.exists() or not docs_dir.is_dir():
@@ -435,10 +437,56 @@ class ChatbotService:
             for path in sorted(docs_dir.rglob("*")):
                 if not path.is_file():
                     continue
-                if path.suffix.lower() not in {".md", ".txt"}:
+                ext = path.suffix.lower()
+                if ext not in {".md", ".txt", ".pdf", ".docx", ".csv"}:
                     continue
                 try:
-                    text = path.read_text(encoding="utf-8")
+                    text = ""
+                    if ext in {".md", ".txt"}:
+                        text = path.read_text(encoding="utf-8")
+                    elif ext == ".pdf":
+                        try:
+                            # Prefer PyPDF2 if available
+                            import PyPDF2  # type: ignore
+
+                            with path.open("rb") as f:
+                                reader = PyPDF2.PdfReader(f)
+                                buf: list[str] = []
+                                for page in reader.pages:
+                                    try:
+                                        buf.append(page.extract_text() or "")
+                                    except Exception:
+                                        pass
+                                text = "\n".join([t.strip() for t in buf if t and t.strip()])
+                        except Exception as pdf_err:
+                            logger.warning(f"Failed to parse PDF {path}: {pdf_err}")
+                            text = ""
+                    elif ext == ".docx":
+                        try:
+                            # python-docx
+                            from docx import Document  # type: ignore
+
+                            doc = Document(str(path))
+                            paras = [p.text for p in doc.paragraphs if p.text and p.text.strip()]
+                            text = "\n".join(paras)
+                        except Exception as docx_err:
+                            logger.warning(f"Failed to parse DOCX {path}: {docx_err}")
+                            text = ""
+                    elif ext == ".csv":
+                        try:
+                            with path.open("r", encoding="utf-8", newline="") as f:
+                                reader = csv.reader(f)
+                                rows: list[str] = []
+                                for row in reader:
+                                    try:
+                                        rows.append(", ".join([col.strip() for col in row if col is not None]))
+                                    except Exception:
+                                        pass
+                                text = "\n".join(rows)
+                        except Exception as csv_err:
+                            logger.warning(f"Failed to parse CSV {path}: {csv_err}")
+                            text = ""
+
                     if text.strip():
                         # Add a lightweight header with the filename for model context
                         parts.append(f"## {path.stem}\n\n{text.strip()}\n")

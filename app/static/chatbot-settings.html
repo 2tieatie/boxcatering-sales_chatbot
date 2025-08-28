@@ -360,6 +360,12 @@
             background: #c82333;
         }
 
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
         .status-indicator {
             display: flex;
             align-items: center;
@@ -482,6 +488,109 @@
         <div id="alert-container"></div>
 
         <div class="settings-grid">
+            <!-- Business Context -->
+            <div class="settings-card">
+                <h3><span class="icon">🏢</span>Business Context</h3>
+
+                <div class="form-group">
+                    <label for="company-name">Company Name</label>
+                    <input type="text" id="company-name" placeholder="Your Company Name" value="Box Catering">
+                </div>
+
+                <div class="form-group">
+                    <label for="business-description">Business Description</label>
+                    <textarea id="business-description"
+                        placeholder="Describe your business, services, and unique selling points...">We are a premium box catering service specializing in corporate events, weddings, and private parties. We offer gourmet food, exceptional service, and customizable menus to meet all dietary requirements.</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="specializations">Specializations</label>
+                    <textarea id="specializations" placeholder="List your key specializations and unique offerings...">• Corporate catering and team events
+• Wedding and celebration catering
+• Dietary restrictions (vegan, gluten-free, halal)
+• Local and sustainable ingredients
+• Custom menu design
+• Delivery and setup services</textarea>
+                </div>
+            </div>
+
+            <!-- Response Templates -->
+            <div class="settings-card">
+                <h3><span class="icon">📝</span>Response Templates</h3>
+
+                <div class="form-group">
+                    <label for="greeting-message">Welcome Message</label>
+                    <textarea id="greeting-message"
+                        placeholder="Custom greeting message...">Hello! I'm your AI-powered box catering assistant. I can help you with menu selection, pricing, dietary requirements, and event planning. How can I assist you today?</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="fallback-message">Fallback Message</label>
+                    <textarea id="fallback-message"
+                        placeholder="Message when AI can't understand...">I apologize, but I didn't quite understand that. Could you please rephrase your question? I'm here to help with catering inquiries, menu options, pricing, and event planning.</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="handover-message">Manager Handover Message</label>
+                    <textarea id="handover-message"
+                        placeholder="Message when transferring to manager...">I understand this requires special attention. Let me connect you with one of our catering specialists who can provide personalized assistance for your specific needs.</textarea>
+                </div>
+            </div>
+
+            <!-- Context Documents -->
+            <div class="settings-card">
+                <h3><span class="icon">📚</span>Context Documents</h3>
+
+                <div class="toggle-group">
+                    <div class="toggle-label">
+                        <span class="title">Enable Context Documents</span>
+                        <span class="description">Include knowledge from /agent_context_documents in AI prompt</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="context-docs-enabled" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="context-docs-dir">Context Docs Directory</label>
+                    <input type="text" id="context-docs-dir" placeholder="agent_context_documents"
+                        value="agent_context_documents">
+                    <div class="help-text">Relative to project root. Supports .md, .txt, .pdf, .docx, .csv</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="context-docs-max-chars">Max Characters in Prompt</label>
+                    <input type="number" id="context-docs-max-chars" min="1000" step="500" value="4000">
+                    <div class="help-text">Upper limit of concatenated context injected into the model prompt.</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Manage Context Documents</label>
+                    <div id="context-upload-area"
+                        style="border: 2px dashed #e1e5e9; border-radius: 10px; padding: 20px; background: #fafbfc; text-align: center; cursor: pointer;">
+                        <div style="font-size: 28px;">📤</div>
+                        <div style="font-weight: 600; margin-top: 8px;">Drag & drop files here, or click to select</div>
+                        <div style="font-size: 12px; color: #666; margin-top: 6px;">Allowed: .md, .txt, .pdf, .docx,
+                            .csv</div>
+                        <input id="context-file-input" type="file" multiple style="display:none"
+                            accept=".md,.txt,.pdf,.docx,.csv">
+                    </div>
+                    <div id="context-selected-files"
+                        style="margin-top: 10px; border:1px solid #eef0f3; border-radius:8px; background:white; max-height: 150px; overflow:auto;">
+                        <div style="padding: 8px; font-size: 13px; color:#666;">No files selected</div>
+                    </div>
+                    <div style="margin-top: 12px; display:flex; gap: 8px; justify-content: flex-end;">
+                        <button class="btn-sm btn-secondary" id="refresh-context-files">Refresh List</button>
+                        <button class="btn-sm btn-primary" id="upload-context-files">Upload Selected</button>
+                    </div>
+                    <div id="context-files-list"
+                        style="margin-top: 15px; max-height: 220px; overflow:auto; border:1px solid #eef0f3; border-radius: 8px; background:white;">
+                        <div style="padding: 10px; font-size: 14px; color:#666;">No files loaded</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Chatbot Language Configuration -->
             <div class="settings-card">
                 <h3><span class="icon">🌍</span>Language Settings</h3>
@@ -512,32 +621,6 @@
                     </div>
                     <div class="help-text">When enabled, the AI will strictly respond only in the selected language
                     </div>
-                </div>
-            </div>
-
-            <!-- Business Context -->
-            <div class="settings-card">
-                <h3><span class="icon">🏢</span>Business Context</h3>
-
-                <div class="form-group">
-                    <label for="company-name">Company Name</label>
-                    <input type="text" id="company-name" placeholder="Your Company Name" value="Box Catering">
-                </div>
-
-                <div class="form-group">
-                    <label for="business-description">Business Description</label>
-                    <textarea id="business-description"
-                        placeholder="Describe your business, services, and unique selling points...">We are a premium box catering service specializing in corporate events, weddings, and private parties. We offer gourmet food, exceptional service, and customizable menus to meet all dietary requirements.</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="specializations">Specializations</label>
-                    <textarea id="specializations" placeholder="List your key specializations and unique offerings...">• Corporate catering and team events
-• Wedding and celebration catering
-• Dietary restrictions (vegan, gluten-free, halal)
-• Local and sustainable ingredients
-• Custom menu design
-• Delivery and setup services</textarea>
                 </div>
             </div>
 
@@ -590,31 +673,6 @@
                 </div>
             </div>
 
-            <!-- Response Templates -->
-            <div class="settings-card">
-                <h3><span class="icon">📝</span>Response Templates</h3>
-
-                <div class="form-group">
-                    <label for="greeting-message">Welcome Message</label>
-                    <textarea id="greeting-message"
-                        placeholder="Custom greeting message...">Hello! I'm your AI-powered box catering assistant. I can help you with menu selection, pricing, dietary requirements, and event planning. How can I assist you today?</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="fallback-message">Fallback Message</label>
-                    <textarea id="fallback-message"
-                        placeholder="Message when AI can't understand...">I apologize, but I didn't quite understand that. Could you please rephrase your question? I'm here to help with catering inquiries, menu options, pricing, and event planning.</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="handover-message">Manager Handover Message</label>
-                    <textarea id="handover-message"
-                        placeholder="Message when transferring to manager...">I understand this requires special attention. Let me connect you with one of our catering specialists who can provide personalized assistance for your specific needs.</textarea>
-                </div>
-            </div>
-
-
-
             <!-- Performance & Monitoring -->
             <div class="settings-card">
                 <h3><span class="icon">📊</span>Performance & Monitoring</h3>
@@ -662,35 +720,6 @@
                     </label>
                 </div>
             </div>
-
-            <!-- Context Documents -->
-            <div class="settings-card">
-                <h3><span class="icon">📚</span>Context Documents</h3>
-
-                <div class="toggle-group">
-                    <div class="toggle-label">
-                        <span class="title">Enable Context Documents</span>
-                        <span class="description">Include knowledge from /agent_context_documents in AI prompt</span>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="context-docs-enabled" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-
-                <div class="form-group">
-                    <label for="context-docs-dir">Context Docs Directory</label>
-                    <input type="text" id="context-docs-dir" placeholder="agent_context_documents"
-                        value="agent_context_documents">
-                    <div class="help-text">Relative to project root. Only .md and .txt files are used.</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="context-docs-max-chars">Max Characters in Prompt</label>
-                    <input type="number" id="context-docs-max-chars" min="1000" step="500" value="4000">
-                    <div class="help-text">Upper limit of concatenated context injected into the model prompt.</div>
-                </div>
-            </div>
         </div>
 
         <div class="action-buttons">
@@ -709,6 +738,7 @@
     <script>
         // Initialize settings
         let currentSettings = {};
+        let pendingContextFiles = [];
 
         // Default settings
         const defaultSettings = {
@@ -1032,6 +1062,186 @@
             }
         }
 
+        async function listContextFiles() {
+            try {
+                const token = localStorage.getItem('access_token');
+                const resp = await fetch('/context-docs/list', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!resp.ok) throw new Error('Failed to list context files');
+                const data = await resp.json();
+                renderContextFiles(data.files || []);
+            } catch (e) {
+                renderContextFiles([]);
+                console.warn('List files failed', e);
+            }
+        }
+
+        function renderContextFiles(files) {
+            const container = document.getElementById('context-files-list');
+            container.innerHTML = '';
+            if (!files.length) {
+                const div = document.createElement('div');
+                div.style.padding = '10px';
+                div.style.fontSize = '14px';
+                div.style.color = '#666';
+                div.textContent = 'No files loaded';
+                container.appendChild(div);
+                return;
+            }
+            for (const f of files) {
+                const row = document.createElement('div');
+                row.style.display = 'flex';
+                row.style.alignItems = 'center';
+                row.style.justifyContent = 'space-between';
+                row.style.padding = '10px 12px';
+                row.style.borderBottom = '1px solid #f0f2f5';
+
+                const left = document.createElement('div');
+                left.style.display = 'flex';
+                left.style.alignItems = 'center';
+                left.style.gap = '10px';
+                const icon = document.createElement('span');
+                icon.textContent = '📄';
+                const name = document.createElement('span');
+                name.textContent = f.name;
+                name.style.fontWeight = '600';
+                const small = document.createElement('span');
+                small.style.color = '#888';
+                small.style.fontSize = '12px';
+                small.textContent = ` ${Math.ceil((f.size || 0) / 1024)} KB`;
+                left.appendChild(icon);
+                left.appendChild(name);
+                left.appendChild(small);
+
+                const del = document.createElement('button');
+                del.className = 'btn-sm btn-danger';
+                del.textContent = 'Delete';
+                del.onclick = async () => {
+                    if (!confirm(`Delete ${f.name}?`)) return;
+                    try {
+                        const token = localStorage.getItem('access_token');
+                        const resp = await fetch(`/context-docs/${encodeURIComponent(f.name)}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (!resp.ok) throw new Error('Delete failed');
+                        showAlert('File deleted', 'success');
+                        await listContextFiles();
+                    } catch (e) {
+                        showAlert('Failed to delete file', 'error');
+                        console.warn(e);
+                    }
+                };
+
+                row.appendChild(left);
+                row.appendChild(del);
+                container.appendChild(row);
+            }
+        }
+
+        function setupContextUploader() {
+            const area = document.getElementById('context-upload-area');
+            const input = document.getElementById('context-file-input');
+            const uploadBtn = document.getElementById('upload-context-files');
+            const refreshBtn = document.getElementById('refresh-context-files');
+            const selectedContainer = document.getElementById('context-selected-files');
+
+            const highlight = () => { area.style.borderColor = '#667eea'; area.style.background = '#f0f2ff'; };
+            const unhighlight = () => { area.style.borderColor = '#e1e5e9'; area.style.background = '#fafbfc'; };
+
+            area.addEventListener('click', () => input.click());
+            area.addEventListener('dragover', (e) => { e.preventDefault(); highlight(); });
+            area.addEventListener('dragleave', (e) => { e.preventDefault(); unhighlight(); });
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                unhighlight();
+                if (e.dataTransfer && e.dataTransfer.files) {
+                    input.files = e.dataTransfer.files;
+                    renderSelectedFiles(input.files);
+                    showAlert(`${input.files.length} file(s) selected`, 'success');
+                }
+            });
+            input.addEventListener('change', () => {
+                renderSelectedFiles(input.files);
+                showAlert(`${input.files.length} file(s) selected`, 'success');
+            });
+
+            uploadBtn.addEventListener('click', async () => {
+                try {
+                    if (!input.files || input.files.length === 0) {
+                        showAlert('No files selected', 'error');
+                        return;
+                    }
+                    const fd = new FormData();
+                    for (const f of input.files) fd.append('files', f);
+                    const token = localStorage.getItem('access_token');
+                    const resp = await fetch('/context-docs/upload', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: fd
+                    });
+                    if (!resp.ok) throw new Error('Upload failed');
+                    const data = await resp.json();
+                    const saved = data.saved || [];
+                    const skipped = data.skipped || [];
+                    if (saved.length) showAlert(`Uploaded: ${saved.join(', ')}`, 'success');
+                    if (skipped.length) showAlert(`Skipped: ${skipped.map(s => s.name).join(', ')}`, 'warning');
+                    input.value = '';
+                    renderSelectedFiles([]);
+                    await listContextFiles();
+                } catch (e) {
+                    console.warn(e);
+                    showAlert('Failed to upload files', 'error');
+                }
+            });
+
+            refreshBtn.addEventListener('click', listContextFiles);
+
+            function renderSelectedFiles(fileList) {
+                if (!selectedContainer) return;
+                selectedContainer.innerHTML = '';
+                const files = Array.from(fileList || []);
+                if (!files.length) {
+                    const empty = document.createElement('div');
+                    empty.style.padding = '8px';
+                    empty.style.fontSize = '13px';
+                    empty.style.color = '#666';
+                    empty.textContent = 'No files selected';
+                    selectedContainer.appendChild(empty);
+                    return;
+                }
+                for (const f of files) {
+                    const row = document.createElement('div');
+                    row.style.display = 'flex';
+                    row.style.alignItems = 'center';
+                    row.style.justifyContent = 'space-between';
+                    row.style.padding = '8px 10px';
+                    row.style.borderBottom = '1px solid #f0f2f5';
+
+                    const left = document.createElement('div');
+                    left.style.display = 'flex';
+                    left.style.alignItems = 'center';
+                    left.style.gap = '10px';
+                    const icon = document.createElement('span');
+                    icon.textContent = '📎';
+                    const name = document.createElement('span');
+                    name.textContent = f.name;
+                    name.style.fontWeight = '600';
+                    const size = document.createElement('span');
+                    size.style.color = '#888';
+                    size.style.fontSize = '12px';
+                    size.textContent = ` ${Math.ceil((f.size || 0) / 1024)} KB`;
+                    left.appendChild(icon);
+                    left.appendChild(name);
+                    left.appendChild(size);
+
+                    row.appendChild(left);
+                    selectedContainer.appendChild(row);
+                }
+            }
+        }
+
         // Reset to defaults
         function resetToDefaults() {
             if (confirm('Are you sure you want to reset all settings to default values? This action cannot be undone.')) {
@@ -1153,7 +1363,12 @@
         }
 
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', checkAuth);
+        document.addEventListener('DOMContentLoaded', async () => {
+            checkAuth();
+            setupContextUploader();
+            // Load the initial list a bit later to ensure auth token is set
+            setTimeout(listContextFiles, 400);
+        });
     </script>
 </body>
 
