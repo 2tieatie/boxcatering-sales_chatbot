@@ -519,8 +519,8 @@ class ChatbotService:
 
     def _model_supports_temperature(self, model_name: str) -> bool:
         """Return True if temperature is supported for the given model."""
-        # Per current assumption: 'gpt-5' doesn't support temperature; 'gpt-5-chat' and others do
-        unsupported = {"gpt-5"}
+
+        unsupported = {"gpt-5", "gpt-5-mini", "gpt-5-nano"}
         return model_name not in unsupported
 
     def _model_requires_max_completion_tokens(self, model_name: str) -> bool:

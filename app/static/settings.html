@@ -461,7 +461,9 @@
                         <div class="form-group">
                             <label for="openai-model">Model</label>
                             <select id="openai-model" name="model">
-                                <option value="gpt-5" selected>GPT-5</option>
+                                <option value="gpt-5">GPT-5</option>
+                                <option value="gpt-5-mini" selected>GPT-5 Mini</option>
+                                <option value="gpt-5-nano">GPT-5 Nano</option>
                                 <option value="gpt-4o">GPT-4o</option>
                                 <option value="gpt-4o-mini">GPT-4o Mini</option>
                                 <option value="gpt-4">GPT-4</option>
@@ -682,8 +684,8 @@
                     // Load OpenAI settings
                     if (settings.openai) {
                         if (settings.openai.api_key) document.getElementById('openai-api-key').value = settings.openai.api_key;
-                        // Default model is gpt-5
-                        document.getElementById('openai-model').value = settings.openai.model || 'gpt-5';
+                        // Default model is gpt-5-mini
+                        document.getElementById('openai-model').value = settings.openai.model || 'gpt-5-mini';
                         if (settings.openai.max_tokens) document.getElementById('openai-max-tokens').value = settings.openai.max_tokens;
                         if (settings.openai.temperature) document.getElementById('openai-temperature').value = settings.openai.temperature;
                         updateTemperatureAvailability();
@@ -845,12 +847,15 @@
         document.getElementById('openai-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             const formData = new FormData(e.target);
+            const chosenModel = formData.get('model');
             const settings = {
                 api_key: formData.get('api_key'),
-                model: formData.get('model'),
-                max_tokens: parseInt(formData.get('max_tokens')),
-                temperature: parseFloat(formData.get('temperature'))
+                model: chosenModel,
+                max_tokens: parseInt(formData.get('max_tokens'))
             };
+            if (modelSupportsTemperature(chosenModel)) {
+                settings.temperature = parseFloat(formData.get('temperature'));
+            }
 
             try {
                 const token = localStorage.getItem('access_token');
@@ -879,8 +884,8 @@
 
         // Disable/enable temperature based on model support
         function modelSupportsTemperature(model) {
-            // By requirement: gpt-5 does not; chat and others do
-            return model && model !== 'gpt-5';
+            // Disable temperature for all gpt-5 family models (gpt-5, gpt-5-mini, gpt-5-nano)
+            return model && !/^gpt-5(\b|[-_])/.test(model);
         }
 
         function updateTemperatureAvailability() {
