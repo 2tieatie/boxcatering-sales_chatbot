@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     # OpenAI
     openai_api_key: str = Field(..., env="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-5", env="OPENAI_MODEL")
+    openai_temperature: float = Field(default=0.7, env="OPENAI_TEMPERATURE")
+    openai_max_tokens: int = Field(default=500, env="OPENAI_MAX_TOKENS")
     
     # Telegram
     telegram_bot_token: Optional[str] = Field(None, env="TELEGRAM_BOT_TOKEN")
@@ -30,6 +32,15 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False, env="DEBUG")
     host: str = Field(default="0.0.0.0", env="HOST")
     port: int = Field(default=8000, env="PORT")
+    
+    # Context documents
+    context_docs_enabled: bool = Field(default=True, env="CONTEXT_DOCS_ENABLED")
+    context_docs_dir: str = Field(
+        default="agent_context_documents", env="CONTEXT_DOCS_DIR"
+    )
+    context_docs_max_chars: int = Field(
+        default=4000, env="CONTEXT_DOCS_MAX_CHARS"
+    )
     
     class Config:
         env_file = ".env"
