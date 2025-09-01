@@ -1,9 +1,8 @@
 """User model for authentication and authorization."""
 
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum as SQLEnum
-from sqlalchemy.sql import func
 
 from app.database import Base
 
@@ -27,8 +26,8 @@ class User(Base):
     full_name = Column(String, nullable=False)
     role = Column(SQLEnum(UserRole), nullable=False, default=UserRole.MANAGER)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
     
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', role='{self.role}')>"

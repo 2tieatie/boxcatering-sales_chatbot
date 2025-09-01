@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boxcatering Chatbot - Configuration</title>
+    <title>Box Catering Chatbot - Configuration</title>
     <style>
         * {
             margin: 0;
@@ -360,6 +360,12 @@
             background: #c82333;
         }
 
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
         .status-indicator {
             display: flex;
             align-items: center;
@@ -455,7 +461,7 @@
 
 <body>
     <div class="header">
-        <h1>Boxcatering Chatbot</h1>
+        <h1>Box Catering Chatbot</h1>
         <div class="nav-links">
             <a href="/dashboard" class="nav-link">Dashboard</a>
             <a href="/chatbot-test" class="nav-link">Chatbot Test</a>
@@ -463,6 +469,7 @@
             <a href="/settings" class="nav-link">Settings</a>
             <a href="/order-history" class="nav-link">Orders</a>
             <a href="/conversation-history" class="nav-link">Conversations</a>
+            <a href="/customers" class="nav-link">Customers</a>
             <a href="/user-management" class="nav-link">Users</a>
             <div class="user-info">
                 <div class="user-avatar" id="user-avatar">U</div>
@@ -481,6 +488,109 @@
         <div id="alert-container"></div>
 
         <div class="settings-grid">
+            <!-- Business Context -->
+            <div class="settings-card">
+                <h3><span class="icon">🏢</span>Business Context</h3>
+
+                <div class="form-group">
+                    <label for="company-name">Company Name</label>
+                    <input type="text" id="company-name" placeholder="Your Company Name" value="Box Catering">
+                </div>
+
+                <div class="form-group">
+                    <label for="business-description">Business Description</label>
+                    <textarea id="business-description"
+                        placeholder="Describe your business, services, and unique selling points...">We are a premium box catering service specializing in corporate events, weddings, and private parties. We offer gourmet food, exceptional service, and customizable menus to meet all dietary requirements.</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="specializations">Specializations</label>
+                    <textarea id="specializations" placeholder="List your key specializations and unique offerings...">• Corporate catering and team events
+• Wedding and celebration catering
+• Dietary restrictions (vegan, gluten-free, halal)
+• Local and sustainable ingredients
+• Custom menu design
+• Delivery and setup services</textarea>
+                </div>
+            </div>
+
+            <!-- Response Templates -->
+            <div class="settings-card">
+                <h3><span class="icon">📝</span>Response Templates</h3>
+
+                <div class="form-group">
+                    <label for="greeting-message">Welcome Message</label>
+                    <textarea id="greeting-message"
+                        placeholder="Custom greeting message...">Hello! I'm your AI-powered box catering assistant. I can help you with menu selection, pricing, dietary requirements, and event planning. How can I assist you today?</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="fallback-message">Fallback Message</label>
+                    <textarea id="fallback-message"
+                        placeholder="Message when AI can't understand...">I apologize, but I didn't quite understand that. Could you please rephrase your question? I'm here to help with catering inquiries, menu options, pricing, and event planning.</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="handover-message">Manager Handover Message</label>
+                    <textarea id="handover-message"
+                        placeholder="Message when transferring to manager...">I understand this requires special attention. Let me connect you with one of our catering specialists who can provide personalized assistance for your specific needs.</textarea>
+                </div>
+            </div>
+
+            <!-- Context Documents -->
+            <div class="settings-card">
+                <h3><span class="icon">📚</span>Context Documents</h3>
+
+                <div class="toggle-group">
+                    <div class="toggle-label">
+                        <span class="title">Enable Context Documents</span>
+                        <span class="description">Include knowledge from /agent_context_documents in AI prompt</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="context-docs-enabled" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="context-docs-dir">Context Docs Directory</label>
+                    <input type="text" id="context-docs-dir" placeholder="agent_context_documents"
+                        value="agent_context_documents">
+                    <div class="help-text">Relative to project root. Supports .md, .txt, .pdf, .docx, .csv</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="context-docs-max-chars">Max Characters in Prompt</label>
+                    <input type="number" id="context-docs-max-chars" min="1000" step="500" value="4000">
+                    <div class="help-text">Upper limit of concatenated context injected into the model prompt.</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Manage Context Documents</label>
+                    <div id="context-upload-area"
+                        style="border: 2px dashed #e1e5e9; border-radius: 10px; padding: 20px; background: #fafbfc; text-align: center; cursor: pointer;">
+                        <div style="font-size: 28px;">📤</div>
+                        <div style="font-weight: 600; margin-top: 8px;">Drag & drop files here, or click to select</div>
+                        <div style="font-size: 12px; color: #666; margin-top: 6px;">Allowed: .md, .txt, .pdf, .docx,
+                            .csv</div>
+                        <input id="context-file-input" type="file" multiple style="display:none"
+                            accept=".md,.txt,.pdf,.docx,.csv">
+                    </div>
+                    <div id="context-selected-files"
+                        style="margin-top: 10px; border:1px solid #eef0f3; border-radius:8px; background:white; max-height: 150px; overflow:auto;">
+                        <div style="padding: 8px; font-size: 13px; color:#666;">No files selected</div>
+                    </div>
+                    <div style="margin-top: 12px; display:flex; gap: 8px; justify-content: flex-end;">
+                        <button class="btn-sm btn-secondary" id="refresh-context-files">Refresh List</button>
+                        <button class="btn-sm btn-primary" id="upload-context-files">Upload Selected</button>
+                    </div>
+                    <div id="context-files-list"
+                        style="margin-top: 15px; max-height: 220px; overflow:auto; border:1px solid #eef0f3; border-radius: 8px; background:white;">
+                        <div style="padding: 10px; font-size: 14px; color:#666;">No files loaded</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Chatbot Language Configuration -->
             <div class="settings-card">
                 <h3><span class="icon">🌍</span>Language Settings</h3>
@@ -511,32 +621,6 @@
                     </div>
                     <div class="help-text">When enabled, the AI will strictly respond only in the selected language
                     </div>
-                </div>
-            </div>
-
-            <!-- Business Context -->
-            <div class="settings-card">
-                <h3><span class="icon">🏢</span>Business Context</h3>
-
-                <div class="form-group">
-                    <label for="company-name">Company Name</label>
-                    <input type="text" id="company-name" placeholder="Your Company Name" value="Boxcatering Pro">
-                </div>
-
-                <div class="form-group">
-                    <label for="business-description">Business Description</label>
-                    <textarea id="business-description"
-                        placeholder="Describe your business, services, and unique selling points...">We are a premium boxcatering service specializing in corporate events, weddings, and private parties. We offer gourmet food, exceptional service, and customizable menus to meet all dietary requirements.</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="specializations">Specializations</label>
-                    <textarea id="specializations" placeholder="List your key specializations and unique offerings...">• Corporate catering and team events
-• Wedding and celebration catering
-• Dietary restrictions (vegan, gluten-free, halal)
-• Local and sustainable ingredients
-• Custom menu design
-• Delivery and setup services</textarea>
                 </div>
             </div>
 
@@ -588,31 +672,6 @@
                     </label>
                 </div>
             </div>
-
-            <!-- Response Templates -->
-            <div class="settings-card">
-                <h3><span class="icon">📝</span>Response Templates</h3>
-
-                <div class="form-group">
-                    <label for="greeting-message">Welcome Message</label>
-                    <textarea id="greeting-message"
-                        placeholder="Custom greeting message...">Hello! I'm your AI-powered boxcatering assistant. I can help you with menu selection, pricing, dietary requirements, and event planning. How can I assist you today?</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="fallback-message">Fallback Message</label>
-                    <textarea id="fallback-message"
-                        placeholder="Message when AI can't understand...">I apologize, but I didn't quite understand that. Could you please rephrase your question? I'm here to help with catering inquiries, menu options, pricing, and event planning.</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="handover-message">Manager Handover Message</label>
-                    <textarea id="handover-message"
-                        placeholder="Message when transferring to manager...">I understand this requires special attention. Let me connect you with one of our catering specialists who can provide personalized assistance for your specific needs.</textarea>
-                </div>
-            </div>
-
-
 
             <!-- Performance & Monitoring -->
             <div class="settings-card">
@@ -679,25 +738,30 @@
     <script>
         // Initialize settings
         let currentSettings = {};
+        let pendingContextFiles = [];
 
         // Default settings
         const defaultSettings = {
             chatbotLanguage: 'uk',
             forceLanguage: true,
-            companyName: 'Boxcatering Pro',
-            businessDescription: 'We are a premium boxcatering service specializing in corporate events, weddings, and private parties. We offer gourmet food, exceptional service, and customizable menus to meet all dietary requirements.',
+            companyName: 'Box Catering',
+            businessDescription: 'We are a premium catering service specializing in corporate events, weddings, and private parties. We offer gourmet food, exceptional service, and customizable menus to meet all dietary requirements.',
             specializations: '• Corporate catering and team events\n• Wedding and celebration catering\n• Dietary restrictions (vegan, gluten-free, halal)\n• Local and sustainable ingredients\n• Custom menu design\n• Delivery and setup services',
             friendlyTone: true,
             professionalStyle: true,
             suggestiveResponses: true,
             managerHandover: true,
-            greetingMessage: 'Hello! I\'m your AI-powered boxcatering assistant. I can help you with menu selection, pricing, dietary requirements, and event planning. How can I assist you today?',
+            greetingMessage: 'Hello! I\'m your AI-powered box catering assistant. I can help you with menu selection, pricing, dietary requirements, and event planning. How can I assist you today?',
             fallbackMessage: 'I apologize, but I didn\'t quite understand that. Could you please rephrase your question? I\'m here to help with catering inquiries, menu options, pricing, and event planning.',
             handoverMessage: 'I understand this requires special attention. Let me connect you with one of our catering specialists who can provide personalized assistance for your specific needs.',
             responseTimeout: 30,
             conversationLogging: true,
             performanceAnalytics: true,
-            errorReporting: true
+            errorReporting: true,
+            // Context Documents defaults
+            contextDocsEnabled: true,
+            contextDocsDir: 'agent_context_documents',
+            contextDocsMaxChars: 4000
         };
 
         // Check authentication
@@ -734,7 +798,6 @@
         // Load current settings
         async function loadSettings() {
             try {
-                // Try to load from database first
                 const token = localStorage.getItem('access_token');
                 const response = await fetch('/chatbot-config/active', {
                     headers: {
@@ -749,33 +812,58 @@
                         ...defaultSettings,
                         chatbotLanguage: dbSettings.language || 'uk',
                         forceLanguage: dbSettings.force_language !== undefined ? dbSettings.force_language : true,
-                        greetingMessage: dbSettings.prompt || defaultSettings.greetingMessage,
-                        businessDescription: dbSettings.business_context || defaultSettings.businessDescription
+                        greetingMessage: dbSettings.welcome_message || defaultSettings.greetingMessage,
+                        businessDescription: dbSettings.business_context || defaultSettings.businessDescription,
+                        // Additional fields
+                        companyName: dbSettings.company_name || defaultSettings.companyName,
+                        specializations: dbSettings.specializations || defaultSettings.specializations,
+                        friendlyTone: dbSettings.friendly_tone !== undefined ? dbSettings.friendly_tone : defaultSettings.friendlyTone,
+                        professionalStyle: dbSettings.professional_style !== undefined ? dbSettings.professional_style : defaultSettings.professionalStyle,
+                        suggestiveResponses: dbSettings.suggestive_responses !== undefined ? dbSettings.suggestive_responses : defaultSettings.suggestiveResponses,
+                        managerHandover: dbSettings.manager_handover !== undefined ? dbSettings.manager_handover : defaultSettings.managerHandover,
+                        fallbackMessage: dbSettings.fallback_message || defaultSettings.fallbackMessage,
+                        handoverMessage: dbSettings.handover_message || defaultSettings.handoverMessage,
+                        responseTimeout: dbSettings.response_timeout || defaultSettings.responseTimeout,
+                        conversationLogging: dbSettings.conversation_logging !== undefined ? dbSettings.conversation_logging : defaultSettings.conversationLogging,
+                        performanceAnalytics: dbSettings.performance_analytics !== undefined ? dbSettings.performance_analytics : defaultSettings.performanceAnalytics,
+                        errorReporting: dbSettings.error_reporting !== undefined ? dbSettings.error_reporting : defaultSettings.errorReporting
                     };
                 } else {
-                    // Fallback to localStorage
-                    const saved = localStorage.getItem('chatbot-settings');
-                    if (saved) {
-                        currentSettings = JSON.parse(saved);
-                    } else {
-                        // Set default values
-                        setDefaults();
-                        return;
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading settings from database:', error);
-                // Fallback to localStorage
-                const saved = localStorage.getItem('chatbot-settings');
-                if (saved) {
-                    currentSettings = JSON.parse(saved);
-                } else {
-                    // Set default values
+                    // No configuration found in database, use defaults
                     setDefaults();
                     return;
                 }
+            } catch (error) {
+                console.error('Error loading settings from database:', error);
+                // Use default values if database is unavailable
+                setDefaults();
+                return;
             }
-
+            // Load system settings for context documents
+            try {
+                const token = localStorage.getItem('access_token');
+                const sysResp = await fetch('/system-config/settings/all', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (sysResp.ok) {
+                    const sysSettings = await sysResp.json();
+                    const system = sysSettings.system || {};
+                    if (system.context_docs_enabled !== undefined) {
+                        currentSettings.contextDocsEnabled = system.context_docs_enabled === true || system.context_docs_enabled === 'true';
+                    }
+                    if (system.context_docs_dir) {
+                        currentSettings.contextDocsDir = system.context_docs_dir;
+                    }
+                    if (system.context_docs_max_chars) {
+                        const n = parseInt(system.context_docs_max_chars);
+                        if (!isNaN(n)) currentSettings.contextDocsMaxChars = n;
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not load system settings:', e);
+            }
             applySettings();
         }
 
@@ -815,22 +903,65 @@
             document.getElementById('conversation-logging').checked = currentSettings.conversationLogging;
             document.getElementById('performance-analytics').checked = currentSettings.performanceAnalytics;
             document.getElementById('error-reporting').checked = currentSettings.errorReporting;
+
+            // Context Documents
+            const ctxEnabledEl = document.getElementById('context-docs-enabled');
+            const ctxDirEl = document.getElementById('context-docs-dir');
+            const ctxMaxEl = document.getElementById('context-docs-max-chars');
+            if (ctxEnabledEl) ctxEnabledEl.checked = currentSettings.contextDocsEnabled;
+            if (ctxDirEl) ctxDirEl.value = currentSettings.contextDocsDir;
+            if (ctxMaxEl) ctxMaxEl.value = currentSettings.contextDocsMaxChars;
         }
 
         // Save settings
         async function saveSettings() {
             try {
                 // Collect all form values
+                const greetingMessage = document.getElementById('greeting-message').value.trim();
+                const businessDescription = document.getElementById('business-description').value.trim();
+                const language = document.getElementById('chatbot-language').value;
+                const forceLanguage = document.getElementById('force-language').checked;
+
+                // Validate required fields
+                if (!greetingMessage) {
+                    showAlert('Welcome Message is required!', 'error');
+                    return;
+                }
+
+                if (!businessDescription) {
+                    showAlert('Business Description is required!', 'error');
+                    return;
+                }
+
                 const settings = {
-                    name: "Boxcatering Chatbot Configuration",
-                    prompt: document.getElementById('greeting-message').value,
-                    business_context: document.getElementById('business-description').value,
-                    language: document.getElementById('chatbot-language').value,
-                    force_language: document.getElementById('force-language').checked,
-                    is_active: true
+                    name: "Box Catering Chatbot Configuration",
+                    welcome_message: greetingMessage,
+                    business_context: businessDescription,
+                    language: language,
+                    force_language: forceLanguage,
+                    is_active: true,
+                    // Additional fields
+                    company_name: document.getElementById('company-name').value.trim(),
+                    specializations: document.getElementById('specializations').value.trim(),
+                    friendly_tone: document.getElementById('friendly-tone').checked,
+                    professional_style: document.getElementById('professional-style').checked,
+                    suggestive_responses: document.getElementById('suggestive-responses').checked,
+                    manager_handover: document.getElementById('manager-handover').checked,
+                    fallback_message: document.getElementById('fallback-message').value.trim(),
+                    handover_message: document.getElementById('handover-message').value.trim(),
+                    response_timeout: parseInt(document.getElementById('response-timeout').value) || 30,
+                    conversation_logging: document.getElementById('conversation-logging').checked,
+                    performance_analytics: document.getElementById('performance-analytics').checked,
+                    error_reporting: document.getElementById('error-reporting').checked
                 };
 
                 console.log('Saving settings:', settings); // Debug log
+                console.log('Field values:', {
+                    greetingMessage,
+                    businessDescription,
+                    language,
+                    forceLanguage
+                });
 
                 // Save to database via API
                 const token = localStorage.getItem('access_token');
@@ -848,7 +979,7 @@
                 console.log('Response status:', response.status); // Debug log
 
                 if (response.ok) {
-                    // Save to localStorage as backup
+                    // Update current settings in memory
                     currentSettings = {
                         chatbotLanguage: document.getElementById('chatbot-language').value,
                         forceLanguage: document.getElementById('force-language').checked,
@@ -867,20 +998,247 @@
                         performanceAnalytics: document.getElementById('performance-analytics').checked,
                         errorReporting: document.getElementById('error-reporting').checked
                     };
-                    localStorage.setItem('chatbot-settings', JSON.stringify(currentSettings));
 
                     showAlert('Settings saved successfully to database!', 'success');
                     updateStatus('Configuration saved successfully', 'success');
+                    // Save system settings for context documents
+                    try {
+                        const systemSettings = {
+                            context_docs_enabled: document.getElementById('context-docs-enabled').checked,
+                            context_docs_dir: document.getElementById('context-docs-dir').value.trim() || 'agent_context_documents',
+                            context_docs_max_chars: parseInt(document.getElementById('context-docs-max-chars').value) || 4000
+                        };
+                        const sysToken = localStorage.getItem('access_token');
+                        await fetch('/system-config/settings/system', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${sysToken}`
+                            },
+                            body: JSON.stringify(systemSettings)
+                        });
+                    } catch (e) {
+                        console.warn('Failed to save system settings:', e);
+                    }
                 } else {
                     const errorData = await response.json();
                     console.error('Error response:', errorData); // Debug log
-                    showAlert(`Failed to save settings: ${errorData.detail || 'Unknown error'}`, 'error');
+                    console.error('Full error details:', {
+                        status: response.status,
+                        statusText: response.statusText,
+                        headers: Object.fromEntries(response.headers.entries()),
+                        errorData
+                    });
+
+                    // Show detailed error information
+                    let errorMessage = 'Failed to save settings';
+                    if (errorData.detail) {
+                        if (Array.isArray(errorData.detail)) {
+                            errorMessage += ': ' + errorData.detail.map(e => e.msg || e.message || 'Unknown error').join(', ');
+                        } else {
+                            errorMessage += ': ' + errorData.detail;
+                        }
+                    }
+
+                    showAlert(errorMessage, 'error');
                     updateStatus('Failed to save configuration', 'error');
                 }
             } catch (error) {
                 console.error('Error saving settings:', error);
-                showAlert('Error saving settings. Please try again.', 'error');
+                let errorMessage = 'Unknown error occurred';
+
+                if (error.detail) {
+                    if (Array.isArray(error.detail)) {
+                        errorMessage = error.detail.map(err => err.msg || err).join(', ');
+                    } else if (typeof error.detail === 'string') {
+                        errorMessage = error.detail;
+                    } else {
+                        errorMessage = JSON.stringify(error.detail);
+                    }
+                }
+
+                showAlert(`Failed to save settings: ${errorMessage}`, 'error');
                 updateStatus('Error saving configuration', 'error');
+            }
+        }
+
+        async function listContextFiles() {
+            try {
+                const token = localStorage.getItem('access_token');
+                const resp = await fetch('/context-docs/list', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!resp.ok) throw new Error('Failed to list context files');
+                const data = await resp.json();
+                renderContextFiles(data.files || []);
+            } catch (e) {
+                renderContextFiles([]);
+                console.warn('List files failed', e);
+            }
+        }
+
+        function renderContextFiles(files) {
+            const container = document.getElementById('context-files-list');
+            container.innerHTML = '';
+            if (!files.length) {
+                const div = document.createElement('div');
+                div.style.padding = '10px';
+                div.style.fontSize = '14px';
+                div.style.color = '#666';
+                div.textContent = 'No files loaded';
+                container.appendChild(div);
+                return;
+            }
+            for (const f of files) {
+                const row = document.createElement('div');
+                row.style.display = 'flex';
+                row.style.alignItems = 'center';
+                row.style.justifyContent = 'space-between';
+                row.style.padding = '10px 12px';
+                row.style.borderBottom = '1px solid #f0f2f5';
+
+                const left = document.createElement('div');
+                left.style.display = 'flex';
+                left.style.alignItems = 'center';
+                left.style.gap = '10px';
+                const icon = document.createElement('span');
+                icon.textContent = '📄';
+                const name = document.createElement('span');
+                name.textContent = f.name;
+                name.style.fontWeight = '600';
+                const small = document.createElement('span');
+                small.style.color = '#888';
+                small.style.fontSize = '12px';
+                small.textContent = ` ${Math.ceil((f.size || 0) / 1024)} KB`;
+                left.appendChild(icon);
+                left.appendChild(name);
+                left.appendChild(small);
+
+                const del = document.createElement('button');
+                del.className = 'btn-sm btn-danger';
+                del.textContent = 'Delete';
+                del.onclick = async () => {
+                    if (!confirm(`Delete ${f.name}?`)) return;
+                    try {
+                        const token = localStorage.getItem('access_token');
+                        const resp = await fetch(`/context-docs/${encodeURIComponent(f.name)}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (!resp.ok) throw new Error('Delete failed');
+                        showAlert('File deleted', 'success');
+                        await listContextFiles();
+                    } catch (e) {
+                        showAlert('Failed to delete file', 'error');
+                        console.warn(e);
+                    }
+                };
+
+                row.appendChild(left);
+                row.appendChild(del);
+                container.appendChild(row);
+            }
+        }
+
+        function setupContextUploader() {
+            const area = document.getElementById('context-upload-area');
+            const input = document.getElementById('context-file-input');
+            const uploadBtn = document.getElementById('upload-context-files');
+            const refreshBtn = document.getElementById('refresh-context-files');
+            const selectedContainer = document.getElementById('context-selected-files');
+
+            const highlight = () => { area.style.borderColor = '#667eea'; area.style.background = '#f0f2ff'; };
+            const unhighlight = () => { area.style.borderColor = '#e1e5e9'; area.style.background = '#fafbfc'; };
+
+            area.addEventListener('click', () => input.click());
+            area.addEventListener('dragover', (e) => { e.preventDefault(); highlight(); });
+            area.addEventListener('dragleave', (e) => { e.preventDefault(); unhighlight(); });
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                unhighlight();
+                if (e.dataTransfer && e.dataTransfer.files) {
+                    input.files = e.dataTransfer.files;
+                    renderSelectedFiles(input.files);
+                    showAlert(`${input.files.length} file(s) selected`, 'success');
+                }
+            });
+            input.addEventListener('change', () => {
+                renderSelectedFiles(input.files);
+                showAlert(`${input.files.length} file(s) selected`, 'success');
+            });
+
+            uploadBtn.addEventListener('click', async () => {
+                try {
+                    if (!input.files || input.files.length === 0) {
+                        showAlert('No files selected', 'error');
+                        return;
+                    }
+                    const fd = new FormData();
+                    for (const f of input.files) fd.append('files', f);
+                    const token = localStorage.getItem('access_token');
+                    const resp = await fetch('/context-docs/upload', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: fd
+                    });
+                    if (!resp.ok) throw new Error('Upload failed');
+                    const data = await resp.json();
+                    const saved = data.saved || [];
+                    const skipped = data.skipped || [];
+                    if (saved.length) showAlert(`Uploaded: ${saved.join(', ')}`, 'success');
+                    if (skipped.length) showAlert(`Skipped: ${skipped.map(s => s.name).join(', ')}`, 'warning');
+                    input.value = '';
+                    renderSelectedFiles([]);
+                    await listContextFiles();
+                } catch (e) {
+                    console.warn(e);
+                    showAlert('Failed to upload files', 'error');
+                }
+            });
+
+            refreshBtn.addEventListener('click', listContextFiles);
+
+            function renderSelectedFiles(fileList) {
+                if (!selectedContainer) return;
+                selectedContainer.innerHTML = '';
+                const files = Array.from(fileList || []);
+                if (!files.length) {
+                    const empty = document.createElement('div');
+                    empty.style.padding = '8px';
+                    empty.style.fontSize = '13px';
+                    empty.style.color = '#666';
+                    empty.textContent = 'No files selected';
+                    selectedContainer.appendChild(empty);
+                    return;
+                }
+                for (const f of files) {
+                    const row = document.createElement('div');
+                    row.style.display = 'flex';
+                    row.style.alignItems = 'center';
+                    row.style.justifyContent = 'space-between';
+                    row.style.padding = '8px 10px';
+                    row.style.borderBottom = '1px solid #f0f2f5';
+
+                    const left = document.createElement('div');
+                    left.style.display = 'flex';
+                    left.style.alignItems = 'center';
+                    left.style.gap = '10px';
+                    const icon = document.createElement('span');
+                    icon.textContent = '📎';
+                    const name = document.createElement('span');
+                    name.textContent = f.name;
+                    name.style.fontWeight = '600';
+                    const size = document.createElement('span');
+                    size.style.color = '#888';
+                    size.style.fontSize = '12px';
+                    size.textContent = ` ${Math.ceil((f.size || 0) / 1024)} KB`;
+                    left.appendChild(icon);
+                    left.appendChild(name);
+                    left.appendChild(size);
+
+                    row.appendChild(left);
+                    selectedContainer.appendChild(row);
+                }
             }
         }
 
@@ -907,7 +1265,31 @@
 
         // Export settings
         function exportSettings() {
-            const settingsData = JSON.stringify(currentSettings, null, 2);
+            // Collect current form values for export
+            const exportSettings = {
+                chatbotLanguage: document.getElementById('chatbot-language').value,
+                forceLanguage: document.getElementById('force-language').checked,
+                companyName: document.getElementById('company-name').value,
+                businessDescription: document.getElementById('business-description').value,
+                specializations: document.getElementById('specializations').value,
+                friendlyTone: document.getElementById('friendly-tone').checked,
+                professionalStyle: document.getElementById('professional-style').checked,
+                suggestiveResponses: document.getElementById('suggestive-responses').checked,
+                managerHandover: document.getElementById('manager-handover').checked,
+                greetingMessage: document.getElementById('greeting-message').value,
+                fallbackMessage: document.getElementById('fallback-message').value,
+                handoverMessage: document.getElementById('handover-message').value,
+                responseTimeout: parseInt(document.getElementById('response-timeout').value),
+                conversationLogging: document.getElementById('conversation-logging').checked,
+                performanceAnalytics: document.getElementById('performance-analytics').checked,
+                errorReporting: document.getElementById('error-reporting').checked,
+                // Context Documents
+                contextDocsEnabled: document.getElementById('context-docs-enabled').checked,
+                contextDocsDir: document.getElementById('context-docs-dir').value,
+                contextDocsMaxChars: parseInt(document.getElementById('context-docs-max-chars').value)
+            };
+
+            const settingsData = JSON.stringify(exportSettings, null, 2);
             const blob = new Blob([settingsData], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -943,18 +1325,36 @@
             statusDot.className = `status-dot ${type}`;
         }
 
-        // Handle range slider updates
-        document.getElementById('temperature').addEventListener('input', function () {
-            document.getElementById('temperature-value').textContent = this.value;
-        });
+        // Handle range slider updates (guard for non-existent elements)
+        const temperatureEl = document.getElementById('temperature');
+        if (temperatureEl) {
+            temperatureEl.addEventListener('input', function () {
+                const temperatureValueEl = document.getElementById('temperature-value');
+                if (temperatureValueEl) {
+                    temperatureValueEl.textContent = this.value;
+                }
+            });
+        }
 
-        document.getElementById('max-tokens').addEventListener('input', function () {
-            document.getElementById('max-tokens-value').textContent = this.value;
-        });
+        const maxTokensEl = document.getElementById('max-tokens');
+        if (maxTokensEl) {
+            maxTokensEl.addEventListener('input', function () {
+                const maxTokensValueEl = document.getElementById('max-tokens-value');
+                if (maxTokensValueEl) {
+                    maxTokensValueEl.textContent = this.value;
+                }
+            });
+        }
 
-        document.getElementById('response-timeout').addEventListener('input', function () {
-            document.getElementById('response-timeout-value').textContent = this.value;
-        });
+        const responseTimeoutEl = document.getElementById('response-timeout');
+        if (responseTimeoutEl) {
+            responseTimeoutEl.addEventListener('input', function () {
+                const responseTimeoutValueEl = document.getElementById('response-timeout-value');
+                if (responseTimeoutValueEl) {
+                    responseTimeoutValueEl.textContent = this.value;
+                }
+            });
+        }
 
         // Logout function
         function logout() {
@@ -963,7 +1363,12 @@
         }
 
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', checkAuth);
+        document.addEventListener('DOMContentLoaded', async () => {
+            checkAuth();
+            setupContextUploader();
+            // Load the initial list a bit later to ensure auth token is set
+            setTimeout(listContextFiles, 400);
+        });
     </script>
 </body>
 

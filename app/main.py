@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from loguru import logger
 
 from app.api import (
@@ -15,8 +15,13 @@ from app.api import (
     orders_router,
     health_router,
     chatbot_config_router,
-    system_config_router
+    system_config_router,
+    stats_router,
+    customers_router,
+    context_docs_router,
 )
+# from app.api.test_router import router as test_router
+# from app.api.chatbot_config_simple import router as chatbot_config_simple_router
 from app.config import settings
 
 @asynccontextmanager
@@ -56,11 +61,22 @@ app.include_router(conversations_router)
 app.include_router(orders_router)
 app.include_router(chatbot_config_router)
 app.include_router(system_config_router)
+app.include_router(stats_router)
+app.include_router(customers_router)
+app.include_router(context_docs_router)
+# app.include_router(test_router)
+# app.include_router(chatbot_config_simple_router)
 
 @app.get("/")
 async def root():
     """Serve the login page."""
     return FileResponse("app/static/login.html")
+
+
+@app.get("/favicon.ico")
+async def favicon() -> FileResponse:
+    """Serve the favicon to avoid 404s from browsers requesting /favicon.ico."""
+    return FileResponse("app/static/favicon.ico")
 
 
 @app.get("/login")
@@ -111,10 +127,28 @@ async def settings_page():
     return FileResponse("app/static/settings.html")
 
 
+@app.get("/customers")
+async def customers_page():
+    """Serve the customers page."""
+    return FileResponse("app/static/customers.html")
+
+
 @app.get("/change-password")
 async def change_password_page():
     """Serve the change password page."""
     return FileResponse("app/static/change-password.html")
+
+
+@app.head("/.well-known/appspecific/com.chrome.devtools.json")
+async def chrome_devtools_probe_head() -> Response:
+    """Respond to Chrome DevTools discovery HEAD probe without 404 noise."""
+    return Response(status_code=204)
+
+
+@app.get("/.well-known/appspecific/com.chrome.devtools.json")
+async def chrome_devtools_probe_get() -> JSONResponse:
+    """Respond to Chrome DevTools discovery GET probe with empty config."""
+    return JSONResponse(content={})
 
 
 if __name__ == "__main__":

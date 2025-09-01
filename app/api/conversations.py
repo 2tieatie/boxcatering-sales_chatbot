@@ -5,14 +5,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Conversation, User
+from app.models import Conversation, User, Message
 from app.schemas.conversation import ConversationResponse, ConversationUpdate
-from app.services.auth_service import AuthService
-from app.services.role_service import RoleService
+from app.schemas.message import MessageResponse
+from app.dependencies import get_current_active_user_dependency, role_service
+from app.models.conversation import HandoverState
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
-auth_service = AuthService()
-role_service = RoleService()
 
 
 @router.get("/", response_model=List[ConversationResponse])
@@ -21,14 +20,22 @@ async def get_conversations(
     limit: int = 100,
     handover_state: str = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Get list of conversations (all authenticated users can view)."""
     query = db.query(Conversation)
     
     # Filter by handover state if specified
     if handover_state:
-        query = query.filter(Conversation.handover_state == handover_state)
+        # Accept either enum name or value; normalize to value
+        normalized = handover_state
+        try:
+            # Try map from enum name like 'HANDOVER_PENDING'
+            normalized = HandoverState[handover_state].value
+        except Exception:
+            # Could already be a value like 'handover_pending'
+            normalized = handover_state
+        query = query.filter(Conversation.handover_state == normalized)
     
     conversations = query.offset(skip).limit(limit).all()
     return conversations
@@ -38,7 +45,7 @@ async def get_conversations(
 async def get_conversation(
     conversation_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Get conversation by ID (all authenticated users can view)."""
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
@@ -52,7 +59,7 @@ async def update_conversation(
     conversation_id: int,
     conversation_data: ConversationUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Update conversation (managers can update handover state, admins can update more fields)."""
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
@@ -88,7 +95,7 @@ async def get_pending_handovers(
     skip: int = 0, 
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Get conversations pending handover (all authenticated users can view)."""
     conversations = db.query(Conversation).filter(
@@ -101,20 +108,16 @@ async def get_pending_handovers(
 async def take_conversation(
     conversation_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
-    """Take a conversation for handover (managers only)."""
-    if current_user.role != "manager":
-        raise HTTPException(
-            status_code=403, 
-            detail="Only managers can take conversations for handover"
-        )
+    """Take a conversation for handover (manager or higher)."""
+    role_service.require_manager_or_higher(current_user)
     
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     
-    if conversation.handover_state != "HANDOVER_PENDING":
+    if conversation.handover_state != HandoverState.HANDOVER_PENDING:
         raise HTTPException(
             status_code=400, 
             detail="Conversation is not pending handover"
@@ -122,7 +125,7 @@ async def take_conversation(
     
     # Assign conversation to current user
     conversation.assigned_to = current_user.id
-    conversation.handover_state = "HANDOVER_IN_PROGRESS"
+    conversation.handover_state = HandoverState.HANDOVER_IN_PROGRESS
     
     db.commit()
     db.refresh(conversation)
@@ -133,14 +136,10 @@ async def take_conversation(
 async def resolve_conversation(
     conversation_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
-    """Mark conversation as resolved (managers only, and only if assigned to them)."""
-    if current_user.role != "manager":
-        raise HTTPException(
-            status_code=403, 
-            detail="Only managers can resolve conversations"
-        )
+    """Mark conversation as resolved (manager or higher, only if assigned to them)."""
+    role_service.require_manager_or_higher(current_user)
     
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if conversation is None:
@@ -152,14 +151,38 @@ async def resolve_conversation(
             detail="Can only resolve conversations assigned to you"
         )
     
-    if conversation.handover_state != "HANDOVER_IN_PROGRESS":
+    if conversation.handover_state != HandoverState.HANDOVER_IN_PROGRESS:
         raise HTTPException(
             status_code=400, 
             detail="Conversation must be in progress to resolve"
         )
     
-    conversation.handover_state = "RESOLVED_BY_MANAGER"
+    conversation.handover_state = HandoverState.RESOLVED_BY_MANAGER
     
     db.commit()
     db.refresh(conversation)
     return conversation
+
+
+@router.get("/{conversation_id}/messages", response_model=List[MessageResponse])
+async def get_conversation_messages(
+    conversation_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user_dependency),
+):
+    """Get messages for a conversation."""
+    # Ensure conversation exists
+    conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    messages = (
+        db.query(Message)
+        .filter(Message.chat_id == conversation_id)
+        .order_by(Message.timestamp.asc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return messages

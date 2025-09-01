@@ -30,6 +30,10 @@ class Order(Base):
     state = Column(SQLEnum(OrderState), default=OrderState.DRAFT)
     total_amount = Column(Numeric(10, 2), nullable=False, default=0)
     currency = Column(String, default="UAH")
+    # Scheduling and content
+    delivery_date = Column(DateTime(timezone=True), nullable=True)
+    delivery_time = Column(String, nullable=True)
+    menu_items = Column(Text, nullable=True)
     notes = Column(Text, nullable=True)
     is_processed = Column(Boolean, default=False)
     processed_by = Column(Integer, ForeignKey("users.id"), nullable=True)

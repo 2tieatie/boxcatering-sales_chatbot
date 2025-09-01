@@ -1,5 +1,3 @@
-"""Role-based access control service."""
-
 from typing import List
 from fastapi import HTTPException, status
 from app.models.user import User, UserRole
@@ -22,6 +20,11 @@ class RoleService:
     def require_system_admin(user: User) -> User:
         """Require user to be a system administrator."""
         return RoleService.require_role(user, [UserRole.SYSTEM_ADMIN])
+    
+    @staticmethod
+    def require_admin(user: User) -> User:
+        """Require user to be an admin."""
+        return RoleService.require_role(user, [UserRole.ADMIN])
     
     @staticmethod
     def require_admin_or_system_admin(user: User) -> User:

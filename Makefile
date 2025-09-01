@@ -26,7 +26,7 @@ clean:  ## Clean up Python cache files
 	find . -type d -name "__pycache__" -delete
 	find . -type d -name "*.egg-info" -exec rm -rf {} +
 
-db-init:  ## Initialize database tables
+db-init:  ## Initialize database tables and create initial data (admin user, configs)
 	python scripts/init_db.py
 
 db-migrate:  ## Run database migrations
@@ -34,6 +34,15 @@ db-migrate:  ## Run database migrations
 
 db-revision:  ## Create new migration (usage: make db-revision msg="description")
 	alembic revision --autogenerate -m "$(msg)"
+
+setup-system-config:  ## Initialize default system configuration values (now included in db-init)
+	@echo "ℹ️  This target is now included in 'make db-init'"
+	@echo "Run 'make db-init' to initialize database with all initial data"
+
+test-system-config:  ## Test system configuration API endpoints
+	python scripts/test_system_config.py
+
+setup: db-init db-migrate  ## Complete setup: init DB with data, run migrations
 
 run:  ## Run the development server
 	python start.py
