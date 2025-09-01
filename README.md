@@ -90,6 +90,52 @@ The system follows a clean architecture pattern with:
    python -m app.main
    ```
 
+7. **Setup system configuration (optional but recommended)**
+   ```bash
+   # Initialize default system configuration values
+   python scripts/setup_system_config.py
+   ```
+
+### Windows Users
+
+If you're on Windows and don't have `make` installed, you can use the provided PowerShell or batch scripts:
+
+**PowerShell (Recommended):**
+```powershell
+# Show available commands
+.\run.ps1 help
+
+# Install dependencies
+.\run.ps1 install
+
+# Run development server
+.\run.ps1 run
+
+# Initialize database
+.\run.ps1 db-init
+```
+
+**Batch File:**
+```cmd
+# Show available commands
+run.bat help
+
+# Install dependencies
+run.bat install
+
+# Run development server
+run.bat run
+
+# Initialize database
+run.bat db-init
+```
+
+**Alternative: Install Make for Windows**
+You can also install `make` on Windows using:
+- **Chocolatey**: `choco install make`
+- **Scoop**: `scoop install make`
+- **WSL**: Use Windows Subsystem for Linux
+
 ## Configuration
 
 ### Environment Variables
@@ -111,6 +157,28 @@ The system uses PostgreSQL with the following connection format:
 postgresql://username:password@host:port/database_name
 ```
 
+### System Configuration
+
+The system now supports persistent configuration storage through the database. The `make db-init` command (or `.\run.ps1 db-init` on Windows) automatically creates all necessary initial data:
+
+**Linux/macOS:**
+```bash
+make db-init
+```
+
+**Windows:**
+```powershell
+.\run.ps1 db-init
+```
+
+This creates:
+- **Database tables** for all models
+- **System administrator user** (admin/admin123)
+- **Default system configurations** for OpenAI, Telegram, System, and Security settings
+- **Default chatbot configuration** with Ukrainian language enforcement
+
+**⚠️ IMPORTANT:** Change the default password after your first login!
+
 ## API Endpoints
 
 ### Chat
@@ -119,25 +187,48 @@ postgresql://username:password@host:port/database_name
 ### Health
 - `GET /health` - Health check endpoint
 
-### Authentication (to be implemented)
+### Authentication
 - `POST /auth/login` - User login
 - `POST /auth/register` - User registration
 
-### Users (to be implemented)
+### Users
 - `GET /users/` - List users
 - `POST /users/` - Create user
 - `PUT /users/{id}` - Update user
 - `DELETE /users/{id}` - Delete user
+- `GET /users/me` - Get current user info
 
-### Conversations (to be implemented)
+### Conversations
 - `GET /conversations/` - List conversations
 - `GET /conversations/{id}` - Get conversation details
 - `PUT /conversations/{id}` - Update conversation
 
-### Orders (to be implemented)
+### Orders
 - `GET /orders/` - List orders
 - `GET /orders/{id}` - Get order details
 - `PUT /orders/{id}` - Update order
+
+### System Configuration
+- `GET /system-config/` - List all system configurations
+- `GET /system-config/{id}` - Get configuration by ID
+- `GET /system-config/key/{key}` - Get configuration by key
+- `POST /system-config/` - Create new configuration
+- `PUT /system-config/{id}` - Update configuration
+- `DELETE /system-config/{id}` - Delete configuration
+- `GET /system-config/settings/all` - Get all settings organized by category
+- `POST /system-config/settings/bulk` - Save multiple settings at once
+- `POST /system-config/settings/openai` - Save OpenAI settings
+- `POST /system-config/settings/telegram` - Save Telegram settings
+- `POST /system-config/settings/system` - Save system settings
+- `POST /system-config/settings/security` - Save security settings
+
+### Chatbot Configuration
+- `GET /chatbot-config/` - List all chatbot configurations
+- `GET /chatbot-config/{id}` - Get configuration by ID
+- `GET /chatbot-config/active` - Get active chatbot configuration
+- `POST /chatbot-config/` - Create new configuration
+- `PUT /chatbot-config/{id}` - Update configuration
+- `DELETE /chatbot-config/{id}` - Delete configuration
 
 ## Usage
 

@@ -1,23 +1,15 @@
 """Chatbot configuration API endpoints."""
 
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import ChatbotConfig, User
 from app.schemas.chatbot_config import ChatbotConfigCreate, ChatbotConfigUpdate, ChatbotConfigResponse
-from app.services.auth_service import AuthService
-from app.services.role_service import RoleService
+from app.dependencies import get_current_active_user_dependency, require_admin_or_system_admin_dependency
 
 router = APIRouter(prefix="/chatbot-config", tags=["chatbot-config"])
-auth_service = AuthService()
-role_service = RoleService()
-
-
-def require_admin_or_system_admin(current_user: User = Depends(auth_service.get_current_active_user)) -> User:
-    """Dependency to require admin or system admin role."""
-    return role_service.require_admin_or_system_admin(current_user)
 
 
 @router.get("/", response_model=List[ChatbotConfigResponse])
@@ -25,18 +17,43 @@ async def get_chatbot_configs(
     skip: int = 0, 
     limit: int = 100, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_system_admin)
+    current_user: User = Depends(require_admin_or_system_admin_dependency)
 ):
     """Get list of chatbot configurations (admin and system admin only)."""
     configs = db.query(ChatbotConfig).offset(skip).limit(limit).all()
     return configs
 
 
+@router.get("/active", response_model=ChatbotConfigResponse)
+async def get_active_chatbot_config(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user_dependency)  # All authenticated users can see active config
+):
+    """Get active chatbot configuration (all authenticated users).
+
+    Falls back to the most recently created configuration if none are active.
+    """
+    # Prefer explicitly active configuration
+    config = db.query(ChatbotConfig).filter(ChatbotConfig.is_active == True).first()
+    if config is None:
+        # Fallback to latest configuration if none is marked active
+        config = (
+            db.query(ChatbotConfig)
+            .order_by(ChatbotConfig.created_at.desc())
+            .first()
+        )
+
+    if config is None:
+        raise HTTPException(status_code=404, detail="No chatbot configuration found")
+
+    return config
+
+
 @router.get("/{config_id}", response_model=ChatbotConfigResponse)
 async def get_chatbot_config(
     config_id: int, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_system_admin)
+    current_user: User = Depends(require_admin_or_system_admin_dependency)
 ):
     """Get chatbot configuration by ID (admin and system admin only)."""
     config = db.query(ChatbotConfig).filter(ChatbotConfig.id == config_id).first()
@@ -45,36 +62,53 @@ async def get_chatbot_config(
     return config
 
 
-@router.get("/active", response_model=ChatbotConfigResponse)
-async def get_active_chatbot_config(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)  # All authenticated users can see active config
-):
-    """Get active chatbot configuration (all authenticated users)."""
-    config = db.query(ChatbotConfig).filter(ChatbotConfig.is_active == True).first()
-    if config is None:
-        raise HTTPException(status_code=404, detail="No active chatbot configuration found")
-    return config
-
-
 @router.post("/", response_model=ChatbotConfigResponse)
 async def create_chatbot_config(
     config_data: ChatbotConfigCreate, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_system_admin)
+    current_user: User = Depends(require_admin_or_system_admin_dependency)
 ):
-    """Create new chatbot configuration (admin and system admin only)."""
-    # If this is the first config, make it active
-    existing_configs = db.query(ChatbotConfig).count()
-    if existing_configs == 0:
-        config_data.is_active = True
-    
-    # Create new config
-    db_config = ChatbotConfig(**config_data.model_dump())
-    db.add(db_config)
-    db.commit()
-    db.refresh(db_config)
-    
+    """Upsert chatbot configuration (admin and system admin only).
+
+    If an active configuration exists, update it in-place with the provided values.
+    Otherwise, create a new configuration and mark it active.
+    """
+    from sqlalchemy.exc import IntegrityError
+    from fastapi import HTTPException
+
+    # Try to find the currently active configuration
+    active_config = (
+        db.query(ChatbotConfig).filter(ChatbotConfig.is_active == True).first()
+    )
+
+    if active_config:
+        # Update existing active configuration with incoming data
+        update_data = config_data.model_dump()
+        # Ensure the active flag remains true and we don't accidentally toggle it
+        update_data.pop("is_active", None)
+
+        for field, value in update_data.items():
+            setattr(active_config, field, value)
+        active_config.is_active = True
+
+        db.commit()
+        db.refresh(active_config)
+        return active_config
+
+    # No active configuration; create a new one and mark it active
+    config_dict = config_data.model_dump()
+    config_dict["is_active"] = True
+
+    db_config = ChatbotConfig(**config_dict)
+
+    try:
+        db.add(db_config)
+        db.commit()
+        db.refresh(db_config)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Failed to create config due to constraint violation")
+
     return db_config
 
 
@@ -83,7 +117,7 @@ async def update_chatbot_config(
     config_id: int,
     config_data: ChatbotConfigUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_system_admin)
+    current_user: User = Depends(require_admin_or_system_admin_dependency)
 ):
     """Update chatbot configuration (admin and system admin only)."""
     config = db.query(ChatbotConfig).filter(ChatbotConfig.id == config_id).first()
@@ -108,7 +142,7 @@ async def update_chatbot_config(
 async def delete_chatbot_config(
     config_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_system_admin)
+    current_user: User = Depends(require_admin_or_system_admin_dependency)
 ):
     """Delete chatbot configuration (admin and system admin only)."""
     config = db.query(ChatbotConfig).filter(ChatbotConfig.id == config_id).first()

@@ -1,18 +1,15 @@
 """Users API endpoints."""
 
-from typing import List
+from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import User
 from app.schemas import UserCreate, UserUpdate, UserResponse, PasswordChange
-from app.services.auth_service import AuthService
-from app.services.role_service import RoleService
+from app.dependencies import get_current_active_user_dependency, role_service, auth_service
 
 router = APIRouter(prefix="/users", tags=["users"])
-auth_service = AuthService()
-role_service = RoleService()
 
 
 @router.get("/", response_model=List[UserResponse])
@@ -20,7 +17,7 @@ async def get_users(
     skip: int = 0, 
     limit: int = 100, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Get list of users (admin and system admin only)."""
     # Check if current user is admin or system admin
@@ -31,8 +28,9 @@ async def get_users(
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_current_user(current_user: User = Depends(auth_service.get_current_active_user)):
+async def get_current_user(current_user: User = Depends(get_current_active_user_dependency)):
     """Get current user information."""
+
     return current_user
 
 
@@ -40,7 +38,7 @@ async def get_current_user(current_user: User = Depends(auth_service.get_current
 async def get_user(
     user_id: int, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Get user by ID (admin, system admin, or self)."""
     # Check permissions - users can only see themselves unless they're admin/system_admin
@@ -57,7 +55,7 @@ async def get_user(
 async def create_user(
     user_data: UserCreate, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Create new user (admin only)."""
     # Check if current user is admin
@@ -101,7 +99,7 @@ async def update_user(
     user_id: int,
     user_data: UserUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Update user (admin or self)."""
     # Check permissions
@@ -143,7 +141,7 @@ async def update_user(
 async def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Delete user (admin only)."""
     role_service.require_admin_or_system_admin(current_user)
@@ -172,7 +170,7 @@ async def delete_user(
 async def change_password(
     password_data: PasswordChange,
     db: Session = Depends(get_db),
-    current_user: User = Depends(auth_service.get_current_active_user)
+    current_user: User = Depends(get_current_active_user_dependency)
 ):
     """Change current user's password."""
     # Verify current password

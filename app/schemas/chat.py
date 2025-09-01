@@ -1,7 +1,7 @@
 """Chat schemas for WebSocket communication."""
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, Any
 from enum import Enum
 from pydantic import BaseModel
 
@@ -29,3 +29,8 @@ class ChatResponse(BaseModel):
     handover_to_manager: bool = False
     handover_reason: Optional[HandoverReason] = None
     handover_reason_description: Optional[str] = None
+    debug: Optional[Dict[str, Any]] = None
+    # Optional action to instruct the app to perform something (e.g., create order)
+    action: Optional[str] = None
+    # Optional payload for actions, free-form to allow incremental evolution
+    data: Optional[Dict[str, Any]] = None

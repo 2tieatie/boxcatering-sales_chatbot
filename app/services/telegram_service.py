@@ -50,6 +50,35 @@ class TelegramService:
         except Exception as e:
             logger.error(f"Failed to send Telegram notification: {e}")
             return False
+
+    async def send_error_notification(
+        self,
+        session_id: Optional[str],
+        error_message: str,
+    ) -> bool:
+        """Send an error notification to Telegram if configured.
+
+        Returns True on successful send, False otherwise.
+        """
+        if not self.bot or not self.chat_id:
+            logger.warning("Telegram bot not configured for error notifications")
+            return False
+
+        try:
+            text = (
+                f"\u26A0\uFE0F <b>ERROR</b>\n\n"
+                f"<b>Session ID:</b> {session_id or '-'}\n"
+                f"<b>Details:</b> {error_message}"
+            )
+            await self.bot.send_message(
+                chat_id=self.chat_id,
+                text=text,
+                parse_mode='HTML',
+            )
+            return True
+        except Exception as e:
+            logger.error(f"Failed to send Telegram error notification: {e}")
+            return False
     
     def _format_handover_message(
         self, 

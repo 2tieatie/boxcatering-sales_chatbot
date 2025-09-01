@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boxcatering Chatbot - Settings</title>
+    <title>Box Catering Chatbot - Settings</title>
     <style>
         * {
             margin: 0;
@@ -359,6 +359,31 @@
             font-size: 14px;
         }
 
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -392,13 +417,15 @@
 
 <body>
     <div class="header">
-        <h1>Boxcatering Chatbot</h1>
+        <h1>Box Catering Chatbot</h1>
         <div class="nav-links">
             <a href="/dashboard" class="nav-link">Dashboard</a>
             <a href="/chatbot-test" class="nav-link">Chatbot Test</a>
-            <a href="/chatbot-settings" class="nav-link">Settings</a>
+            <a href="/chatbot-settings" class="nav-link">Chatbot Settings</a>
+            <a href="/settings" class="nav-link active">Settings</a>
             <a href="/order-history" class="nav-link">Orders</a>
             <a href="/conversation-history" class="nav-link">Conversations</a>
+            <a href="/customers" class="nav-link">Customers</a>
             <a href="/user-management" class="nav-link">Users</a>
             <div class="user-info">
                 <div class="user-avatar" id="user-avatar">U</div>
@@ -413,6 +440,8 @@
             <h2>⚙️ System Settings</h2>
             <p>Configure API keys, system parameters, and application settings</p>
         </div>
+
+        <div id="alert-container"></div>
 
         <div class="settings-grid">
             <!-- OpenAI Configuration -->
@@ -432,24 +461,28 @@
                         <div class="form-group">
                             <label for="openai-model">Model</label>
                             <select id="openai-model" name="model">
-                                <option value="gpt-5">GPT-5 (Latest & Most Advanced)</option>
-                                <option value="gpt-4o">GPT-4o (Latest & Fastest)</option>
-                                <option value="gpt-4o-mini">GPT-4o Mini (Fast & Efficient)</option>
-                                <option value="gpt-4">GPT-4 (Recommended)</option>
+                                <option value="gpt-5">GPT-5</option>
+                                <option value="gpt-5-mini" selected>GPT-5 Mini</option>
+                                <option value="gpt-5-nano">GPT-5 Nano</option>
+                                <option value="gpt-4o">GPT-4o</option>
+                                <option value="gpt-4o-mini">GPT-4o Mini</option>
+                                <option value="gpt-4">GPT-4</option>
                                 <option value="gpt-4-turbo">GPT-4 Turbo</option>
                                 <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="openai-max-tokens">Max Tokens</label>
-                            <input type="number" id="openai-max-tokens" name="max_tokens" value="1000" min="100"
-                                max="4000">
+                            <input type="number" id="openai-max-tokens" name="max_tokens" value="3000" min="2000"
+                                max="20000">
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="openai-temperature">Temperature</label>
                         <input type="range" id="openai-temperature" name="temperature" min="0" max="2" step="0.1"
                             value="0.7">
+                        <div id="temperature-disabled-note" class="help-text" style="display:none;">Temperature is not
+                            supported for the selected model.</div>
                         <div class="help-text">0.0 = deterministic, 2.0 = very creative</div>
                     </div>
                     <div class="form-actions">
@@ -482,7 +515,7 @@
                     </div>
                     <div class="form-group">
                         <label for="telegram-chat-id">Chat ID</label>
-                        <input type="text" id="telegram-chat-id" name="chat_id" placeholder="e.g., -1001234567890">
+                        <input type="text" id="telegram-chat-id" name="chat_id" placeholder="e.g., 1001234567890">
                         <div class="help-text">Chat ID for notifications (group or channel)</div>
                     </div>
                     <div class="form-group">
@@ -516,7 +549,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="system-name">System Name</label>
-                            <input type="text" id="system-name" name="system_name" value="Boxcatering Chatbot">
+                            <input type="text" id="system-name" name="system_name" value="Box Catering Chatbot">
                         </div>
                         <div class="form-group">
                             <label for="system-version">Version</label>
@@ -635,34 +668,57 @@
             }
         }
 
-        // Load settings from localStorage
-        function loadSettings() {
-            // OpenAI settings
-            const openaiSettings = JSON.parse(localStorage.getItem('openai_settings') || '{}');
-            if (openaiSettings.api_key) document.getElementById('openai-api-key').value = openaiSettings.api_key;
-            if (openaiSettings.model) document.getElementById('openai-model').value = openaiSettings.model;
-            if (openaiSettings.max_tokens) document.getElementById('openai-max-tokens').value = openaiSettings.max_tokens;
-            if (openaiSettings.temperature) document.getElementById('openai-temperature').value = openaiSettings.temperature;
+        // Load settings from system_config API
+        async function loadSettings() {
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch('/system-config/settings/all', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
 
-            // Telegram settings
-            const telegramSettings = JSON.parse(localStorage.getItem('telegram_settings') || '{}');
-            if (telegramSettings.bot_token) document.getElementById('telegram-bot-token').value = telegramSettings.bot_token;
-            if (telegramSettings.chat_id) document.getElementById('telegram-chat-id').value = telegramSettings.chat_id;
-            if (telegramSettings.notifications) document.getElementById('telegram-notifications').value = telegramSettings.notifications;
+                if (response.ok) {
+                    const settings = await response.json();
 
-            // System settings
-            const systemSettings = JSON.parse(localStorage.getItem('system_settings') || '{}');
-            if (systemSettings.system_name) document.getElementById('system-name').value = systemSettings.system_name;
-            if (systemSettings.timezone) document.getElementById('system-timezone').value = systemSettings.timezone;
-            if (systemSettings.language) document.getElementById('system-language').value = systemSettings.language;
-            if (systemSettings.log_level) document.getElementById('system-log-level').value = systemSettings.log_level;
+                    // Load OpenAI settings
+                    if (settings.openai) {
+                        if (settings.openai.api_key) document.getElementById('openai-api-key').value = settings.openai.api_key;
+                        // Default model is gpt-5-mini
+                        document.getElementById('openai-model').value = settings.openai.model || 'gpt-5-mini';
+                        if (settings.openai.max_tokens) document.getElementById('openai-max-tokens').value = settings.openai.max_tokens;
+                        if (settings.openai.temperature) document.getElementById('openai-temperature').value = settings.openai.temperature;
+                        updateTemperatureAvailability();
+                    }
 
-            // Security settings
-            const securitySettings = JSON.parse(localStorage.getItem('security_settings') || '{}');
-            if (securitySettings.jwt_secret) document.getElementById('jwt-secret').value = securitySettings.jwt_secret;
-            if (securitySettings.jwt_expiry) document.getElementById('jwt-expiry').value = securitySettings.jwt_expiry;
-            if (securitySettings.password_min_length) document.getElementById('password-min-length').value = securitySettings.password_min_length;
-            if (securitySettings.session_timeout) document.getElementById('session-timeout').value = securitySettings.session_timeout;
+                    // Load Telegram settings
+                    if (settings.telegram) {
+                        if (settings.telegram.bot_token) document.getElementById('telegram-bot-token').value = settings.telegram.bot_token;
+                        if (settings.telegram.chat_id) document.getElementById('telegram-chat-id').value = settings.telegram.chat_id;
+                        if (settings.telegram.notifications) document.getElementById('telegram-notifications').value = settings.telegram.notifications;
+                    }
+
+                    // Load system settings
+                    if (settings.system) {
+                        if (settings.system.name) document.getElementById('system-name').value = settings.system.name;
+                        if (settings.system.timezone) document.getElementById('system-timezone').value = settings.system.timezone;
+                        if (settings.system.language) document.getElementById('system-language').value = settings.system.language;
+                        if (settings.system.log_level) document.getElementById('system-log-level').value = settings.system.log_level;
+                    }
+
+                    // Load security settings
+                    if (settings.security) {
+                        if (settings.security.jwt_secret) document.getElementById('jwt-secret').value = settings.security.jwt_secret;
+                        if (settings.security.jwt_expiry) document.getElementById('jwt-expiry').value = settings.security.jwt_expiry;
+                        if (settings.security.password_min_length) document.getElementById('password-min-length').value = settings.security.password_min_length;
+                        if (settings.security.session_timeout) document.getElementById('session-timeout').value = settings.security.session_timeout;
+                    }
+                } else {
+                    console.error('Failed to load settings:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
         }
 
         // Toggle password visibility
@@ -682,8 +738,11 @@
         // Test OpenAI connection
         async function testOpenAI() {
             const apiKey = document.getElementById('openai-api-key').value;
+            const model = document.getElementById('openai-model').value;
+            const maxTokens = parseInt(document.getElementById('openai-max-tokens').value || '0', 10);
+            const temperature = parseFloat(document.getElementById('openai-temperature').value || '0');
             if (!apiKey) {
-                alert('Please enter an API key first');
+                showAlert('Please enter an API key first', 'error');
                 return;
             }
 
@@ -697,22 +756,33 @@
             result.textContent = 'Testing OpenAI connection...';
 
             try {
-                // Simulate API test
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                const token = localStorage.getItem('access_token');
+                const response = await fetch('/system-config/settings/openai/test', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        api_key: apiKey,
+                        model: model,
+                        // keep request tiny server-side; pass along current values for consistency
+                        max_tokens: Math.min(Math.max(maxTokens || 1, 1), 5),
+                        temperature: modelSupportsTemperature(model) ? temperature : undefined
+                    })
+                });
 
-                // In a real app, this would make an actual API call
-                const success = Math.random() > 0.3; // 70% success rate for demo
-
-                if (success) {
+                const data = await response.json();
+                if (response.ok && data.success) {
                     status.className = 'status-indicator status-connected';
                     status.innerHTML = '<span>🟢</span> Connected';
                     result.className = 'test-result test-success';
-                    result.textContent = '✅ OpenAI connection successful! API key is valid.';
+                    result.textContent = '✅ OpenAI connection successful!';
                 } else {
                     status.className = 'status-indicator status-disconnected';
                     status.innerHTML = '<span>🔴</span> Disconnected';
                     result.className = 'test-result test-error';
-                    result.textContent = '❌ OpenAI connection failed. Please check your API key.';
+                    result.textContent = '❌ OpenAI connection failed: ' + (data.message || data.detail || 'Unknown error');
                 }
             } catch (error) {
                 status.className = 'status-indicator status-disconnected';
@@ -725,8 +795,9 @@
         // Test Telegram bot
         async function testTelegram() {
             const botToken = document.getElementById('telegram-bot-token').value;
+            const chatId = document.getElementById('telegram-chat-id').value;
             if (!botToken) {
-                alert('Please enter a bot token first');
+                showAlert('Please enter a bot token first', 'error');
                 return;
             }
 
@@ -740,22 +811,29 @@
             result.textContent = 'Testing Telegram bot...';
 
             try {
-                // Simulate bot test
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                const token = localStorage.getItem('access_token');
+                const response = await fetch('/system-config/settings/telegram/test', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ bot_token: botToken, chat_id: chatId || undefined })
+                });
+                const data = await response.json();
 
-                // In a real app, this would make an actual API call to Telegram
-                const success = Math.random() > 0.3; // 70% success rate for demo
-
-                if (success) {
+                if (response.ok && data.success) {
                     status.className = 'status-indicator status-connected';
                     status.innerHTML = '<span>🟢</span> Connected';
                     result.className = 'test-result test-success';
-                    result.textContent = '✅ Telegram bot connection successful! Bot is active.';
+                    result.textContent = data.sent
+                        ? '✅ Telegram test successful! Message sent to chat.'
+                        : '✅ Telegram bot token is valid!';
                 } else {
                     status.className = 'status-indicator status-disconnected';
                     status.innerHTML = '<span>🔴</span> Disconnected';
                     result.className = 'test-result test-error';
-                    result.textContent = '❌ Telegram bot connection failed. Please check your bot token.';
+                    result.textContent = '❌ Telegram test failed: ' + (data.message || data.detail || 'Unknown error');
                 }
             } catch (error) {
                 status.className = 'status-indicator status-disconnected';
@@ -766,22 +844,63 @@
         }
 
         // Save OpenAI settings
-        document.getElementById('openai-form').addEventListener('submit', function (e) {
+        document.getElementById('openai-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             const formData = new FormData(e.target);
+            const chosenModel = formData.get('model');
             const settings = {
                 api_key: formData.get('api_key'),
-                model: formData.get('model'),
-                max_tokens: parseInt(formData.get('max_tokens')),
-                temperature: parseFloat(formData.get('temperature'))
+                model: chosenModel,
+                max_tokens: parseInt(formData.get('max_tokens'))
             };
+            if (modelSupportsTemperature(chosenModel)) {
+                settings.temperature = parseFloat(formData.get('temperature'));
+            }
 
-            localStorage.setItem('openai_settings', JSON.stringify(settings));
-            alert('OpenAI settings saved successfully!');
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch('/system-config/settings/openai', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert('OpenAI settings saved successfully to database!', 'success');
+                    console.log('OpenAI settings saved:', result);
+                } else {
+                    const error = await response.json();
+                    showAlert('Failed to save OpenAI settings: ' + (error.detail || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error saving OpenAI settings:', error);
+                showAlert('Error saving OpenAI settings: ' + error.message, 'error');
+            }
         });
 
+        // Disable/enable temperature based on model support
+        function modelSupportsTemperature(model) {
+            // Disable temperature for all gpt-5 family models (gpt-5, gpt-5-mini, gpt-5-nano)
+            return model && !/^gpt-5(\b|[-_])/.test(model);
+        }
+
+        function updateTemperatureAvailability() {
+            const model = document.getElementById('openai-model').value;
+            const slider = document.getElementById('openai-temperature');
+            const note = document.getElementById('temperature-disabled-note');
+            const supported = modelSupportsTemperature(model);
+            slider.disabled = !supported;
+            note.style.display = supported ? 'none' : 'block';
+        }
+
+        document.getElementById('openai-model').addEventListener('change', updateTemperatureAvailability);
+
         // Save Telegram settings
-        document.getElementById('telegram-form').addEventListener('submit', function (e) {
+        document.getElementById('telegram-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             const formData = new FormData(e.target);
             const settings = {
@@ -790,28 +909,70 @@
                 notifications: formData.get('notifications')
             };
 
-            localStorage.setItem('telegram_settings', JSON.stringify(settings));
-            alert('Telegram settings saved successfully!');
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch('/system-config/settings/telegram', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert('Telegram settings saved successfully to database!', 'success');
+                    console.log('Telegram settings saved:', result);
+                } else {
+                    const error = await response.json();
+                    showAlert('Failed to save Telegram settings: ' + (error.detail || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error saving Telegram settings:', error);
+                showAlert('Error saving Telegram settings: ' + error.message, 'error');
+            }
         });
 
         // Save system settings
-        document.getElementById('system-form').addEventListener('submit', function (e) {
+        document.getElementById('system-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             const formData = new FormData(e.target);
             const settings = {
-                system_name: formData.get('system_name'),
+                name: formData.get('system_name'),
                 version: formData.get('version'),
                 timezone: formData.get('timezone'),
                 language: formData.get('language'),
                 log_level: formData.get('log_level')
             };
 
-            localStorage.setItem('system_settings', JSON.stringify(settings));
-            alert('System settings saved successfully!');
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch('/system-config/settings/system', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert('System settings saved successfully to database!', 'success');
+                    console.log('System settings saved:', result);
+                } else {
+                    const error = await response.json();
+                    showAlert('Failed to save system settings: ' + (error.detail || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error saving system settings:', error);
+                showAlert('Error saving system settings: ' + error.message, 'error');
+            }
         });
 
         // Save security settings
-        document.getElementById('security-form').addEventListener('submit', function (e) {
+        document.getElementById('security-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             const formData = new FormData(e.target);
             const settings = {
@@ -821,8 +982,29 @@
                 session_timeout: parseInt(formData.get('session_timeout'))
             };
 
-            localStorage.setItem('security_settings', JSON.stringify(settings));
-            alert('Security settings saved successfully!');
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch('/system-config/settings/security', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert('Security settings saved successfully to database!', 'success');
+                    console.log('Security settings saved:', result);
+                } else {
+                    const error = await response.json();
+                    showAlert('Failed to save security settings: ' + (error.detail || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error saving security settings:', error);
+                showAlert('Error saving security settings: ' + error.message, 'error');
+            }
         });
 
         // Regenerate JWT secret
@@ -830,8 +1012,24 @@
             if (confirm('Are you sure you want to regenerate the JWT secret? This will invalidate all existing sessions.')) {
                 const newSecret = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
                 document.getElementById('jwt-secret').value = newSecret;
-                alert('New JWT secret generated. Please save the security settings to apply the change.');
+                showAlert('New JWT secret generated. Please save the security settings to apply the change.', 'success');
             }
+        }
+
+        // Show alert message (shared pattern with chatbot-settings.html)
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alert-container');
+            if (!alertContainer) return;
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+
+            alertContainer.appendChild(alertDiv);
+            alertDiv.style.display = 'block';
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
         }
 
         // Logout function

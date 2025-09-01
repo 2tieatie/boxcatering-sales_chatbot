@@ -1,5 +1,3 @@
-"""User schemas for authentication and management."""
-
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, EmailStr
@@ -13,7 +11,7 @@ class UserBase(BaseModel):
     email: EmailStr
     full_name: str
     role: UserRole = UserRole.MANAGER
-
+    
 
 class UserCreate(UserBase):
     """User creation schema."""
@@ -47,6 +45,11 @@ class UserLogin(BaseModel):
     password: str
 
 
+class UserInDB(UserBase):
+    """User in database schema."""
+    hashed_password: str
+
+
 class Token(BaseModel):
     """Token schema."""
     access_token: str
@@ -55,7 +58,7 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     """Token data schema."""
-    username: Optional[str] = None
+    username: str | None = None
 
 
 class PasswordChange(BaseModel):
