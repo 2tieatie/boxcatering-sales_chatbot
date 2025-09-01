@@ -235,7 +235,7 @@ def create_default_chatbot_config(db):
             # Create new default configuration
             default_config = ChatbotConfig(
                 name="Boxcatering Chatbot Configuration",
-                prompt=("Привіт! Я Марічка, ваш AI-помічник з бокскейтерингу."
+                welcome_message=("Привіт! Я Марічка, ваш AI-помічник з бокскейтерингу."
                         "Я можу допомогти вам з вибором меню, цінами, дієтичними вимогами та плануванням заходів. "
                         "Як я можу вам допомогти сьогодні?"),
                 business_context=("Ми є преміум сервісом бокскейтерингу, що спеціалізується на корпоративних заходах, "
