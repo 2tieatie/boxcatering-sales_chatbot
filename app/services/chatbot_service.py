@@ -261,6 +261,21 @@ class ChatbotService:
         All your responses must be in {language}.
         """
 
+        # Persona instruction: adopt a polite, friendly female assistant persona
+        persona_instruction = ""
+        if language == "uk":
+            persona_instruction = """
+        Персона: Ви — чемна й доброзичлива жіноча асистентка.
+        Пишіть завжди від першої особи в жіночому роді.
+        Уникайте звертання в чоловічому роді.
+        """
+        else:
+            persona_instruction = """
+        Persona: You are a polite, friendly female assistant.
+        Write in first person using feminine wording when applicable.
+        Avoid masculine phrasing.
+        """
+
         company_name = (config or {}).get("company_name")
         business_context = (config or {}).get("business_context")
         specializations = (config or {}).get("specializations")
@@ -325,6 +340,7 @@ class ChatbotService:
         return f"""
         You are a helpful AI assistant for a box catering business.
         {language_instruction}
+        {persona_instruction}
 
         {('\n'.join(context_lines)) if context_lines else ''}
 
