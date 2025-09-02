@@ -699,7 +699,6 @@
             <div class="table-header">
                 <div class="table-title">Order Details</div>
                 <div class="table-actions">
-                    <button class="btn btn-success" onclick="showNewOrderModal()">➕ New Order</button>
                     <button class="btn btn-secondary" onclick="reloadOrders()">🔄 Refresh</button>
                 </div>
             </div>
@@ -1074,9 +1073,7 @@
                         <td>
                             <div class="action-buttons">
                                 <button class="action-btn btn-primary" onclick="viewOrder(${order.id})">👁️ View</button>
-                                <button class="action-btn btn-warning" onclick="editOrder(${order.id})">✏️ Edit</button>
                                 <button class="action-btn btn-success" onclick="updateStatus(${order.id})">🔄 Status</button>
-                                <button class="action-btn btn-danger" onclick="deleteOrder(${order.id})">🗑️ Delete</button>
                             </div>
                         </td>
                     </tr>
@@ -1181,7 +1178,6 @@
 
             modalFooter.innerHTML = `
                 <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-                <button class="btn btn-warning" onclick="editOrder(${order.id})">Edit Order</button>
                 <button class="btn btn-success" onclick="updateStatus(${order.id})">Update Status</button>
             `;
 
@@ -1222,97 +1218,6 @@
                 default:
                     return undefined;
             }
-        }
-
-        // Edit order (manager manual edit)
-        function editOrder(orderId) {
-            const order = orders.find(o => o.id === orderId);
-            if (!order) return;
-
-            const modalTitle = document.getElementById('modalTitle');
-            const modalBody = document.getElementById('modalBody');
-            const modalFooter = document.getElementById('modalFooter');
-
-            modalTitle.textContent = `Edit Order #${order.id}`;
-
-            // Build edit form
-            modalBody.innerHTML = `
-                <form id="editOrderForm">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <div>
-                            <h4>Customer</h4>
-                            <div class="form-group">
-                                <label for="edit-customer-name">Customer Name</label>
-                                <input type="text" id="edit-customer-name" value="${order.customer_name || ''}">
-                            </div>
-                            <div class="form-group">
-                                <label for="edit-customer-email">Customer Email</label>
-                                <input type="email" id="edit-customer-email" value="${order.customer_email || ''}">
-                            </div>
-                            <div class="form-group">
-                                <label for="edit-customer-phone">Customer Phone</label>
-                                <input type="tel" id="edit-customer-phone" value="${order.customer_phone || ''}">
-                            </div>
-                            <div class="form-group">
-                                <label for="edit-customer-address">Customer Address</label>
-                                <textarea id="edit-customer-address">${order.customer_address || ''}</textarea>
-                            </div>
-                        </div>
-                        <div>
-                            <h4>Order</h4>
-                            <div class="form-group">
-                                <label for="edit-delivery-date">Delivery Date</label>
-                                <input type="date" id="edit-delivery-date" value="${order.delivery_date ? new Date(order.delivery_date).toISOString().slice(0, 10) : ''}">
-                            </div>
-                            <div class="form-group">
-                                <label for="edit-delivery-time">Delivery Time</label>
-                                <input type="time" id="edit-delivery-time" value="${order.delivery_time || ''}">
-                            </div>
-                            <div class="form-group">
-                                <label for="edit-guests">Guests</label>
-                                <input type="number" id="edit-guests" min="1" value="${order.guests_count || ''}">
-                            </div>
-                            <div class="form-group">
-                                <label for="edit-status">Status</label>
-                                <select id="edit-status">
-                                    <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
-                                    <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
-                                    <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>Preparing</option>
-                                    <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-                                    <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="edit-priority">Priority</label>
-                                <select id="edit-priority">
-                                    <option value="low" ${order.priority === 'low' ? 'selected' : ''}>Low</option>
-                                    <option value="medium" ${order.priority === 'medium' ? 'selected' : ''}>Medium</option>
-                                    <option value="high" ${order.priority === 'high' ? 'selected' : ''}>High</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="edit-total">Total Amount (₴)</label>
-                                <input type="number" step="0.01" id="edit-total" value="${typeof order.total_amount === 'number' ? order.total_amount : (parseFloat(order.total_amount) || 0)}">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-menu-items">Menu Items</label>
-                        <textarea id="edit-menu-items">${order.menu_items || ''}</textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-notes">Notes</label>
-                        <textarea id="edit-notes">${order.notes || ''}</textarea>
-                    </div>
-                </form>
-            `;
-
-            modalFooter.innerHTML = `
-                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveEditedOrder(${order.id})">Save Changes</button>
-            `;
-
-            document.getElementById('orderModal').style.display = 'block';
         }
 
         async function saveEditedOrder(orderId) {
@@ -1391,23 +1296,6 @@
             updateStats();
             renderOrdersTable();
             showAlert(`Order #${order.id} status updated to ${nextStatus}`, 'success');
-        }
-
-        // Delete order
-        function deleteOrder(orderId) {
-            if (confirm(`Are you sure you want to delete Order #${orderId}? This action cannot be undone.`)) {
-                orders = orders.filter(o => o.id !== orderId);
-                filteredOrders = filteredOrders.filter(o => o.id !== orderId);
-                updateStats();
-                renderOrdersTable();
-                showAlert(`Order #${orderId} deleted successfully`, 'success');
-            }
-        }
-
-        // Show new order modal
-        function showNewOrderModal() {
-            document.getElementById('newOrderModal').style.display = 'block';
-            document.getElementById('newOrderForm').reset();
         }
 
         // Create new order
