@@ -496,7 +496,6 @@
             <div class="table-header">
                 <h3><span>📇</span>Customers</h3>
                 <div class="table-actions" style="display:flex;gap:10px;">
-                    <button class="btn btn-success" onclick="openCreate()">➕ New Customer</button>
                     <button class="btn btn-secondary" onclick="reloadCustomers()">🔄 Refresh</button>
                 </div>
             </div>
@@ -509,7 +508,6 @@
                         <th>Phone</th>
                         <th>Address</th>
                         <th>Notes</th>
-                        <th style="width:160px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="rows"></tbody>
@@ -622,38 +620,9 @@
                     <td>${c.email ?? ''}</td>
                     <td>${c.phone ?? ''}</td>
                     <td>${c.address ?? ''}</td>
-                    <td>${c.notes ?? ''}</td>
-                    <td>
-                        <div class="actions">
-                            <button class="secondary" onclick="openEdit(${c.id}, ${encodeURIComponent(JSON.stringify(c))})">Edit</button>
-                            <button class="danger" onclick="removeCustomer(${c.id})">Delete</button>
-                        </div>
-                    </td>`;
+                    <td>${c.notes ?? ''}</td>`;
                 tbody.appendChild(tr);
             }
-        }
-
-        function openCreate() {
-            editingId = null;
-            document.getElementById('modal-title').textContent = 'New Customer';
-            document.getElementById('name').value = '';
-            document.getElementById('email').value = '';
-            document.getElementById('phone').value = '';
-            document.getElementById('address').value = '';
-            document.getElementById('notes').value = '';
-            document.getElementById('modal').classList.add('open');
-        }
-
-        function openEdit(id, encodedJson) {
-            const data = JSON.parse(decodeURIComponent(encodedJson));
-            editingId = id;
-            document.getElementById('modal-title').textContent = `Edit Customer #${id}`;
-            document.getElementById('name').value = data.name ?? '';
-            document.getElementById('email').value = data.email ?? '';
-            document.getElementById('phone').value = data.phone ?? '';
-            document.getElementById('address').value = data.address ?? '';
-            document.getElementById('notes').value = data.notes ?? '';
-            document.getElementById('modal').classList.add('open');
         }
 
         function closeIfBackdrop(e) {
@@ -683,14 +652,6 @@
             if (!res.ok) { showAlert('Failed to save customer', 'error'); return; }
             showAlert('Saved successfully');
             closeModal();
-            await reloadCustomers();
-        }
-
-        async function removeCustomer(id) {
-            if (!confirm('Delete this customer?')) return;
-            const res = await fetch(`/customers/${id}`, { method: 'DELETE', headers: apiHeaders() });
-            if (!res.ok) { showAlert('Failed to delete customer', 'error'); return; }
-            showAlert('Deleted successfully');
             await reloadCustomers();
         }
 
