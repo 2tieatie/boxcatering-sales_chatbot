@@ -473,7 +473,6 @@
             <div class="chat-controls">
                 <button class="control-btn primary" onclick="clearChat()">Clear Chat</button>
                 <button class="control-btn" onclick="exportChat()">Export Chat</button>
-                <button class="control-btn danger" onclick="resetChatbot()">Reset Chatbot</button>
             </div>
 
             <div class="status-indicator" style="margin-top: 15px; justify-content: center;">
@@ -760,12 +759,6 @@
             a.download = `chatbot-test-${new Date().toISOString().split('T')[0]}.txt`;
             a.click();
             URL.revokeObjectURL(url);
-        }
-
-        function resetChatbot() {
-            if (confirm('Are you sure you want to reset the chatbot? This will clear all settings and start fresh.')) {
-                location.reload();
-            }
         }
 
         // Logout function
