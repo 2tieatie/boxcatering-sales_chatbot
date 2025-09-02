@@ -78,8 +78,7 @@ body {
 /* Dropdowns */
 .dropdown {
     position: relative;
-    padding-bottom: 8px;
-    /* Keeps hover while moving to the menu */
+    /* padding-bottom: 8px; */
 }
 
 .dropdown-toggle {
