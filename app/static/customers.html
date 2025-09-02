@@ -32,30 +32,6 @@
             font-size: 24px;
         }
 
-        .nav-links {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .nav-link {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-            padding: 8px 16px;
-            border-radius: 6px;
-            transition: background-color 0.2s ease;
-        }
-
-        .nav-link:hover {
-            background: #f0f2ff;
-        }
-
-        .nav-link.active {
-            background: #667eea;
-            color: white;
-        }
-
         .user-info {
             display: flex;
             align-items: center;
@@ -433,11 +409,12 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 
 <body>
     <div class="header">
-        <h1>Customers</h1>
+        <h1>Box Catering Chatbot</h1>
         <div class="nav-links">
             <a href="/dashboard" class="nav-link">Dashboard</a>
             <a href="/chatbot-test" class="nav-link">Chatbot Test</a>
@@ -547,6 +524,7 @@
         </div>
     </div>
 
+    <script src="/static/nav.js"></script>
     <script src="/static/auth.js"></script>
     <script>
         let editingId = null;
