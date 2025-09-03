@@ -363,5 +363,7 @@
     "userManagement.msg.updateFailed": "Не вдалося оновити користувача",
     "userManagement.msg.createFailed": "Не вдалося створити користувача",
     "userManagement.msg.updateError": "Помилка оновлення користувача",
-    "userManagement.msg.createError": "Помилка створення користувача"
+    "userManagement.msg.createError": "Помилка створення користувача",
+    "nav.group.workingWithCustomers": "Робота з клієнтами",
+    "nav.group.generalSettings": "Загальні налаштування"
 }
