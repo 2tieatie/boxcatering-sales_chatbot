@@ -515,6 +515,11 @@
             }
         }
 
+        // Re-render dynamic row buttons on language change
+        document.addEventListener('i18n:languageChanged', function () {
+            try { renderRows(customers || []); } catch { }
+        });
+
         function closeIfBackdrop(e) {
             if (e.target.id === 'modal') closeModal();
         }
@@ -616,8 +621,8 @@
                                 <thead>
                                     <tr>
                                         <th>ID</th>
-                                        <th>Session</th>
-                                        <th>Status</th>
+                                        <th>${t('conversationHistory.csv.sessionId') || 'Session ID'}</th>
+                                        <th>${t('conversationHistory.table.status') || 'Status'}</th>
                                         <th>${t('conversationHistory.table.started') || 'Started'}</th>
                                         <th>${t('customers.table.actions') || 'Actions'}</th>
                                     </tr>
