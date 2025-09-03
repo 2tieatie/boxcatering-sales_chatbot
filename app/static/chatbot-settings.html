@@ -1015,7 +1015,7 @@
 
                 const del = document.createElement('button');
                 del.className = 'btn-sm btn-danger';
-                del.textContent = 'Delete';
+                del.textContent = (window.I18N && I18N.t) ? I18N.t('chatbotSettings.ctx.delete') : 'Delete';
                 del.onclick = async () => {
                     if (!confirm(`Delete ${f.name}?`)) return;
                     try {

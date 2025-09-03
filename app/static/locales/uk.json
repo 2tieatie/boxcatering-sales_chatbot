@@ -118,6 +118,7 @@
     "chatbotSettings.ctx.refresh": "Оновити список",
     "chatbotSettings.ctx.upload": "Завантажити вибрані",
     "chatbotSettings.ctx.noFiles": "Файлів не завантажено",
+    "chatbotSettings.ctx.delete": "Видалити",
     "chatbotSettings.lang.label": "Мова чат-бота",
     "chatbotSettings.lang.help": "Мова, якою ШІ спілкуватиметься з клієнтами",
     "chatbotSettings.lang.forceLabel": "Примусовий контроль мови",

@@ -118,6 +118,7 @@
     "chatbotSettings.ctx.refresh": "Refresh List",
     "chatbotSettings.ctx.upload": "Upload Selected",
     "chatbotSettings.ctx.noFiles": "No files loaded",
+    "chatbotSettings.ctx.delete": "Delete",
     "chatbotSettings.lang.label": "Chatbot Language",
     "chatbotSettings.lang.help": "Language the AI agent will use to communicate with customers",
     "chatbotSettings.lang.forceLabel": "Force Language Compliance",
