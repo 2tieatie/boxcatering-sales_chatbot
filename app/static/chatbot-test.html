@@ -326,20 +326,11 @@
 <body>
     <div class="header">
         <h1 data-i18n="app.title">Box Catering Chatbot</h1>
-        <div class="nav-links">
-            <a href="/dashboard" class="nav-link">Панель</a>
-            <a href="/chatbot-test" class="nav-link active">Тест чат-бота</a>
-            <a href="/chatbot-settings" class="nav-link">Налаштування чат-бота</a>
-            <a href="/settings" class="nav-link">Налаштування</a>
-            <a href="/order-history" class="nav-link">Замовлення</a>
-            <a href="/conversation-history" class="nav-link">Діалоги</a>
-            <a href="/customers" class="nav-link">Клієнти</a>
-            <a href="/user-management" class="nav-link">Користувачі</a>
-            <div class="user-info">
-                <div class="user-avatar" id="user-avatar">U</div>
-                <span id="username">Користувач</span>
-                <button class="logout-btn" onclick="logout()">Вийти</button>
-            </div>
+        <div class="nav-links" id="nav"></div>
+        <div class="user-info">
+            <div class="user-avatar" id="user-avatar">U</div>
+            <span id="username">User</span>
+            <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
         </div>
     </div>
 
