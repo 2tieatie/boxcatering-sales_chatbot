@@ -236,8 +236,9 @@
                 try {
                     const token = localStorage.getItem('access_token');
                     const meRes = await fetch('/users/me', { headers: { 'Authorization': `Bearer ${token}` } });
-                    let lang = localStorage.getItem('ui_language') || 'uk';
-                    if (meRes.ok) {
+                    const storedLang = localStorage.getItem('ui_language');
+                    let lang = storedLang || 'uk';
+                    if (!storedLang && meRes.ok) {
                         const me = await meRes.json();
                         lang = me.preferred_language || lang;
                     }

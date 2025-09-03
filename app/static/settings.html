@@ -491,15 +491,13 @@
                 try {
                     const token = localStorage.getItem('access_token');
                     const meRes = await fetch('/users/me', { headers: { 'Authorization': `Bearer ${token}` } });
-                    let lang = 'uk';
-                    if (meRes.ok) {
+                    const storedLang = localStorage.getItem('ui_language');
+                    let lang = storedLang || 'uk';
+                    if (!storedLang && meRes.ok) {
                         const me = await meRes.json();
-                        lang = (me.preferred_language || 'uk');
-                        localStorage.setItem('ui_language', lang);
-                    } else {
-                        lang = localStorage.getItem('ui_language') || 'uk';
+                        lang = me.preferred_language || lang;
+                        try { localStorage.setItem('ui_language', lang); } catch { }
                     }
-                    // Normalize legacy 'ua' to 'uk'
                     const norm = (window.I18N && I18N.setLanguage) ? await (async () => { await I18N.setLanguage(lang); return I18N.lang; })() : lang;
                     // Apply translations immediately
                     try {
