@@ -638,6 +638,8 @@
     <script>
         // Conversations will be loaded from the API
         let conversations = [];
+        let convIdToOrderId = {};
+        let ordersCache = [];
 
         let currentPage = 1;
         const itemsPerPage = 10;
@@ -702,7 +704,8 @@
                     started: formatDateTime(c.created_at),
                     lastActivity: formatDateTime(c.updated_at || c.created_at),
                     messageCount: 0,
-                    handoverState: c.handover_state
+                    handoverState: c.handover_state,
+                    customer_id: c.customer_id
                 }));
                 filteredConversations = [...conversations];
                 updateStatistics();
@@ -710,9 +713,46 @@
                 renderPagination();
                 // Load message counts asynchronously after initial render
                 loadMessageCounts();
+                // Preload orders mapping to enable order links from conversations
+                preloadOrdersMapping();
+                // Deep-link: open conversation by id if provided
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    const conversationId = parseInt(params.get('conversationId'));
+                    if (!isNaN(conversationId)) {
+                        viewConversationWhenReady(conversationId);
+                    }
+                } catch { }
             } catch (e) {
                 console.error('Failed to load conversations', e);
             }
+        }
+
+        // Preload mapping conversation -> order id (first found)
+        async function preloadOrdersMapping() {
+            try {
+                const res = await fetchJSON('/orders/?limit=500');
+                ordersCache = Array.isArray(res) ? res : [];
+                convIdToOrderId = {};
+                for (const o of ordersCache) {
+                    if (o.conversation_id && !convIdToOrderId[o.conversation_id]) {
+                        convIdToOrderId[o.conversation_id] = o.id;
+                    }
+                }
+                renderConversations();
+            } catch (e) {
+                console.warn('Failed to load orders for mapping', e);
+            }
+        }
+
+        function viewConversationWhenReady(conversationId) {
+            const timer = setInterval(() => {
+                if (Array.isArray(conversations) && conversations.find(c => c.id === conversationId)) {
+                    clearInterval(timer);
+                    viewConversation(conversationId);
+                }
+            }, 200);
+            setTimeout(() => clearInterval(timer), 8000);
         }
 
         // Fetch message count for a conversation (bounded limit)
@@ -860,6 +900,13 @@
             if (state === 'handover_in_progress') {
                 buttons.push(`<button class="btn btn-sm btn-edit" onclick="resolveConversation(${conversation.id})">✅ ${t('conversationHistory.actions.resolve')}</button>`);
             }
+            if (conversation.customer_id) {
+                buttons.push(`<button class="btn btn-sm btn-secondary" onclick="navigateToCustomer(${conversation.customer_id})">👤 ${t('conversationHistory.actions.viewCustomer') || 'Customer'}</button>`);
+            }
+            const orderId = convIdToOrderId[conversation.id];
+            if (orderId) {
+                buttons.push(`<button class="btn btn-sm" onclick="navigateToOrder(${orderId})">🧾 ${t('conversationHistory.actions.viewOrder') || 'Order'}</button>`);
+            }
             buttons.push(`<button class="btn btn-sm btn-delete" onclick="deleteConversation(${conversation.id})">🗑️ ${t('conversationHistory.actions.delete')}</button>`);
             return buttons.join('');
         }
@@ -981,6 +1028,7 @@
                     };
                 });
 
+                const relatedOrderId = convIdToOrderId[id] || (Array.isArray(ordersCache) ? (ordersCache.find(o => o.conversation_id === id) || {}).id : undefined);
                 modalContent.innerHTML = `
                 <div class="conversation-details">
                     <div class="detail-row">
@@ -1002,6 +1050,14 @@
                     <div class="detail-row">
                         <span class="detail-label">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.lastActivity') : 'Last Activity:'}</span>
                         <span class="detail-value">${formatDateTime(details.updated_at || details.created_at)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.customer') : 'Customer:'}</span>
+                        <span class="detail-value">${details.customer_id ? `#${details.customer_id} <button class=\"btn btn-sm btn-secondary\" onclick=\"navigateToCustomer(${details.customer_id})\">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.actions.viewCustomer') : 'View Customer'}</button>` : '-'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.order') : 'Order:'}</span>
+                        <span class="detail-value">${relatedOrderId ? `#${relatedOrderId} <button class=\"btn btn-sm\" onclick=\"navigateToOrder(${relatedOrderId})\">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.actions.viewOrder') : 'View Order'}</button>` : '-'}</span>
                     </div>
                     ${details.handover_reason ? `
                         <div class="detail-row">
@@ -1046,6 +1102,17 @@
         // Close modal
         function closeModal() {
             document.getElementById('conversation-modal').style.display = 'none';
+        }
+
+        // Navigation helpers
+        function navigateToCustomer(customerId) {
+            if (!customerId) return;
+            window.location.href = `/static/customers.html?customerId=${encodeURIComponent(customerId)}`;
+        }
+
+        function navigateToOrder(orderId) {
+            if (!orderId) return;
+            window.location.href = `/static/order-history.html?orderId=${encodeURIComponent(orderId)}`;
         }
 
         // Take conversation into progress (handover_pending -> handover_in_progress)
