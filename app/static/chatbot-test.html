@@ -214,6 +214,7 @@
             font-weight: 600;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             min-width: 100px;
+            margin-bottom: 0.75%;
         }
 
         .send-btn:hover {
@@ -336,15 +337,15 @@
 
     <div class="chat-container">
         <div class="chat-header">
-            <h2>💬 Тест-чат з Марічкою</h2>
-            <p>Тестуйте та взаємодійте з вашим чат-ботом на базі ШІ</p>
+            <h2 data-i18n="chatTest.headerTitle">💬 Test chat with Marichka</h2>
+            <p data-i18n="chatTest.headerSubtitle">Test and interact with your AI-powered chatbot</p>
         </div>
 
         <div class="chat-messages" id="chat-messages">
             <div class="message bot">
                 <div class="message-avatar">👩</div>
                 <div class="message-content">
-                    <div id="bot-welcome-content">Завантаження привітання…</div>
+                    <div id="bot-welcome-content" data-i18n="chatTest.welcome.loading">Loading welcome message…</div>
                     <div class="message-time" id="bot-welcome-time"></div>
                 </div>
             </div>
@@ -361,24 +362,22 @@
         <div class="chat-input-container">
             <form class="chat-input-form" id="chat-form">
                 <div class="input-group">
-                    <label for="chat-input">Введіть повідомлення:</label>
-                    <textarea id="chat-input" class="chat-input"
-                        placeholder="Запитайте про меню, зробіть замовлення або отримайте консультацію щодо кейтерингу..."
-                        rows="1"></textarea>
+                    <label for="chat-input" data-i18n="chatTest.input.label">Enter a message:</label>
+                    <textarea id="chat-input" class="chat-input" placeholder="" rows="1"></textarea>
                 </div>
-                <button type="submit" class="send-btn" id="send-btn">
-                    Надіслати
-                </button>
+                <button type="submit" class="send-btn" id="send-btn" data-i18n="chatTest.send">Send</button>
             </form>
 
             <div class="chat-controls">
-                <button class="control-btn primary" onclick="clearChat()">Очистити чат</button>
-                <button class="control-btn" onclick="exportChat()">Експортувати чат</button>
+                <button class="control-btn primary" onclick="clearChat()" data-i18n="chatTest.controls.clear">Clear
+                    chat</button>
+                <button class="control-btn" onclick="exportChat()" data-i18n="chatTest.controls.export">Export
+                    chat</button>
             </div>
 
             <div class="status-indicator" style="margin-top: 15px; justify-content: center;">
                 <div class="status-dot" id="status-dot"></div>
-                <span id="status-text">Підключено до AI-сервісу</span>
+                <span id="status-text" data-i18n="chatTest.status.connectedToAI">Connected to AI service</span>
             </div>
         </div>
     </div>
@@ -391,14 +390,21 @@
                 try {
                     const token = localStorage.getItem('access_token');
                     const meRes = await fetch('/users/me', { headers: token ? { 'Authorization': `Bearer ${token}` } : {} });
-                    let lang = localStorage.getItem('ui_language') || 'uk';
-                    if (meRes && meRes.ok) {
+                    const storedLang = localStorage.getItem('ui_language');
+                    let lang = storedLang || 'uk';
+                    if (!storedLang && meRes && meRes.ok) {
                         const me = await meRes.json();
                         lang = me.preferred_language || lang;
                     }
                     if (window.I18N && I18N.setLanguage) {
                         await I18N.setLanguage(lang);
                     }
+                    try {
+                        const input = document.getElementById('chat-input');
+                        if (input && window.I18N && I18N.t) {
+                            input.placeholder = I18N.t('chatTest.input.placeholder');
+                        }
+                    } catch { }
                     document.querySelectorAll('[data-i18n]').forEach(function (el) {
                         const k = el.getAttribute('data-i18n');
                         if (window.I18N && I18N.t) { el.textContent = I18N.t(k); }
@@ -473,14 +479,14 @@
                 });
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const cfg = await resp.json();
-                const welcome = cfg.welcome_message || cfg.handover_message || 'Вітаю! Чим можу допомогти?';
+                const welcome = cfg.welcome_message || cfg.handover_message || ((window.I18N && I18N.t) ? I18N.t('chatTest.welcome.default') : 'Welcome! How can I help?');
                 const node = document.getElementById('bot-welcome-content');
                 if (node) node.textContent = welcome;
                 document.getElementById('bot-welcome-time').textContent = new Date().toLocaleTimeString();
             } catch (e) {
                 console.warn('Failed to load active chatbot config:', e);
                 const node = document.getElementById('bot-welcome-content');
-                if (node) node.textContent = 'Вітаю! Чим можу допомогти?';
+                if (node) node.textContent = (window.I18N && I18N.t) ? I18N.t('chatTest.welcome.default') : 'Welcome! How can I help?';
                 document.getElementById('bot-welcome-time').textContent = new Date().toLocaleTimeString();
             }
         }
@@ -531,7 +537,13 @@
             const text = document.getElementById('status-text');
             dot.classList.remove('offline', 'connecting');
             if (cssClass) dot.classList.add(cssClass);
-            text.textContent = status;
+            try {
+                if (window.I18N && I18N.t) {
+                    text.textContent = I18N.t(status) || status;
+                } else {
+                    text.textContent = status;
+                }
+            } catch { text.textContent = status; }
         }
 
         function connectWebSocket() {
@@ -539,12 +551,12 @@
 
             const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
             const url = `${protocol}://${location.host}/chat/ws${location.search || ''}`;
-            setStatus('Підключення до AI-сервісу…', 'connecting');
+            setStatus('chatTest.status.connectingToAI', 'connecting');
 
             ws = new WebSocket(url);
 
             ws.onopen = () => {
-                setStatus('Підключено до AI-сервісу', '');
+                setStatus('chatTest.status.connectedToAI', '');
                 if (reconnectTimer) {
                     clearTimeout(reconnectTimer);
                     reconnectTimer = null;
@@ -559,7 +571,7 @@
                     if (text) {
                         addMessage(text);
                     } else {
-                        addMessage('Вибачте, сталася помилка. Спробуйте ще раз пізніше.');
+                        addMessage((window.I18N && I18N.t) ? I18N.t('chatTest.error.generic') : 'Sorry, something went wrong. Please try again later.');
                     }
 
                     if (data.handover_to_manager) {
@@ -576,11 +588,11 @@
             };
 
             ws.onerror = () => {
-                setStatus('Помилка з’єднання. Повторне підключення…', 'connecting');
+                setStatus('chatTest.status.connectionError', 'connecting');
             };
 
             ws.onclose = () => {
-                setStatus('З’єднання розірвано. Повторне підключення…', 'offline');
+                setStatus('chatTest.status.disconnected', 'offline');
                 reconnectTimer = setTimeout(connectWebSocket, RECONNECT_DELAY_MS);
             };
         }
@@ -594,7 +606,7 @@
                         ws.send(JSON.stringify(payload));
                     } else {
                         hideTypingIndicator();
-                        addMessage('Не вдалось підключитись до AI сервісу. Спробуйте ще раз пізніше.');
+                        addMessage((window.I18N && I18N.t) ? I18N.t('chatTest.error.connectFail') : 'Connection failed. Please try again later.');
                     }
                 }, 500);
                 return;
@@ -605,8 +617,14 @@
         function showHandoverNotice(data) {
             const reason = data.handover_reason || 'HANDOVER';
             const desc = data.handover_reason_description || '';
-            const notice = `Передаю розмову менеджеру (${reason}). ${desc}`.trim();
-            addMessage(notice);
+            try {
+                const notice = (window.I18N && I18N.t)
+                    ? I18N.t('chatTest.handover.notice', { reason: reason, desc: desc }).trim()
+                    : `Handing over to manager (${reason}). ${desc}`.trim();
+                addMessage(notice);
+            } catch {
+                addMessage(`Handing over to manager (${reason}). ${desc}`.trim());
+            }
         }
 
         // Handle form submission
@@ -647,13 +665,13 @@
 
         // Control functions
         function clearChat() {
-            if (confirm('Ви впевнені, що хочете очистити історію чату?')) {
+            if (confirm((window.I18N && I18N.t) ? I18N.t('chatTest.clear.confirm') : 'Are you sure you want to clear the chat history?')) {
                 const messagesContainer = document.getElementById('chat-messages');
                 messagesContainer.innerHTML = `
                     <div class="message bot">
                         <div class="message-avatar">👩</div>
                         <div class="message-content">
-                            <div>Історію чату очищено. Чим можу допомогти?</div>
+                            <div>${(window.I18N && I18N.t) ? I18N.t('chatTest.cleared.message') : 'Chat history cleared. How can I help you?'}</div>
                             <div class="message-time">${new Date().toLocaleTimeString()}</div>
                         </div>
                     </div>
@@ -675,8 +693,10 @@
         }
 
         function exportChat() {
+            const userLabel = (window.I18N && I18N.t) ? I18N.t('chatTest.export.user') : 'User';
+            const botLabel = (window.I18N && I18N.t) ? I18N.t('chatTest.export.bot') : 'Bot';
             const chatText = chatHistory.map(msg =>
-                `[${msg.timestamp}] ${msg.isUser ? 'Користувач' : 'Бот'}: ${msg.content}`
+                `[${msg.timestamp}] ${msg.isUser ? userLabel : botLabel}: ${msg.content}`
             ).join('\n\n');
 
             const blob = new Blob([chatText], { type: 'text/plain' });
