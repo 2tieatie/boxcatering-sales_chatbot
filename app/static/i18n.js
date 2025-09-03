@@ -3,20 +3,28 @@
     let currentLang = null;
     let dict = {};
 
+    function normalizeLang(lang) {
+        if (!lang) return DEFAULT_LANG;
+        const l = String(lang).toLowerCase();
+        if (l === 'ua' || l.startsWith('ua-')) return 'uk';
+        if (l === 'uk-ua') return 'uk';
+        return l.slice(0, 2);
+    }
+
     function detectLanguage() {
         try {
             const stored = localStorage.getItem('ui_language');
-            if (stored) return stored;
+            if (stored) return normalizeLang(stored);
         } catch { }
         try {
-            const navLang = (navigator.language || navigator.userLanguage || DEFAULT_LANG).slice(0, 2);
-            return navLang;
+            const navLang = (navigator.language || navigator.userLanguage || DEFAULT_LANG);
+            return normalizeLang(navLang);
         } catch { }
         return DEFAULT_LANG;
     }
 
     async function load(lang) {
-        const target = lang || detectLanguage();
+        const target = normalizeLang(lang) || detectLanguage();
         currentLang = target;
         try {
             const res = await fetch(`/static/locales/${target}.json`, { cache: 'no-store' });
@@ -49,11 +57,12 @@
     }
 
     async function setLanguage(lang) {
-        try { localStorage.setItem('ui_language', lang); } catch { }
-        await load(lang);
+        const canon = normalizeLang(lang);
+        try { localStorage.setItem('ui_language', canon); } catch { }
+        await load(canon);
     }
 
-    if (!window.I18N) {
+    if (!window.I18N || !window.I18N.setLanguage) {
         window.I18N = { t, load, setLanguage, get lang() { return currentLang || DEFAULT_LANG; } };
         // Fire and forget default load
         load().catch(() => { });

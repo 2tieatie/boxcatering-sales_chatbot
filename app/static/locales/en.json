@@ -27,6 +27,7 @@
     "settings.system.version": "Version",
     "settings.system.timezone": "Timezone",
     "settings.system.language": "Language",
+    "settings.system.userLanguage": "Your UI Language",
     "settings.system.logLevel": "Log Level",
     "settings.system.save": "💾 Save System Settings",
     "settings.openai.title": "OpenAI Configuration",

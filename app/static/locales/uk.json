@@ -27,6 +27,7 @@
     "settings.system.version": "Версія",
     "settings.system.timezone": "Часовий пояс",
     "settings.system.language": "Мова",
+    "settings.system.userLanguage": "Мова інтерфейсу",
     "settings.system.logLevel": "Рівень логування",
     "settings.system.save": "💾 Зберегти системні налаштування",
     "settings.openai.title": "Налаштування OpenAI",
