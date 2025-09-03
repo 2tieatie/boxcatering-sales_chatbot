@@ -959,6 +959,11 @@
             tableContent.innerHTML = tableHTML;
         }
 
+        // Re-render dynamic table content on language change
+        document.addEventListener('i18n:languageChanged', function () {
+            try { renderOrdersTable(); } catch { }
+        });
+
         // Render pagination
         function renderPagination(totalPages) {
             let paginationHTML = '<div class="pagination">';

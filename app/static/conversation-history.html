@@ -894,6 +894,14 @@
             pagination.innerHTML = paginationHTML;
         }
 
+        // Re-render dynamic content on language change
+        document.addEventListener('i18n:languageChanged', function () {
+            try {
+                renderConversations();
+                renderPagination();
+            } catch { }
+        });
+
         // Change page
         function changePage(page) {
             currentPage = page;
