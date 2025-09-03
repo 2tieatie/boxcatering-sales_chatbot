@@ -62,7 +62,7 @@
         .filter-actions {
             display: flex;
             gap: 15px;
-            align-items: end;
+            align-items: flex-end;
         }
 
         .stats-summary {
@@ -409,7 +409,7 @@
             }
 
             .table-actions {
-                justify-content: center;
+                align-items: center;
             }
 
             .orders-table {
@@ -504,16 +504,22 @@
                     <label for="date-to" data-i18n="orderHistory.filters.dateTo">Date To</label>
                     <input type="date" id="date-to">
                 </div>
+            </div>
+            <div class="filters-grid">
                 <div class="filter-group">
                     <label for="search-input" data-i18n="orderHistory.filters.search">Search</label>
                     <input type="text" id="search-input" placeholder="Customer name, order ID..."
                         data-i18n-placeholder="orderHistory.filters.searchPh">
                 </div>
                 <div class="filter-actions">
-                    <button class="btn btn-primary" onclick="applyFilters()" data-i18n="orderHistory.filters.apply">🔍
-                        Apply</button>
-                    <button class="btn btn-secondary" onclick="clearFilters()" data-i18n="orderHistory.filters.clear">🔄
-                        Clear</button>
+                    <button class="btn btn-primary" onclick="applyFilters()">
+                        <span aria-hidden="true">🔍</span>
+                        <span data-i18n="orderHistory.filters.apply">Apply</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearFilters()">
+                        <span aria-hidden="true">🔄</span>
+                        <span data-i18n="orderHistory.filters.clear">Clear</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -523,8 +529,10 @@
             <div class="table-header">
                 <div class="table-title" data-i18n="orderHistory.table.title">Order Details</div>
                 <div class="table-actions">
-                    <button class="btn btn-secondary" onclick="reloadOrders()" data-i18n="orderHistory.table.refresh">🔄
-                        Refresh</button>
+                    <button class="btn btn-secondary" onclick="reloadOrders()">
+                        <span aria-hidden="true">🔄</span>
+                        <span data-i18n="orderHistory.table.refresh">Refresh</span>
+                    </button>
                 </div>
             </div>
 

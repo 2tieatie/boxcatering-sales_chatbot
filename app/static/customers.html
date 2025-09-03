@@ -126,7 +126,7 @@
         .filter-actions {
             display: flex;
             gap: 15px;
-            justify-content: flex-end;
+            align-items: flex-end;
         }
 
         /* Table container */
@@ -317,10 +317,14 @@
                         data-i18n-placeholder="customers.filters.searchPh">
                 </div>
                 <div class="filter-actions">
-                    <button class="btn btn-primary" onclick="applyFilters()" data-i18n="customers.filters.apply">🔍
-                        Apply</button>
-                    <button class="btn btn-secondary" onclick="clearFilters()" data-i18n="customers.filters.clear">🔄
-                        Clear</button>
+                    <button class="btn btn-primary" onclick="applyFilters()">
+                        <span aria-hidden="true">🔍</span>
+                        <span data-i18n="customers.filters.apply">Apply</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearFilters()">
+                        <span aria-hidden="true">🔄</span>
+                        <span data-i18n="customers.filters.clear">Clear</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -331,8 +335,10 @@
             <div class="table-header">
                 <h3><span>📇</span><span data-i18n="customers.table.title">Customers</span></h3>
                 <div class="table-actions" style="display:flex;gap:10px;">
-                    <button class="btn btn-secondary" onclick="reloadCustomers()" data-i18n="customers.table.refresh">🔄
-                        Refresh</button>
+                    <button class="btn btn-secondary" onclick="reloadCustomers()">
+                        <span aria-hidden="true">🔄</span>
+                        <span data-i18n="customers.table.refresh">Refresh</span>
+                    </button>
                 </div>
             </div>
             <table>
