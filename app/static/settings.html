@@ -250,21 +250,12 @@
 
 <body>
     <div class="header">
-        <h1>Box Catering Chatbot</h1>
-        <div class="nav-links">
-            <a href="/dashboard" class="nav-link">Dashboard</a>
-            <a href="/chatbot-test" class="nav-link">Chatbot Test</a>
-            <a href="/chatbot-settings" class="nav-link">Chatbot Settings</a>
-            <a href="/settings" class="nav-link active">Settings</a>
-            <a href="/order-history" class="nav-link">Orders</a>
-            <a href="/conversation-history" class="nav-link">Conversations</a>
-            <a href="/customers" class="nav-link">Customers</a>
-            <a href="/user-management" class="nav-link">Users</a>
-            <div class="user-info">
-                <div class="user-avatar" id="user-avatar">U</div>
-                <span id="username">User</span>
-                <button class="logout-btn" onclick="logout()">Logout</button>
-            </div>
+        <h1 data-i18n="app.title">Box Catering Chatbot</h1>
+        <div class="nav-links" id="nav"></div>
+        <div class="user-info">
+            <div class="user-avatar" id="user-avatar">U</div>
+            <span id="username">User</span>
+            <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
         </div>
     </div>
 

@@ -294,20 +294,11 @@
 <body>
     <div class="header">
         <h1 data-i18n="app.title">Box Catering Chatbot</h1>
-        <div class="nav-links">
-            <a href="/dashboard" class="nav-link" data-i18n="nav.dashboard">Dashboard</a>
-            <a href="/chatbot-test" class="nav-link" data-i18n="nav.chatbotTest">Chatbot Test</a>
-            <a href="/chatbot-settings" class="nav-link active" data-i18n="nav.chatbotSettings">Chatbot Settings</a>
-            <a href="/settings" class="nav-link" data-i18n="nav.settings">Settings</a>
-            <a href="/order-history" class="nav-link" data-i18n="nav.orders">Orders</a>
-            <a href="/conversation-history" class="nav-link" data-i18n="nav.conversations">Conversations</a>
-            <a href="/customers" class="nav-link" data-i18n="nav.customers">Customers</a>
-            <a href="/user-management" class="nav-link" data-i18n="nav.users">Users</a>
-            <div class="user-info">
-                <div class="user-avatar" id="user-avatar">U</div>
-                <span id="username">User</span>
-                <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
-            </div>
+        <div class="nav-links" id="nav"></div>
+        <div class="user-info">
+            <div class="user-avatar" id="user-avatar">U</div>
+            <span id="username">User</span>
+            <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
         </div>
     </div>
 
