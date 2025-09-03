@@ -99,6 +99,62 @@
         container.appendChild(nav);
     }
 
+    function ensureLangToggle(userInfoContainer) {
+        if (!userInfoContainer) return;
+
+        let langToggle = userInfoContainer.querySelector('.lang-toggle');
+        if (!langToggle) {
+            langToggle = document.createElement('div');
+            langToggle.className = 'lang-toggle';
+
+            const uaBtn = document.createElement('button');
+            uaBtn.type = 'button';
+            uaBtn.className = 'lang-btn';
+            uaBtn.textContent = 'UA';
+            uaBtn.title = 'Українська';
+
+            const enBtn = document.createElement('button');
+            enBtn.type = 'button';
+            enBtn.className = 'lang-btn';
+            enBtn.textContent = 'EN';
+            enBtn.title = 'English';
+
+            async function switchTo(lang) {
+                try {
+                    if (window.I18N && typeof I18N.setLanguage === 'function') {
+                        await I18N.setLanguage(lang);
+                    }
+                } catch { }
+                updateActive();
+            }
+
+            uaBtn.addEventListener('click', function (e) { e.preventDefault(); switchTo('uk'); });
+            enBtn.addEventListener('click', function (e) { e.preventDefault(); switchTo('en'); });
+
+            langToggle.appendChild(uaBtn);
+            langToggle.appendChild(enBtn);
+            userInfoContainer.appendChild(langToggle);
+        }
+
+        function updateActive() {
+            const current = (window.I18N && I18N.lang) ? I18N.lang : 'uk';
+            const ua = langToggle.querySelector('.lang-btn:nth-child(1)');
+            const en = langToggle.querySelector('.lang-btn:nth-child(2)');
+            if (ua && en) {
+                ua.classList.remove('active');
+                en.classList.remove('active');
+                if (current === 'en') { en.classList.add('active'); } else { ua.classList.add('active'); }
+            }
+        }
+
+        updateActive();
+        try {
+            if (window.__i18nReady && typeof window.__i18nReady.then === 'function') {
+                window.__i18nReady.then(function () { updateActive(); });
+            }
+        } catch { }
+    }
+
     function ensureHeader() {
         const header = document.querySelector('.header');
         if (!header) return;
@@ -149,6 +205,11 @@
             userInfo.appendChild(btn);
             header.appendChild(userInfo);
         }
+
+        try {
+            const targetUserInfo = header.querySelector('.user-info');
+            if (targetUserInfo) { ensureLangToggle(targetUserInfo); }
+        } catch { }
     }
 
     if (document.readyState === 'loading') {
