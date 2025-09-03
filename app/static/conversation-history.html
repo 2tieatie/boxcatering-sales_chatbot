@@ -98,7 +98,7 @@
         .filter-actions {
             display: flex;
             gap: 15px;
-            justify-content: flex-end;
+            align-items: flex-end;
         }
 
         .table-container {
@@ -422,7 +422,7 @@
             }
 
             .filter-actions {
-                justify-content: center;
+                align-items: center;
             }
 
             .table-container {
@@ -522,16 +522,22 @@
                     <label for="date-to" data-i18n="conversationHistory.filters.dateTo">Date To</label>
                     <input type="date" id="date-to">
                 </div>
+            </div>
+            <div class="filters-grid">
                 <div class="filter-group">
                     <label for="search-input" data-i18n="conversationHistory.filters.search">Search</label>
                     <input type="text" id="search-input" placeholder="Search conversations..."
                         data-i18n-placeholder="conversationHistory.filters.searchPh">
                 </div>
                 <div class="filter-actions">
-                    <button class="btn btn-primary" onclick="applyFilters()"
-                        data-i18n="conversationHistory.filters.apply">🔍 Apply</button>
-                    <button class="btn btn-secondary" onclick="clearFilters()"
-                        data-i18n="conversationHistory.filters.clear">🔄 Clear</button>
+                    <button class="btn btn-primary" onclick="applyFilters()">
+                        <span aria-hidden="true">🔍</span>
+                        <span data-i18n="conversationHistory.filters.apply">Apply</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearFilters()">
+                        <span aria-hidden="true">🔄</span>
+                        <span data-i18n="conversationHistory.filters.clear">Clear</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -541,10 +547,14 @@
             <div class="table-header">
                 <h3><span>📋</span><span data-i18n="conversationHistory.table.title">Conversations</span></h3>
                 <div class="table-actions">
-                    <button class="btn btn-primary" onclick="exportConversations()"
-                        data-i18n="conversationHistory.table.export">📤 Export</button>
-                    <button class="btn btn-secondary" onclick="refreshData()"
-                        data-i18n="conversationHistory.table.refresh">🔄 Refresh</button>
+                    <button class="btn btn-primary" onclick="exportConversations()">
+                        <span aria-hidden="true">📤</span>
+                        <span data-i18n="conversationHistory.table.export">Export</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshData()">
+                        <span aria-hidden="true">🔄</span>
+                        <span data-i18n="conversationHistory.table.refresh">Refresh</span>
+                    </button>
                 </div>
             </div>
 
