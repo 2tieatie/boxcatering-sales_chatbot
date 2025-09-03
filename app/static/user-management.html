@@ -458,10 +458,14 @@
                         data-i18n-placeholder="userManagement.filters.searchPh">
                 </div>
                 <div class="filter-actions">
-                    <button class="btn btn-primary" onclick="applyFilters()" data-i18n="userManagement.filters.apply">🔍
-                        Apply</button>
-                    <button class="btn btn-secondary" onclick="clearFilters()"
-                        data-i18n="userManagement.filters.clear">🔄 Clear</button>
+                    <button class="btn btn-primary" onclick="applyFilters()">
+                        <span aria-hidden="true">🔍</span>
+                        <span data-i18n="userManagement.filters.apply">Apply</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearFilters()">
+                        <span aria-hidden="true">🔄</span>
+                        <span data-i18n="userManagement.filters.clear">Clear</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -471,10 +475,14 @@
             <div class="table-header">
                 <h3><span>📋</span><span data-i18n="userManagement.table.title">Users</span></h3>
                 <div class="table-actions">
-                    <button class="btn btn-success" onclick="openAddUserModal()" data-i18n="userManagement.table.add">➕
-                        Add User</button>
-                    <button class="btn btn-secondary" onclick="refreshData()"
-                        data-i18n="userManagement.table.refresh">🔄 Refresh</button>
+                    <button class="btn btn-success" onclick="openAddUserModal()">
+                        <span aria-hidden="true">➕</span>
+                        <span data-i18n="userManagement.table.add">Add User</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshData()">
+                        <span aria-hidden="true">🔄</span>
+                        <span data-i18n="userManagement.table.refresh">Refresh</span>
+                    </button>
                 </div>
             </div>
 
@@ -738,8 +746,12 @@
                     <td>${formatDateTime(user.created_at)}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn btn-sm btn-warning" onclick="editUser(${user.id})">${(window.I18N && I18N.t) ? I18N.t('userManagement.actions.edit') : '✏️ Edit'}</button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})">${(window.I18N && I18N.t) ? I18N.t('userManagement.actions.delete') : '🗑️ Delete'}</button>
+                            <button class="btn btn-sm btn-warning" onclick="editUser(${user.id})">
+                                ${(window.I18N && I18N.t) ? I18N.t('userManagement.actions.edit') : 'Edit'}
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})">
+                                ${(window.I18N && I18N.t) ? I18N.t('userManagement.actions.delete') : 'Delete'}
+                            </button>
                         </div>
                     </td>
                 </tr>
