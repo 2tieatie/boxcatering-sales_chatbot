@@ -325,7 +325,7 @@
 
 <body>
     <div class="header">
-        <h1>Box Catering Chatbot</h1>
+        <h1 data-i18n="app.title">Box Catering Chatbot</h1>
         <div class="nav-links">
             <a href="/dashboard" class="nav-link">Панель</a>
             <a href="/chatbot-test" class="nav-link active">Тест чат-бота</a>
@@ -392,8 +392,32 @@
         </div>
     </div>
 
-    <script src="/static/nav.js"></script>
     <script src="/static/auth.js"></script>
+    <script src="/static/i18n.js"></script>
+    <script>
+        (function () {
+            async function initI18N() {
+                try {
+                    const token = localStorage.getItem('access_token');
+                    const meRes = await fetch('/users/me', { headers: token ? { 'Authorization': `Bearer ${token}` } : {} });
+                    let lang = localStorage.getItem('ui_language') || 'uk';
+                    if (meRes && meRes.ok) {
+                        const me = await meRes.json();
+                        lang = me.preferred_language || lang;
+                    }
+                    if (window.I18N && I18N.setLanguage) {
+                        await I18N.setLanguage(lang);
+                    }
+                    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+                        const k = el.getAttribute('data-i18n');
+                        if (window.I18N && I18N.t) { el.textContent = I18N.t(k); }
+                    });
+                } catch { }
+            }
+            window.__i18nReady = initI18N();
+        })();
+    </script>
+    <script src="/static/nav.js"></script>
     <script>
         // Initialize chat
         let chatHistory = [];

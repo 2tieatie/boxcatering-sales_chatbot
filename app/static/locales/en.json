@@ -363,5 +363,7 @@
     "userManagement.msg.updateFailed": "Failed to update user",
     "userManagement.msg.createFailed": "Failed to create user",
     "userManagement.msg.updateError": "Error updating user",
-    "userManagement.msg.createError": "Error creating user"
+    "userManagement.msg.createError": "Error creating user",
+    "nav.group.workingWithCustomers": "Working with Customers",
+    "nav.group.generalSettings": "General Settings"
 }
