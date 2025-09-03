@@ -293,28 +293,29 @@
 
 <body>
     <div class="header">
-        <h1>Box Catering Chatbot</h1>
+        <h1 data-i18n="app.title">Box Catering Chatbot</h1>
         <div class="nav-links">
-            <a href="/dashboard" class="nav-link">Dashboard</a>
-            <a href="/chatbot-test" class="nav-link">Chatbot Test</a>
-            <a href="/chatbot-settings" class="nav-link active">Chatbot Settings</a>
-            <a href="/settings" class="nav-link">Settings</a>
-            <a href="/order-history" class="nav-link">Orders</a>
-            <a href="/conversation-history" class="nav-link">Conversations</a>
-            <a href="/customers" class="nav-link">Customers</a>
-            <a href="/user-management" class="nav-link">Users</a>
+            <a href="/dashboard" class="nav-link" data-i18n="nav.dashboard">Dashboard</a>
+            <a href="/chatbot-test" class="nav-link" data-i18n="nav.chatbotTest">Chatbot Test</a>
+            <a href="/chatbot-settings" class="nav-link active" data-i18n="nav.chatbotSettings">Chatbot Settings</a>
+            <a href="/settings" class="nav-link" data-i18n="nav.settings">Settings</a>
+            <a href="/order-history" class="nav-link" data-i18n="nav.orders">Orders</a>
+            <a href="/conversation-history" class="nav-link" data-i18n="nav.conversations">Conversations</a>
+            <a href="/customers" class="nav-link" data-i18n="nav.customers">Customers</a>
+            <a href="/user-management" class="nav-link" data-i18n="nav.users">Users</a>
             <div class="user-info">
                 <div class="user-avatar" id="user-avatar">U</div>
                 <span id="username">User</span>
-                <button class="logout-btn" onclick="logout()">Logout</button>
+                <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
             </div>
         </div>
     </div>
 
     <div class="container">
         <div class="page-header">
-            <h2>⚙️ Chatbot Configuration</h2>
-            <p>Customize your AI-powered chatbot settings, behavior, and responses to match your business needs</p>
+            <h2 data-i18n="chatbotSettings.headerTitle">⚙️ Chatbot Configuration</h2>
+            <p data-i18n="chatbotSettings.headerSubtitle">Customize your AI-powered chatbot settings, behavior, and
+                responses to match your business needs</p>
         </div>
 
         <div id="alert-container"></div>
@@ -322,22 +323,27 @@
         <div class="settings-grid">
             <!-- Business Context -->
             <div class="settings-card">
-                <h3><span class="icon">🏢</span>Business Context</h3>
+                <h3><span class="icon">🏢</span><span data-i18n="chatbotSettings.section.business">Business
+                        Context</span></h3>
 
                 <div class="form-group">
-                    <label for="company-name">Company Name</label>
-                    <input type="text" id="company-name" placeholder="Your Company Name" value="Box Catering">
+                    <label for="company-name" data-i18n="chatbotSettings.companyName">Company Name</label>
+                    <input type="text" id="company-name" placeholder="Your Company Name" value="Box Catering"
+                        data-i18n-placeholder="chatbotSettings.companyNamePh">
                 </div>
 
                 <div class="form-group">
-                    <label for="business-description">Business Description</label>
+                    <label for="business-description" data-i18n="chatbotSettings.businessDescription">Business
+                        Description</label>
                     <textarea id="business-description"
-                        placeholder="Describe your business, services, and unique selling points...">We are a premium box catering service specializing in corporate events, weddings, and private parties. We offer gourmet food, exceptional service, and customizable menus to meet all dietary requirements.</textarea>
+                        placeholder="Describe your business, services, and unique selling points..."
+                        data-i18n-placeholder="chatbotSettings.businessDescriptionPh">We are a premium box catering service specializing in corporate events, weddings, and private parties. We offer gourmet food, exceptional service, and customizable menus to meet all dietary requirements.</textarea>
                 </div>
 
                 <div class="form-group">
-                    <label for="specializations">Specializations</label>
-                    <textarea id="specializations" placeholder="List your key specializations and unique offerings...">• Corporate catering and team events
+                    <label for="specializations" data-i18n="chatbotSettings.specializations">Specializations</label>
+                    <textarea id="specializations" placeholder="List your key specializations and unique offerings..."
+                        data-i18n-placeholder="chatbotSettings.specializationsPh">• Corporate catering and team events
 • Wedding and celebration catering
 • Dietary restrictions (vegan, gluten-free, halal)
 • Local and sustainable ingredients
@@ -348,35 +354,39 @@
 
             <!-- Response Templates -->
             <div class="settings-card">
-                <h3><span class="icon">📝</span>Response Templates</h3>
+                <h3><span class="icon">📝</span><span data-i18n="chatbotSettings.section.responses">Response
+                        Templates</span></h3>
 
                 <div class="form-group">
-                    <label for="greeting-message">Welcome Message</label>
-                    <textarea id="greeting-message"
-                        placeholder="Custom greeting message...">Hello! I'm your AI-powered box catering assistant. I can help you with menu selection, pricing, dietary requirements, and event planning. How can I assist you today?</textarea>
+                    <label for="greeting-message" data-i18n="chatbotSettings.labels.welcome">Welcome Message</label>
+                    <textarea id="greeting-message" placeholder="Custom greeting message..."
+                        data-i18n-placeholder="chatbotSettings.placeholders.welcome">Hello! I'm your AI-powered box catering assistant. I can help you with menu selection, pricing, dietary requirements, and event planning. How can I assist you today?</textarea>
                 </div>
 
                 <div class="form-group">
-                    <label for="fallback-message">Fallback Message</label>
-                    <textarea id="fallback-message"
-                        placeholder="Message when AI can't understand...">I apologize, but I didn't quite understand that. Could you please rephrase your question? I'm here to help with catering inquiries, menu options, pricing, and event planning.</textarea>
+                    <label for="fallback-message" data-i18n="chatbotSettings.labels.fallback">Fallback Message</label>
+                    <textarea id="fallback-message" placeholder="Message when AI can't understand..."
+                        data-i18n-placeholder="chatbotSettings.placeholders.fallback">I apologize, but I didn't quite understand that. Could you please rephrase your question? I'm here to help with catering inquiries, menu options, pricing, and event planning.</textarea>
                 </div>
 
                 <div class="form-group">
-                    <label for="handover-message">Manager Handover Message</label>
-                    <textarea id="handover-message"
-                        placeholder="Message when transferring to manager...">I understand this requires special attention. Let me connect you with one of our catering specialists who can provide personalized assistance for your specific needs.</textarea>
+                    <label for="handover-message" data-i18n="chatbotSettings.labels.handover">Manager Handover
+                        Message</label>
+                    <textarea id="handover-message" placeholder="Message when transferring to manager..."
+                        data-i18n-placeholder="chatbotSettings.placeholders.handover">I understand this requires special attention. Let me connect you with one of our catering specialists who can provide personalized assistance for your specific needs.</textarea>
                 </div>
             </div>
 
             <!-- Context Documents -->
             <div class="settings-card">
-                <h3><span class="icon">📚</span>Context Documents</h3>
+                <h3><span class="icon">📚</span><span data-i18n="chatbotSettings.section.contextDocs">Context
+                        Documents</span></h3>
 
                 <div class="toggle-group">
                     <div class="toggle-label">
-                        <span class="title">Enable Context Documents</span>
-                        <span class="description">Include knowledge from /agent_context_documents in AI prompt</span>
+                        <span class="title" data-i18n="chatbotSettings.ctx.enableTitle">Enable Context Documents</span>
+                        <span class="description" data-i18n="chatbotSettings.ctx.enableDesc">Include knowledge from
+                            /agent_context_documents in AI prompt</span>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="context-docs-enabled" checked>
@@ -385,50 +395,59 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="context-docs-dir">Context Docs Directory</label>
+                    <label for="context-docs-dir" data-i18n="chatbotSettings.ctx.dir">Context Docs Directory</label>
                     <input type="text" id="context-docs-dir" placeholder="agent_context_documents"
                         value="agent_context_documents">
-                    <div class="help-text">Relative to project root. Supports .md, .txt, .pdf, .docx, .csv</div>
+                    <div class="help-text" data-i18n="chatbotSettings.ctx.dirHelp">Relative to project root. Supports
+                        .md, .txt, .pdf, .docx, .csv</div>
                 </div>
 
                 <div class="form-group">
-                    <label for="context-docs-max-chars">Max Characters in Prompt</label>
+                    <label for="context-docs-max-chars" data-i18n="chatbotSettings.ctx.maxChars">Max Characters in
+                        Prompt</label>
                     <input type="number" id="context-docs-max-chars" min="1000" step="500" value="4000">
-                    <div class="help-text">Upper limit of concatenated context injected into the model prompt.</div>
+                    <div class="help-text" data-i18n="chatbotSettings.ctx.maxCharsHelp">Upper limit of concatenated
+                        context injected into the model prompt.</div>
                 </div>
 
                 <div class="form-group">
-                    <label>Manage Context Documents</label>
+                    <label data-i18n="chatbotSettings.ctx.manage">Manage Context Documents</label>
                     <div id="context-upload-area"
                         style="border: 2px dashed #e1e5e9; border-radius: 10px; padding: 20px; background: #fafbfc; text-align: center; cursor: pointer;">
                         <div style="font-size: 28px;">📤</div>
-                        <div style="font-weight: 600; margin-top: 8px;">Drag & drop files here, or click to select</div>
-                        <div style="font-size: 12px; color: #666; margin-top: 6px;">Allowed: .md, .txt, .pdf, .docx,
-                            .csv</div>
+                        <div style="font-weight: 600; margin-top: 8px;" data-i18n="chatbotSettings.ctx.drop">Drag & drop
+                            files here, or click to select</div>
+                        <div style="font-size: 12px; color: #666; margin-top: 6px;"
+                            data-i18n="chatbotSettings.ctx.allowed">Allowed: .md, .txt, .pdf, .docx, .csv</div>
                         <input id="context-file-input" type="file" multiple style="display:none"
                             accept=".md,.txt,.pdf,.docx,.csv">
                     </div>
                     <div id="context-selected-files"
                         style="margin-top: 10px; border:1px solid #eef0f3; border-radius:8px; background:white; max-height: 150px; overflow:auto;">
-                        <div style="padding: 8px; font-size: 13px; color:#666;">No files selected</div>
+                        <div style="padding: 8px; font-size: 13px; color:#666;"
+                            data-i18n="chatbotSettings.ctx.noSelected">No files selected</div>
                     </div>
                     <div style="margin-top: 12px; display:flex; gap: 8px; justify-content: flex-end;">
-                        <button class="btn-sm btn-secondary" id="refresh-context-files">Refresh List</button>
-                        <button class="btn-sm btn-primary" id="upload-context-files">Upload Selected</button>
+                        <button class="btn-sm btn-secondary" id="refresh-context-files"
+                            data-i18n="chatbotSettings.ctx.refresh">Refresh List</button>
+                        <button class="btn-sm btn-primary" id="upload-context-files"
+                            data-i18n="chatbotSettings.ctx.upload">Upload Selected</button>
                     </div>
                     <div id="context-files-list"
                         style="margin-top: 15px; max-height: 220px; overflow:auto; border:1px solid #eef0f3; border-radius: 8px; background:white;">
-                        <div style="padding: 10px; font-size: 14px; color:#666;">No files loaded</div>
+                        <div style="padding: 10px; font-size: 14px; color:#666;"
+                            data-i18n="chatbotSettings.ctx.noFiles">No files loaded</div>
                     </div>
                 </div>
             </div>
 
             <!-- Chatbot Language Configuration -->
             <div class="settings-card">
-                <h3><span class="icon">🌍</span>Language Settings</h3>
+                <h3><span class="icon">🌍</span><span data-i18n="chatbotSettings.section.language">Language
+                        Settings</span></h3>
 
                 <div class="form-group">
-                    <label for="chatbot-language">Chatbot Language</label>
+                    <label for="chatbot-language" data-i18n="chatbotSettings.lang.label">Chatbot Language</label>
                     <select id="chatbot-language">
                         <option value="uk">🇺🇦 Ukrainian (Українська)</option>
                         <option value="en">🇺🇸 English</option>
@@ -436,34 +455,41 @@
                         <option value="fr">🇫🇷 French (Français)</option>
                         <option value="es">🇪🇸 Spanish (Español)</option>
                     </select>
-                    <div class="help-text">Language the AI agent will use to communicate with customers</div>
+                    <div class="help-text" data-i18n="chatbotSettings.lang.help">Language the AI agent will use to
+                        communicate with customers</div>
                 </div>
 
                 <div class="form-group">
-                    <label for="force-language">Force Language Compliance</label>
+                    <label for="force-language" data-i18n="chatbotSettings.lang.forceLabel">Force Language
+                        Compliance</label>
                     <div class="toggle-group">
                         <div class="toggle-label">
-                            <span class="title">Strict Language Enforcement</span>
-                            <span class="description">AI will only respond in the selected language</span>
+                            <span class="title" data-i18n="chatbotSettings.lang.forceTitle">Strict Language
+                                Enforcement</span>
+                            <span class="description" data-i18n="chatbotSettings.lang.forceDesc">AI will only respond in
+                                the selected language</span>
                         </div>
                         <label class="toggle-switch">
                             <input type="checkbox" id="force-language" checked>
                             <span class="slider"></span>
                         </label>
                     </div>
-                    <div class="help-text">When enabled, the AI will strictly respond only in the selected language
+                    <div class="help-text" data-i18n="chatbotSettings.lang.forceHelp">When enabled, the AI will strictly
+                        respond only in the selected language
                     </div>
                 </div>
             </div>
 
             <!-- Chatbot Behavior -->
             <div class="settings-card">
-                <h3><span class="icon">🎭</span>Chatbot Behavior</h3>
+                <h3><span class="icon">🎭</span><span data-i18n="chatbotSettings.section.behavior">Chatbot
+                        Behavior</span></h3>
 
                 <div class="toggle-group">
                     <div class="toggle-label">
-                        <span class="title">Friendly Tone</span>
-                        <span class="description">Use warm, welcoming language</span>
+                        <span class="title" data-i18n="chatbotSettings.behavior.friendlyTitle">Friendly Tone</span>
+                        <span class="description" data-i18n="chatbotSettings.behavior.friendlyDesc">Use warm, welcoming
+                            language</span>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="friendly-tone" checked>
@@ -473,8 +499,10 @@
 
                 <div class="toggle-group">
                     <div class="toggle-label">
-                        <span class="title">Professional Style</span>
-                        <span class="description">Maintain business-appropriate language</span>
+                        <span class="title" data-i18n="chatbotSettings.behavior.professionalTitle">Professional
+                            Style</span>
+                        <span class="description" data-i18n="chatbotSettings.behavior.professionalDesc">Maintain
+                            business-appropriate language</span>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="professional-style" checked>
@@ -484,8 +512,10 @@
 
                 <div class="toggle-group">
                     <div class="toggle-label">
-                        <span class="title">Suggestive Responses</span>
-                        <span class="description">Offer follow-up suggestions</span>
+                        <span class="title" data-i18n="chatbotSettings.behavior.suggestiveTitle">Suggestive
+                            Responses</span>
+                        <span class="description" data-i18n="chatbotSettings.behavior.suggestiveDesc">Offer follow-up
+                            suggestions</span>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="suggestive-responses" checked>
@@ -495,8 +525,9 @@
 
                 <div class="toggle-group">
                     <div class="toggle-label">
-                        <span class="title">Manager Handover</span>
-                        <span class="description">Enable automatic manager escalation</span>
+                        <span class="title" data-i18n="chatbotSettings.behavior.handoverTitle">Manager Handover</span>
+                        <span class="description" data-i18n="chatbotSettings.behavior.handoverDesc">Enable automatic
+                            manager escalation</span>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="manager-handover" checked>
@@ -507,22 +538,27 @@
 
             <!-- Performance & Monitoring -->
             <div class="settings-card">
-                <h3><span class="icon">📊</span>Performance & Monitoring</h3>
+                <h3><span class="icon">📊</span><span data-i18n="chatbotSettings.section.performance">Performance &
+                        Monitoring</span></h3>
 
                 <div class="form-group">
-                    <label for="response-timeout">Response Timeout (seconds)</label>
+                    <label for="response-timeout" data-i18n="chatbotSettings.performance.timeout">Response Timeout
+                        (seconds)</label>
                     <div class="range-group">
                         <input type="range" id="response-timeout" class="range-slider" min="5" max="60" step="5"
                             value="30">
                         <span class="range-value" id="response-timeout-value">30</span>
                     </div>
-                    <div class="help-text">Maximum time to wait for AI response</div>
+                    <div class="help-text" data-i18n="chatbotSettings.performance.timeoutHelp">Maximum time to wait for
+                        AI response</div>
                 </div>
 
                 <div class="toggle-group">
                     <div class="toggle-label">
-                        <span class="title">Conversation Logging</span>
-                        <span class="description">Store chat history for analysis</span>
+                        <span class="title" data-i18n="chatbotSettings.performance.loggingTitle">Conversation
+                            Logging</span>
+                        <span class="description" data-i18n="chatbotSettings.performance.loggingDesc">Store chat history
+                            for analysis</span>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="conversation-logging" checked>
@@ -532,8 +568,10 @@
 
                 <div class="toggle-group">
                     <div class="toggle-label">
-                        <span class="title">Performance Analytics</span>
-                        <span class="description">Track response quality and speed</span>
+                        <span class="title" data-i18n="chatbotSettings.performance.analyticsTitle">Performance
+                            Analytics</span>
+                        <span class="description" data-i18n="chatbotSettings.performance.analyticsDesc">Track response
+                            quality and speed</span>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="performance-analytics" checked>
@@ -543,8 +581,9 @@
 
                 <div class="toggle-group">
                     <div class="toggle-label">
-                        <span class="title">Error Reporting</span>
-                        <span class="description">Log and report system errors</span>
+                        <span class="title" data-i18n="chatbotSettings.performance.errorsTitle">Error Reporting</span>
+                        <span class="description" data-i18n="chatbotSettings.performance.errorsDesc">Log and report
+                            system errors</span>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="error-reporting" checked>
@@ -555,20 +594,55 @@
         </div>
 
         <div class="action-buttons">
-            <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
-            <button class="btn btn-secondary" onclick="resetToDefaults()">🔄 Reset to Defaults</button>
-            <button class="btn btn-success" onclick="testConfiguration()">🧪 Test Configuration</button>
-            <button class="btn btn-danger" onclick="exportSettings()">📤 Export Settings</button>
+            <button class="btn btn-primary" onclick="saveSettings()" data-i18n="chatbotSettings.btn.save">💾 Save
+                Settings</button>
+            <button class="btn btn-secondary" onclick="resetToDefaults()" data-i18n="chatbotSettings.btn.reset">🔄 Reset
+                to Defaults</button>
+            <button class="btn btn-success" onclick="testConfiguration()" data-i18n="chatbotSettings.btn.test">🧪 Test
+                Configuration</button>
+            <button class="btn btn-danger" onclick="exportSettings()" data-i18n="chatbotSettings.btn.export">📤 Export
+                Settings</button>
         </div>
 
         <div class="status-indicator" style="margin-top: 30px;">
             <div class="status-dot" id="status-dot"></div>
-            <span id="status-text">Configuration saved successfully</span>
+            <span id="status-text" data-i18n="chatbotSettings.status.saved">Configuration saved successfully</span>
         </div>
     </div>
 
-    <script src="/static/nav.js"></script>
     <script src="/static/auth.js"></script>
+    <script src="/static/i18n.js"></script>
+    <script>
+        (function () {
+            async function initI18N() {
+                try {
+                    const token = localStorage.getItem('access_token');
+                    const meRes = await fetch('/users/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                    let lang = localStorage.getItem('ui_language') || 'uk';
+                    if (meRes.ok) {
+                        const me = await meRes.json();
+                        lang = me.preferred_language || lang;
+                    }
+                    if (window.I18N && I18N.setLanguage) {
+                        await I18N.setLanguage(lang);
+                    }
+                    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+                        const k = el.getAttribute('data-i18n');
+                        const txt = (window.I18N && I18N._dict && I18N._dict[k]) ? I18N._dict[k] : null;
+                        if (txt) el.textContent = txt;
+                    });
+                    // Translate placeholders for inputs/textareas
+                    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+                        const k = el.getAttribute('data-i18n-placeholder');
+                        const txt = (window.I18N && I18N._dict && I18N._dict[k]) ? I18N._dict[k] : null;
+                        if (txt) el.setAttribute('placeholder', txt);
+                    });
+                } catch { }
+            }
+            window.__i18nReady = initI18N();
+        })();
+    </script>
+    <script src="/static/nav.js"></script>
     <script>
         // Initialize settings
         let currentSettings = {};

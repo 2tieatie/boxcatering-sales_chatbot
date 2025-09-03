@@ -150,79 +150,85 @@
 
 <body>
     <div class="header">
-        <h1>Box Catering Chatbot</h1>
+        <h1 data-i18n="app.title">Box Catering Chatbot</h1>
         <div class="nav-links">
-            <a href="/dashboard" class="nav-link">Dashboard</a>
-            <a href="/chatbot-test" class="nav-link">Chatbot Test</a>
-            <a href="/chatbot-settings" class="nav-link active">Chatbot Settings</a>
-            <a href="/settings" class="nav-link">Settings</a>
-            <a href="/order-history" class="nav-link">Orders</a>
-            <a href="/conversation-history" class="nav-link">Conversations</a>
-            <a href="/customers" class="nav-link">Customers</a>
-            <a href="/user-management" class="nav-link">Users</a>
+            <a href="/dashboard" class="nav-link" data-i18n="nav.dashboard">Dashboard</a>
+            <a href="/chatbot-test" class="nav-link" data-i18n="nav.chatbotTest">Chatbot Test</a>
+            <a href="/chatbot-settings" class="nav-link active" data-i18n="nav.chatbotSettings">Chatbot Settings</a>
+            <a href="/settings" class="nav-link" data-i18n="nav.settings">Settings</a>
+            <a href="/order-history" class="nav-link" data-i18n="nav.orders">Orders</a>
+            <a href="/conversation-history" class="nav-link" data-i18n="nav.conversations">Conversations</a>
+            <a href="/customers" class="nav-link" data-i18n="nav.customers">Customers</a>
+            <a href="/user-management" class="nav-link" data-i18n="nav.users">Users</a>
             <div class="user-info">
                 <div class="user-avatar" id="user-avatar">U</div>
                 <span id="username">User</span>
-                <button class="logout-btn" onclick="logout()">Logout</button>
+                <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
             </div>
         </div>
     </div>
 
     <div class="container">
         <div class="welcome-section">
-            <h2>Welcome back!</h2>
-            <p>Manage your boxcatering business efficiently with AI-powered customer service and comprehensive
-                analytics.</p>
+            <h2 data-i18n="dashboard.welcome">Welcome back!</h2>
+            <p data-i18n="dashboard.subtitle">Manage your boxcatering business efficiently with AI-powered customer
+                service and comprehensive analytics.</p>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-number" id="total-conversations">0</div>
-                <div class="stat-label">Total Conversations</div>
+                <div class="stat-label" data-i18n="dashboard.totalConversations">Total Conversations</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="active-orders">0</div>
-                <div class="stat-label">Active Orders</div>
+                <div class="stat-label" data-i18n="dashboard.activeOrders">Active Orders</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="total-customers">0</div>
-                <div class="stat-label">Total Customers</div>
+                <div class="stat-label" data-i18n="dashboard.totalCustomers">Total Customers</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="handovers">0</div>
-                <div class="stat-label">Manager Handovers</div>
+                <div class="stat-label" data-i18n="dashboard.handovers">Manager Handovers</div>
             </div>
         </div>
 
         <div class="actions-grid">
             <div class="action-card">
-                <h3>👩 Chatbot Testing</h3>
-                <p>Test and interact with your AI-powered chatbot, simulate customer conversations, and validate
-                    responses.</p>
-                <button class="action-btn" onclick="window.location.href='/chatbot-test'">Test Chatbot</button>
+                <h3 data-i18n="dashboard.card.testTitle">👩 Chatbot Testing</h3>
+                <p data-i18n="dashboard.card.testDesc">Test and interact with your AI-powered chatbot, simulate customer
+                    conversations, and validate responses.</p>
+                <button class="action-btn" onclick="window.location.href='/chatbot-test'"
+                    data-i18n="dashboard.card.testButton">Test Chatbot</button>
             </div>
             <div class="action-card">
-                <h3>Chat Management</h3>
-                <p>Monitor and manage ongoing conversations, review chat history, and handle customer inquiries.</p>
-                <button class="action-btn" onclick="window.location.href='/conversation-history'">Manage Chats</button>
+                <h3 data-i18n="dashboard.card.chatTitle">Chat Management</h3>
+                <p data-i18n="dashboard.card.chatDesc">Monitor and manage ongoing conversations, review chat history,
+                    and handle customer inquiries.</p>
+                <button class="action-btn" onclick="window.location.href='/conversation-history'"
+                    data-i18n="dashboard.card.chatButton">Manage Chats</button>
             </div>
             <div class="action-card">
-                <h3>Order Management</h3>
-                <p>Track orders, update statuses, manage inventory, and ensure timely delivery to customers.</p>
-                <button class="action-btn" onclick="window.location.href='/order-history'">Manage
-                    Orders</button>
+                <h3 data-i18n="dashboard.card.orderTitle">Order Management</h3>
+                <p data-i18n="dashboard.card.orderDesc">Track orders, update statuses, manage inventory, and ensure
+                    timely delivery to customers.</p>
+                <button class="action-btn" onclick="window.location.href='/order-history'"
+                    data-i18n="dashboard.card.orderButton">Manage Orders</button>
             </div>
             <div class="action-card">
-                <h3>Customer Database</h3>
-                <p>Access customer information, view order history, and maintain customer relationships.</p>
-                <button class="action-btn" onclick="window.location.href='/customers'">View
-                    Customers</button>
+                <h3 data-i18n="dashboard.card.customersTitle">Customer Database</h3>
+                <p data-i18n="dashboard.card.customersDesc">Access customer information, view order history, and
+                    maintain customer relationships.</p>
+                <button class="action-btn" onclick="window.location.href='/customers'"
+                    data-i18n="dashboard.card.customersButton">View Customers</button>
             </div>
 
             <div class="action-card">
-                <h3>🔐 Change Password</h3>
-                <p>Update your account password for enhanced security.</p>
-                <button class="action-btn" onclick="window.location.href='/change-password'">Change Password</button>
+                <h3 data-i18n="dashboard.card.passwordTitle">🔐 Change Password</h3>
+                <p data-i18n="dashboard.card.passwordDesc">Update your account password for enhanced security.</p>
+                <button class="action-btn" onclick="window.location.href='/change-password'"
+                    data-i18n="dashboard.card.passwordButton">Change Password</button>
             </div>
         </div>
     </div>
@@ -231,8 +237,33 @@
         💬
     </div>
 
-    <script src="/static/nav.js"></script>
     <script src="/static/auth.js"></script>
+    <script src="/static/i18n.js"></script>
+    <script>
+        (function () {
+            async function initI18N() {
+                try {
+                    const token = localStorage.getItem('access_token');
+                    const meRes = await fetch('/users/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                    let lang = localStorage.getItem('ui_language') || 'uk';
+                    if (meRes.ok) {
+                        const me = await meRes.json();
+                        lang = me.preferred_language || lang;
+                    }
+                    if (window.I18N && I18N.setLanguage) {
+                        await I18N.setLanguage(lang);
+                    }
+                    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+                        const k = el.getAttribute('data-i18n');
+                        const txt = (window.I18N && I18N._dict && I18N._dict[k]) ? I18N._dict[k] : null;
+                        if (txt) el.textContent = txt;
+                    });
+                } catch { }
+            }
+            window.__i18nReady = initI18N();
+        })();
+    </script>
+    <script src="/static/nav.js"></script>
     <script>
         // Check if user is authenticated
         function checkAuth() {

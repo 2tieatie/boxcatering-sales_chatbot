@@ -278,55 +278,58 @@
 
 <body>
     <div class="header">
-        <h1>Box Catering Chatbot</h1>
+        <h1 data-i18n="app.title">Box Catering Chatbot</h1>
         <div class="nav-links">
-            <a href="/dashboard" class="nav-link">Dashboard</a>
-            <a href="/chatbot-test" class="nav-link">Chatbot Test</a>
-            <a href="/chatbot-settings" class="nav-link">Chatbot Settings</a>
-            <a href="/settings" class="nav-link">Settings</a>
-            <a href="/order-history" class="nav-link">Orders</a>
-            <a href="/conversation-history" class="nav-link">Conversations</a>
-            <a href="/customers" class="nav-link active">Customers</a>
-            <a href="/user-management" class="nav-link">Users</a>
+            <a href="/dashboard" class="nav-link" data-i18n="nav.dashboard">Dashboard</a>
+            <a href="/chatbot-test" class="nav-link" data-i18n="nav.chatbotTest">Chatbot Test</a>
+            <a href="/chatbot-settings" class="nav-link" data-i18n="nav.chatbotSettings">Chatbot Settings</a>
+            <a href="/settings" class="nav-link" data-i18n="nav.settings">Settings</a>
+            <a href="/order-history" class="nav-link" data-i18n="nav.orders">Orders</a>
+            <a href="/conversation-history" class="nav-link" data-i18n="nav.conversations">Conversations</a>
+            <a href="/customers" class="nav-link active" data-i18n="nav.customers">Customers</a>
+            <a href="/user-management" class="nav-link" data-i18n="nav.users">Users</a>
             <div class="user-info">
                 <div class="user-avatar" id="user-avatar">U</div>
                 <span id="username">User</span>
-                <button class="logout-btn" onclick="logout()">Logout</button>
+                <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
             </div>
         </div>
     </div>
 
     <div class="container">
         <div class="page-header">
-            <h2>👤 Customers</h2>
-            <p>Manage your customers database, contact information, and notes.</p>
+            <h2 data-i18n="customers.title">👤 Customers</h2>
+            <p data-i18n="customers.subtitle">Manage your customers database, contact information, and notes.</p>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
                 <h3 id="total-customers">0</h3>
-                <p>Total Customers</p>
+                <p data-i18n="customers.stats.total">Total Customers</p>
             </div>
             <div class="stat-card">
                 <h3 id="with-email">0</h3>
-                <p>With Email</p>
+                <p data-i18n="customers.stats.withEmail">With Email</p>
             </div>
             <div class="stat-card">
                 <h3 id="with-phone">0</h3>
-                <p>With Phone</p>
+                <p data-i18n="customers.stats.withPhone">With Phone</p>
             </div>
         </div>
 
         <div class="filters-section">
-            <h3><span>🔍</span>Filters & Search</h3>
+            <h3><span>🔍</span><span data-i18n="customers.filters.title">Filters & Search</span></h3>
             <div class="filters-grid">
                 <div class="filter-group">
-                    <label for="search-input">Search</label>
-                    <input type="text" id="search-input" placeholder="Name, email, phone...">
+                    <label for="search-input" data-i18n="customers.filters.search">Search</label>
+                    <input type="text" id="search-input" placeholder="Name, email, phone..."
+                        data-i18n-placeholder="customers.filters.searchPh">
                 </div>
                 <div class="filter-actions">
-                    <button class="btn btn-primary" onclick="applyFilters()">🔍 Apply</button>
-                    <button class="btn btn-secondary" onclick="clearFilters()">🔄 Clear</button>
+                    <button class="btn btn-primary" onclick="applyFilters()" data-i18n="customers.filters.apply">🔍
+                        Apply</button>
+                    <button class="btn btn-secondary" onclick="clearFilters()" data-i18n="customers.filters.clear">🔄
+                        Clear</button>
                 </div>
             </div>
         </div>
@@ -335,20 +338,21 @@
 
         <div class="table-container">
             <div class="table-header">
-                <h3><span>📇</span>Customers</h3>
+                <h3><span>📇</span><span data-i18n="customers.table.title">Customers</span></h3>
                 <div class="table-actions" style="display:flex;gap:10px;">
-                    <button class="btn btn-secondary" onclick="reloadCustomers()">🔄 Refresh</button>
+                    <button class="btn btn-secondary" onclick="reloadCustomers()" data-i18n="customers.table.refresh">🔄
+                        Refresh</button>
                 </div>
             </div>
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Address</th>
-                        <th>Notes</th>
+                        <th data-i18n="customers.table.id">ID</th>
+                        <th data-i18n="customers.table.name">Name</th>
+                        <th data-i18n="customers.table.email">Email</th>
+                        <th data-i18n="customers.table.phone">Phone</th>
+                        <th data-i18n="customers.table.address">Address</th>
+                        <th data-i18n="customers.table.notes">Notes</th>
                     </tr>
                 </thead>
                 <tbody id="rows"></tbody>
@@ -358,39 +362,67 @@
 
     <div id="modal" class="modal" onclick="closeIfBackdrop(event)">
         <div class="modal-card">
-            <div class="modal-title" id="modal-title">New Customer</div>
+            <div class="modal-title" id="modal-title" data-i18n="customers.modal.title.new">New Customer</div>
             <div class="form-grid">
                 <div>
-                    <label for="name">Name</label>
-                    <input id="name" />
+                    <label for="name" data-i18n="customers.modal.name">Name</label>
+                    <input id="name" data-i18n-placeholder="customers.modal.namePh" />
                 </div>
                 <div>
-                    <label for="email">Email</label>
-                    <input id="email" />
+                    <label for="email" data-i18n="customers.modal.email">Email</label>
+                    <input id="email" data-i18n-placeholder="customers.modal.emailPh" />
                 </div>
                 <div>
-                    <label for="phone">Phone</label>
-                    <input id="phone" />
+                    <label for="phone" data-i18n="customers.modal.phone">Phone</label>
+                    <input id="phone" data-i18n-placeholder="customers.modal.phonePh" />
                 </div>
                 <div>
-                    <label for="address">Address</label>
-                    <input id="address" />
+                    <label for="address" data-i18n="customers.modal.address">Address</label>
+                    <input id="address" data-i18n-placeholder="customers.modal.addressPh" />
                 </div>
                 <div style="grid-column: 1 / -1;">
-                    <label for="notes">Notes</label>
-                    <textarea id="notes" rows="3"></textarea>
+                    <label for="notes" data-i18n="customers.modal.notes">Notes</label>
+                    <textarea id="notes" rows="3" data-i18n-placeholder="customers.modal.notesPh"></textarea>
                 </div>
             </div>
             <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary" id="saveBtn" onclick="saveCustomer()">Save</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal()"
+                    data-i18n="customers.modal.cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="saveBtn" onclick="saveCustomer()"
+                    data-i18n="customers.modal.save">Save</button>
             </div>
         </div>
     </div>
 
-    <script src="/static/nav.js"></script>
     <script src="/static/auth.js"></script>
+    <script src="/static/i18n.js"></script>
     <script>
+        (function () {
+            async function initI18N() {
+                try {
+                    const token = localStorage.getItem('access_token');
+                    const meRes = await fetch('/users/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                    let lang = localStorage.getItem('ui_language') || 'uk';
+                    if (meRes.ok) {
+                        const me = await meRes.json();
+                        lang = me.preferred_language || lang;
+                    }
+                    if (window.I18N && I18N.setLanguage) {
+                        await I18N.setLanguage(lang);
+                    }
+                    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+                        const k = el.getAttribute('data-i18n');
+                        if (window.I18N && I18N.t) { el.textContent = I18N.t(k); }
+                    });
+                    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+                        const k = el.getAttribute('data-i18n-placeholder');
+                        if (window.I18N && I18N.t) { el.setAttribute('placeholder', I18N.t(k)); }
+                    });
+                } catch { }
+            }
+            window.__i18nReady = initI18N();
+        })();
+
         let editingId = null;
         let customers = [];
 
@@ -414,7 +446,7 @@
             if (!token) { window.location.href = '/login'; return; }
             document.getElementById('username').textContent = 'System Admin';
             document.getElementById('user-avatar').textContent = 'S';
-            reloadCustomers();
+            (window.__i18nReady || Promise.resolve()).then(reloadCustomers);
         }
 
         function apiHeaders() {
@@ -484,15 +516,15 @@
                 notes: document.getElementById('notes').value.trim() || null,
             };
 
-            if (!payload.name) { showAlert('Name is required', 'error'); return; }
+            if (!payload.name) { showAlert((window.I18N && I18N.t) ? I18N.t('customers.alert.nameRequired') : 'Name is required', 'error'); return; }
 
             let url = '/customers/';
             let method = 'POST';
             if (editingId !== null) { url = `/customers/${editingId}`; method = 'PUT'; }
 
             const res = await fetch(url, { method, headers: apiHeaders(), body: JSON.stringify(payload) });
-            if (!res.ok) { showAlert('Failed to save customer', 'error'); return; }
-            showAlert('Saved successfully');
+            if (!res.ok) { showAlert((window.I18N && I18N.t) ? I18N.t('customers.alert.saveFailed') : 'Failed to save customer', 'error'); return; }
+            showAlert((window.I18N && I18N.t) ? I18N.t('customers.alert.saveSuccess') : 'Saved successfully');
             closeModal();
             await reloadCustomers();
         }

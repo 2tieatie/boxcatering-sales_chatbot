@@ -454,88 +454,93 @@
 
 <body>
     <div class="header">
-        <h1>Box Catering Chatbot</h1>
+        <h1 data-i18n="app.title">Box Catering Chatbot</h1>
         <div class="nav-links">
-            <a href="/dashboard" class="nav-link">Dashboard</a>
-            <a href="/chatbot-test" class="nav-link">Chatbot Test</a>
-            <a href="/chatbot-settings" class="nav-link">Chatbot Settings</a>
-            <a href="/settings" class="nav-link">Settings</a>
-            <a href="/order-history" class="nav-link">Orders</a>
-            <a href="/conversation-history" class="nav-link active">Conversations</a>
-            <a href="/customers" class="nav-link">Customers</a>
-            <a href="/user-management" class="nav-link">Users</a>
+            <a href="/dashboard" class="nav-link" data-i18n="nav.dashboard">Dashboard</a>
+            <a href="/chatbot-test" class="nav-link" data-i18n="nav.chatbotTest">Chatbot Test</a>
+            <a href="/chatbot-settings" class="nav-link" data-i18n="nav.chatbotSettings">Chatbot Settings</a>
+            <a href="/settings" class="nav-link" data-i18n="nav.settings">Settings</a>
+            <a href="/order-history" class="nav-link" data-i18n="nav.orders">Orders</a>
+            <a href="/conversation-history" class="nav-link active" data-i18n="nav.conversations">Conversations</a>
+            <a href="/customers" class="nav-link" data-i18n="nav.customers">Customers</a>
+            <a href="/user-management" class="nav-link" data-i18n="nav.users">Users</a>
             <div class="user-info">
                 <div class="user-avatar" id="user-avatar">U</div>
                 <span id="username">User</span>
-                <button class="logout-btn" onclick="logout()">Logout</button>
+                <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
             </div>
         </div>
     </div>
 
     <div class="container">
         <div class="page-header">
-            <h2>💬 Conversation History</h2>
-            <p>Track and manage all customer conversations with your AI-powered chatbot</p>
+            <h2 data-i18n="conversationHistory.title">💬 Conversation History</h2>
+            <p data-i18n="conversationHistory.subtitle">Track and manage all customer conversations with your AI-powered
+                chatbot</p>
         </div>
 
         <!-- Statistics Cards -->
         <div class="stats-grid">
             <div class="stat-card">
                 <h3 id="total-conversations">0</h3>
-                <p>Total Conversations</p>
+                <p data-i18n="conversationHistory.stats.total">Total Conversations</p>
             </div>
             <div class="stat-card">
                 <h3 id="active-conversations">0</h3>
-                <p>Active Conversations</p>
+                <p data-i18n="conversationHistory.stats.active">Active Conversations</p>
             </div>
             <div class="stat-card">
                 <h3 id="handover-count">0</h3>
-                <p>Manager Handovers</p>
+                <p data-i18n="conversationHistory.stats.handovers">Manager Handovers</p>
             </div>
             <div class="stat-card">
                 <h3 id="avg-response-time">0s</h3>
-                <p>Avg Response Time</p>
+                <p data-i18n="conversationHistory.stats.avgResponse">Avg Response Time</p>
             </div>
         </div>
 
         <!-- Filters Section -->
         <div class="filters-section">
-            <h3><span>🔍</span>Filters & Search</h3>
+            <h3><span>🔍</span><span data-i18n="conversationHistory.filters.title">Filters & Search</span></h3>
             <div class="filters-grid">
                 <div class="filter-group">
-                    <label for="status-filter">Status</label>
+                    <label for="status-filter" data-i18n="conversationHistory.filters.status">Status</label>
                     <select id="status-filter">
-                        <option value="">All Statuses</option>
-                        <option value="active">Active</option>
-                        <option value="completed">Completed</option>
-                        <option value="handover">Manager Handover</option>
-                        <option value="archived">Archived</option>
+                        <option value="" data-i18n="conversationHistory.filters.allStatuses">All Statuses</option>
+                        <option value="active" data-i18n="conversationHistory.status.active">Active</option>
+                        <option value="completed" data-i18n="conversationHistory.status.completed">Completed</option>
+                        <option value="handover" data-i18n="conversationHistory.status.handover">Manager Handover
+                        </option>
+                        <option value="archived" data-i18n="conversationHistory.status.archived">Archived</option>
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label for="priority-filter">Priority</label>
+                    <label for="priority-filter" data-i18n="conversationHistory.filters.priority">Priority</label>
                     <select id="priority-filter">
-                        <option value="">All Priorities</option>
-                        <option value="high">High</option>
-                        <option value="medium">Medium</option>
-                        <option value="low">Low</option>
+                        <option value="" data-i18n="conversationHistory.filters.allPriorities">All Priorities</option>
+                        <option value="high" data-i18n="conversationHistory.priority.high">High</option>
+                        <option value="medium" data-i18n="conversationHistory.priority.medium">Medium</option>
+                        <option value="low" data-i18n="conversationHistory.priority.low">Low</option>
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label for="date-from">Date From</label>
+                    <label for="date-from" data-i18n="conversationHistory.filters.dateFrom">Date From</label>
                     <input type="date" id="date-from">
                 </div>
                 <div class="filter-group">
-                    <label for="date-to">Date To</label>
+                    <label for="date-to" data-i18n="conversationHistory.filters.dateTo">Date To</label>
                     <input type="date" id="date-to">
                 </div>
                 <div class="filter-group">
-                    <label for="search-input">Search</label>
-                    <input type="text" id="search-input" placeholder="Search conversations...">
+                    <label for="search-input" data-i18n="conversationHistory.filters.search">Search</label>
+                    <input type="text" id="search-input" placeholder="Search conversations..."
+                        data-i18n-placeholder="conversationHistory.filters.searchPh">
                 </div>
                 <div class="filter-actions">
-                    <button class="btn btn-primary" onclick="applyFilters()">🔍 Apply</button>
-                    <button class="btn btn-secondary" onclick="clearFilters()">🔄 Clear</button>
+                    <button class="btn btn-primary" onclick="applyFilters()"
+                        data-i18n="conversationHistory.filters.apply">🔍 Apply</button>
+                    <button class="btn btn-secondary" onclick="clearFilters()"
+                        data-i18n="conversationHistory.filters.clear">🔄 Clear</button>
                 </div>
             </div>
         </div>
@@ -543,24 +548,26 @@
         <!-- Conversations Table -->
         <div class="table-container">
             <div class="table-header">
-                <h3><span>📋</span>Conversations</h3>
+                <h3><span>📋</span><span data-i18n="conversationHistory.table.title">Conversations</span></h3>
                 <div class="table-actions">
-                    <button class="btn btn-primary" onclick="exportConversations()">📤 Export</button>
-                    <button class="btn btn-secondary" onclick="refreshData()">🔄 Refresh</button>
+                    <button class="btn btn-primary" onclick="exportConversations()"
+                        data-i18n="conversationHistory.table.export">📤 Export</button>
+                    <button class="btn btn-secondary" onclick="refreshData()"
+                        data-i18n="conversationHistory.table.refresh">🔄 Refresh</button>
                 </div>
             </div>
 
             <table class="conversations-table">
                 <thead>
                     <tr>
-                        <th>Customer</th>
-                        <th>Conversation Preview</th>
-                        <th>Status</th>
-                        <th>Priority</th>
-                        <th>Started</th>
-                        <th>Last Activity</th>
-                        <th>Messages</th>
-                        <th>Actions</th>
+                        <th data-i18n="conversationHistory.table.customer">Customer</th>
+                        <th data-i18n="conversationHistory.table.preview">Conversation Preview</th>
+                        <th data-i18n="conversationHistory.table.status">Status</th>
+                        <th data-i18n="conversationHistory.table.priority">Priority</th>
+                        <th data-i18n="conversationHistory.table.started">Started</th>
+                        <th data-i18n="conversationHistory.table.lastActivity">Last Activity</th>
+                        <th data-i18n="conversationHistory.table.messages">Messages</th>
+                        <th data-i18n="conversationHistory.table.actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="conversations-tbody">
@@ -579,7 +586,7 @@
     <div id="conversation-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Conversation Details</h3>
+                <h3 data-i18n="conversationHistory.modal.title">Conversation Details</h3>
                 <span class="close" onclick="closeModal()">&times;</span>
             </div>
             <div id="modal-content">
@@ -588,8 +595,44 @@
         </div>
     </div>
 
-    <script src="/static/nav.js"></script>
     <script src="/static/auth.js"></script>
+    <script src="/static/i18n.js"></script>
+    <script>
+        (function () {
+            async function initI18N() {
+                try {
+                    const token = localStorage.getItem('access_token');
+                    const meRes = await fetch('/users/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                    let lang = localStorage.getItem('ui_language') || 'uk';
+                    if (meRes.ok) {
+                        const me = await meRes.json();
+                        lang = me.preferred_language || lang;
+                    }
+                    if (window.I18N && I18N.setLanguage) {
+                        await I18N.setLanguage(lang);
+                    }
+                    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+                        const k = el.getAttribute('data-i18n');
+                        if (window.I18N && I18N.t) {
+                            el.textContent = I18N.t(k);
+                        }
+                    });
+                    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+                        const k = el.getAttribute('data-i18n-placeholder');
+                        if (window.I18N && I18N.t) {
+                            el.setAttribute('placeholder', I18N.t(k));
+                        }
+                    });
+                    // Re-render table to apply translated dynamic labels
+                    if (typeof renderConversations === 'function') {
+                        renderConversations();
+                    }
+                } catch { }
+            }
+            window.__i18nReady = initI18N();
+        })();
+    </script>
+    <script src="/static/nav.js"></script>
     <script>
         // Conversations will be loaded from the API
         let conversations = [];
@@ -704,9 +747,10 @@
 
         function mapStatus(handoverState) {
             if (!handoverState || handoverState === 'none') return 'active';
-            if (handoverState === 'handover_pending') return 'handover pending';
-            if (handoverState === 'handover_in_progress') return 'handover in progress';
+            if (handoverState === 'handover_pending') return 'handover';
+            if (handoverState === 'handover_in_progress') return 'handover';
             if (handoverState === 'resolved_by_manager') return 'completed';
+            if (handoverState === 'archived') return 'archived';
             return 'active';
         }
 
@@ -768,6 +812,7 @@
             const endIndex = startIndex + itemsPerPage;
             const pageConversations = filteredConversations.slice(startIndex, endIndex);
 
+            const t = (k) => (window.I18N && I18N.t) ? I18N.t(k) : k;
             tbody.innerHTML = pageConversations.map(conversation => `
                 <tr>
                     <td>
@@ -783,12 +828,12 @@
                     </td>
                     <td>
                         <span class="status-badge status-${conversation.status}">
-                            ${conversation.status.charAt(0).toUpperCase() + conversation.status.slice(1)}
+                            ${t('conversationHistory.status.' + conversation.status)}
                         </span>
                     </td>
                     <td>
                         <span class="priority-badge priority-${conversation.priority}">
-                            ${conversation.priority.charAt(0).toUpperCase() + conversation.priority.slice(1)}
+                            ${t('conversationHistory.priority.' + conversation.priority)}
                         </span>
                     </td>
                     <td>${conversation.started}</td>
@@ -804,15 +849,16 @@
         // Build action buttons HTML per row
         function renderActionButtons(conversation) {
             const buttons = [];
-            buttons.push(`<button class="btn btn-sm btn-view" onclick="viewConversation(${conversation.id})">👁️ View</button>`);
+            const t = (k) => (window.I18N && I18N.t) ? I18N.t(k) : k;
+            buttons.push(`<button class="btn btn-sm btn-view" onclick="viewConversation(${conversation.id})">👁️ ${t('conversationHistory.actions.view')}</button>`);
             const state = String(conversation.handoverState || '').toLowerCase();
             if (state === 'handover_pending') {
-                buttons.push(`<button class="btn btn-sm btn-edit" onclick="takeConversation(${conversation.id})">🚀 In progress</button>`);
+                buttons.push(`<button class="btn btn-sm btn-edit" onclick="takeConversation(${conversation.id})">🚀 ${t('conversationHistory.actions.inProgress')}</button>`);
             }
             if (state === 'handover_in_progress') {
-                buttons.push(`<button class="btn btn-sm btn-edit" onclick="resolveConversation(${conversation.id})">✅ Mark as resolved</button>`);
+                buttons.push(`<button class="btn btn-sm btn-edit" onclick="resolveConversation(${conversation.id})">✅ ${t('conversationHistory.actions.resolve')}</button>`);
             }
-            buttons.push(`<button class="btn btn-sm btn-delete" onclick="deleteConversation(${conversation.id})">🗑️ Delete</button>`);
+            buttons.push(`<button class="btn btn-sm btn-delete" onclick="deleteConversation(${conversation.id})">🗑️ ${t('conversationHistory.actions.delete')}</button>`);
             return buttons.join('');
         }
 
@@ -826,9 +872,10 @@
                 return;
             }
 
+            const t = (k) => (window.I18N && I18N._dict && I18N._dict[k]) ? I18N._dict[k] : k;
             let paginationHTML = `
-                <button onclick="changePage(1)" ${currentPage === 1 ? 'disabled' : ''}>« First</button>
-                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹ Previous</button>
+                <button onclick="changePage(1)" ${currentPage === 1 ? 'disabled' : ''}>« ${t('conversationHistory.pagination.first')}</button>
+                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹ ${t('conversationHistory.pagination.prev')}</button>
             `;
 
             for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
@@ -838,8 +885,8 @@
             }
 
             paginationHTML += `
-                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next ›</button>
-                <button onclick="changePage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>Last »</button>
+                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>${t('conversationHistory.pagination.next')} ›</button>
+                <button onclick="changePage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>${t('conversationHistory.pagination.last')} »</button>
             `;
 
             pagination.innerHTML = paginationHTML;
@@ -912,54 +959,60 @@
                     fetchJSON(`/conversations/${id}/messages?limit=500`)
                 ]);
 
-                const mappedMessages = (messages || []).map(m => ({
-                    sender: m.sender === 'user' ? 'customer' : (m.sender === 'bot' ? 'bot' : 'manager'),
-                    content: m.text,
-                    timestamp: formatDateTime(m.timestamp)
-                }));
+                const mappedMessages = (messages || []).map(m => {
+                    const sender = m.sender === 'user' ? 'customer' : (m.sender === 'bot' ? 'bot' : 'manager');
+                    const senderKey = sender === 'customer' ? 'conversationHistory.sender.customer' : (sender === 'bot' ? 'conversationHistory.sender.bot' : 'conversationHistory.sender.manager');
+                    const senderLabel = (window.I18N && I18N.t) ? I18N.t(senderKey) : (sender === 'customer' ? '👤 Customer' : sender === 'bot' ? '🤖 Bot' : '👨 Manager');
+                    return {
+                        sender,
+                        senderLabel,
+                        content: m.text,
+                        timestamp: formatDateTime(m.timestamp)
+                    };
+                });
 
                 modalContent.innerHTML = `
                 <div class="conversation-details">
                     <div class="detail-row">
-                        <span class="detail-label">Session ID:</span>
+                        <span class="detail-label">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.sessionId') : 'Session ID:'}</span>
                         <span class="detail-value">${details.session_id}</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Status:</span>
+                        <span class="detail-label">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.status') : 'Status:'}</span>
                         <span class="detail-value">
                             <span class="status-badge status-${mapStatus(details.handover_state)}">
-                                ${mapStatus(details.handover_state).charAt(0).toUpperCase() + mapStatus(details.handover_state).slice(1)}
+                                ${(window.I18N && I18N.t) ? I18N.t('conversationHistory.status.' + mapStatus(details.handover_state)) : (mapStatus(details.handover_state).charAt(0).toUpperCase() + mapStatus(details.handover_state).slice(1))}
                             </span>
                         </span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Started:</span>
+                        <span class="detail-label">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.started') : 'Started:'}</span>
                         <span class="detail-value">${formatDateTime(details.created_at)}</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Last Activity:</span>
+                        <span class="detail-label">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.lastActivity') : 'Last Activity:'}</span>
                         <span class="detail-value">${formatDateTime(details.updated_at || details.created_at)}</span>
                     </div>
                     ${details.handover_reason ? `
                         <div class="detail-row">
-                            <span class="detail-label">Handover Reason:</span>
+                            <span class="detail-label">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.handoverReason') : 'Handover Reason:'}</span>
                             <span class="detail-value">${details.handover_reason}</span>
                         </div>
                     ` : ''}
                     ${details.handover_reason_description ? `
                         <div class="detail-row">
-                            <span class="detail-label">Handover Description:</span>
+                            <span class="detail-label">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.handoverDescription') : 'Handover Description:'}</span>
                             <span class="detail-value">${details.handover_reason_description}</span>
                         </div>
                     ` : ''}
                 </div>
 
-                <h4>Message History</h4>
+                <h4>${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.messageHistory') : 'Message History'}</h4>
                 <div class="messages-container">
                     ${mappedMessages.map(message => `
                         <div class="message-item message ${message.sender}">
                             <div class="message-header">
-                                <span class="message-sender">${message.sender === 'customer' ? '👤 Customer' : '🤖 Bot'}</span>
+                                <span class="message-sender">${message.senderLabel}</span>
                                 <span>${message.timestamp}</span>
                             </div>
                             <div class="message-content">${message.content}</div>
@@ -1052,13 +1105,14 @@
 
         // Generate CSV content
         function generateCSV(data) {
-            const headers = ['Session ID', 'Status', 'Started', 'Last Activity'];
+            const t = (k) => (window.I18N && I18N._dict && I18N._dict[k]) ? I18N._dict[k] : k;
+            const headers = [t('conversationHistory.csv.sessionId'), t('conversationHistory.table.status'), t('conversationHistory.table.started'), t('conversationHistory.table.lastActivity')];
             const csvRows = [headers.join(',')];
 
             data.forEach(conversation => {
                 const row = [
                     conversation.sessionId || conversation.customer.name,
-                    conversation.status,
+                    t('conversationHistory.status.' + conversation.status),
                     conversation.started,
                     conversation.lastActivity
                 ];
