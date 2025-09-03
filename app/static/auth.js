@@ -101,6 +101,11 @@
         ensureTokenValidOrRedirect,
     };
 
+    // Expose locale helper minimal surface if available
+    if (!window.I18N) {
+        window.I18N = { t: (k) => k, lang: (navigator.language || 'uk').slice(0, 2) };
+    }
+
     // Kick off on load except on the login page
     if (window.location.pathname !== LOGIN_PATH) {
         ensureTokenValidOrRedirect();
