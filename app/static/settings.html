@@ -493,6 +493,7 @@
     </div>
 
     <script src="/static/auth.js"></script>
+    <script src="/static/i18n.js"></script>
     <script>
         (function () {
             async function loadI18N() {
@@ -507,15 +508,21 @@
                     } else {
                         lang = localStorage.getItem('ui_language') || 'uk';
                     }
-                    const resp = await fetch(`/static/locales/${lang}.json`, { cache: 'no-store' });
-                    const dict = resp.ok ? await resp.json() : {};
-                    window.I18N = {
-                        _dict: dict,
-                        _lang: lang,
-                        t: function (key) { return (this._dict && this._dict[key]) || key; },
-                        get lang() { return this._lang; }
-                    };
-                } catch (e) { window.I18N = { t: (k) => k, lang: 'uk' }; }
+                    // Normalize legacy 'ua' to 'uk'
+                    const norm = (window.I18N && I18N.setLanguage) ? await (async () => { await I18N.setLanguage(lang); return I18N.lang; })() : lang;
+                    // Apply translations immediately
+                    try {
+                        document.querySelectorAll('[data-i18n]').forEach(function (el) {
+                            const k = el.getAttribute('data-i18n');
+                            const txt = (window.I18N && I18N._dict && I18N._dict[k]) ? I18N._dict[k] : null;
+                            if (txt) el.textContent = txt;
+                        });
+                        // Rebuild nav with translated labels
+                        const navScript = document.createElement('script');
+                        navScript.src = '/static/nav.js?v=' + Date.now();
+                        document.body.appendChild(navScript);
+                    } catch { }
+                } catch (e) { window.I18N = window.I18N || { t: (k) => k, lang: 'uk' }; }
             }
             window.__i18nReady = loadI18N();
         })();
