@@ -431,28 +431,29 @@
 
 <body>
     <div class="header">
-        <h1>Box Catering Chatbot</h1>
+        <h1 data-i18n="app.title">Box Catering Chatbot</h1>
         <div class="nav-links">
-            <a href="/dashboard" class="nav-link">Dashboard</a>
-            <a href="/chatbot-test" class="nav-link">Chatbot Test</a>
-            <a href="/chatbot-settings" class="nav-link">Chatbot Settings</a>
-            <a href="/settings" class="nav-link">Settings</a>
-            <a href="/order-history" class="nav-link active">Orders</a>
-            <a href="/conversation-history" class="nav-link">Conversations</a>
-            <a href="/customers" class="nav-link">Customers</a>
-            <a href="/user-management" class="nav-link">Users</a>
+            <a href="/dashboard" class="nav-link" data-i18n="nav.dashboard">Dashboard</a>
+            <a href="/chatbot-test" class="nav-link" data-i18n="nav.chatbotTest">Chatbot Test</a>
+            <a href="/chatbot-settings" class="nav-link" data-i18n="nav.chatbotSettings">Chatbot Settings</a>
+            <a href="/settings" class="nav-link" data-i18n="nav.settings">Settings</a>
+            <a href="/order-history" class="nav-link active" data-i18n="nav.orders">Orders</a>
+            <a href="/conversation-history" class="nav-link" data-i18n="nav.conversations">Conversations</a>
+            <a href="/customers" class="nav-link" data-i18n="nav.customers">Customers</a>
+            <a href="/user-management" class="nav-link" data-i18n="nav.users">Users</a>
             <div class="user-info">
                 <div class="user-avatar" id="user-avatar">U</div>
                 <span id="username">User</span>
-                <button class="logout-btn" onclick="logout()">Logout</button>
+                <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
             </div>
         </div>
     </div>
 
     <div class="container">
         <div class="page-header">
-            <h2>📋 Order History</h2>
-            <p>Track and manage all your box catering orders with comprehensive details and status updates</p>
+            <h2 data-i18n="orderHistory.title">📋 Order History</h2>
+            <p data-i18n="orderHistory.subtitle">Track and manage all your box catering orders with comprehensive
+                details and status updates</p>
         </div>
 
         <div id="alert-container"></div>
@@ -461,23 +462,23 @@
         <div class="stats-summary">
             <div class="stat-card">
                 <div class="stat-number" id="total-orders">0</div>
-                <div class="stat-label">Total Orders</div>
+                <div class="stat-label" data-i18n="orderHistory.stats.totalOrders">Total Orders</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="pending-orders">0</div>
-                <div class="stat-label">Pending</div>
+                <div class="stat-label" data-i18n="orderHistory.stats.pending">Pending</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="active-orders">0</div>
-                <div class="stat-label">Active</div>
+                <div class="stat-label" data-i18n="orderHistory.stats.active">Active</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="completed-orders">0</div>
-                <div class="stat-label">Completed</div>
+                <div class="stat-label" data-i18n="orderHistory.stats.completed">Completed</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="total-revenue">₴0</div>
-                <div class="stat-label">Total Revenue</div>
+                <div class="stat-label" data-i18n="orderHistory.stats.totalRevenue">Total Revenue</div>
             </div>
         </div>
 
@@ -485,40 +486,43 @@
         <div class="filters-section">
             <div class="filters-grid">
                 <div class="filter-group">
-                    <label for="status-filter">Status</label>
+                    <label for="status-filter" data-i18n="orderHistory.filters.status">Status</label>
                     <select id="status-filter">
-                        <option value="">All Statuses</option>
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="preparing">Preparing</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
+                        <option value="" data-i18n="orderHistory.filters.allStatuses">All Statuses</option>
+                        <option value="pending" data-i18n="orderHistory.status.pending">Pending</option>
+                        <option value="confirmed" data-i18n="orderHistory.status.confirmed">Confirmed</option>
+                        <option value="preparing" data-i18n="orderHistory.status.preparing">Preparing</option>
+                        <option value="delivered" data-i18n="orderHistory.status.delivered">Delivered</option>
+                        <option value="cancelled" data-i18n="orderHistory.status.cancelled">Cancelled</option>
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label for="priority-filter">Priority</label>
+                    <label for="priority-filter" data-i18n="orderHistory.filters.priority">Priority</label>
                     <select id="priority-filter">
-                        <option value="">All Priorities</option>
-                        <option value="high">High</option>
-                        <option value="medium">Medium</option>
-                        <option value="low">Low</option>
+                        <option value="" data-i18n="orderHistory.filters.allPriorities">All Priorities</option>
+                        <option value="high" data-i18n="orderHistory.priority.high">High</option>
+                        <option value="medium" data-i18n="orderHistory.priority.medium">Medium</option>
+                        <option value="low" data-i18n="orderHistory.priority.low">Low</option>
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label for="date-from">Date From</label>
+                    <label for="date-from" data-i18n="orderHistory.filters.dateFrom">Date From</label>
                     <input type="date" id="date-from">
                 </div>
                 <div class="filter-group">
-                    <label for="date-to">Date To</label>
+                    <label for="date-to" data-i18n="orderHistory.filters.dateTo">Date To</label>
                     <input type="date" id="date-to">
                 </div>
                 <div class="filter-group">
-                    <label for="search-input">Search</label>
-                    <input type="text" id="search-input" placeholder="Customer name, order ID...">
+                    <label for="search-input" data-i18n="orderHistory.filters.search">Search</label>
+                    <input type="text" id="search-input" placeholder="Customer name, order ID..."
+                        data-i18n-placeholder="orderHistory.filters.searchPh">
                 </div>
                 <div class="filter-actions">
-                    <button class="btn btn-primary" onclick="applyFilters()">🔍 Apply</button>
-                    <button class="btn btn-secondary" onclick="clearFilters()">🔄 Clear</button>
+                    <button class="btn btn-primary" onclick="applyFilters()" data-i18n="orderHistory.filters.apply">🔍
+                        Apply</button>
+                    <button class="btn btn-secondary" onclick="clearFilters()" data-i18n="orderHistory.filters.clear">🔄
+                        Clear</button>
                 </div>
             </div>
         </div>
@@ -526,16 +530,17 @@
         <!-- Orders Table -->
         <div class="table-container">
             <div class="table-header">
-                <div class="table-title">Order Details</div>
+                <div class="table-title" data-i18n="orderHistory.table.title">Order Details</div>
                 <div class="table-actions">
-                    <button class="btn btn-secondary" onclick="reloadOrders()">🔄 Refresh</button>
+                    <button class="btn btn-secondary" onclick="reloadOrders()" data-i18n="orderHistory.table.refresh">🔄
+                        Refresh</button>
                 </div>
             </div>
 
             <div id="table-content">
                 <div class="loading">
                     <div class="spinner"></div>
-                    <p>Loading orders...</p>
+                    <p data-i18n="orderHistory.loading">Loading orders...</p>
                 </div>
             </div>
         </div>
@@ -625,14 +630,44 @@
         </div>
     </div>
 
-    <script src="/static/nav.js"></script>
     <script src="/static/auth.js"></script>
+    <script src="/static/i18n.js"></script>
+    <script src="/static/nav.js"></script>
+    <script>
+        (function () {
+            async function initI18N() {
+                try {
+                    const token = localStorage.getItem('access_token');
+                    const meRes = await fetch('/users/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                    let lang = localStorage.getItem('ui_language') || 'uk';
+                    if (meRes.ok) {
+                        const me = await meRes.json();
+                        lang = me.preferred_language || lang;
+                    }
+                    if (window.I18N && I18N.setLanguage) {
+                        await I18N.setLanguage(lang);
+                    }
+                    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+                        const k = el.getAttribute('data-i18n');
+                        if (window.I18N && I18N.t) { el.textContent = I18N.t(k); }
+                    });
+                    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+                        const k = el.getAttribute('data-i18n-placeholder');
+                        if (window.I18N && I18N.t) { el.setAttribute('placeholder', I18N.t(k)); }
+                    });
+                    if (typeof renderOrdersTable === 'function') { renderOrdersTable(); }
+                } catch { }
+            }
+            window.__i18nReady = initI18N();
+        })();
+    </script>
     <script>
         // Global variables
         let orders = [];
         let filteredOrders = [];
         let currentPage = 1;
         const ordersPerPage = 10;
+        const t = (k) => (window.I18N && I18N.t) ? I18N.t(k) : k;
 
         // Check authentication
         function checkAuth() {
@@ -854,8 +889,8 @@
             if (filteredOrders.length === 0) {
                 tableContent.innerHTML = `
                     <div class="no-orders">
-                        <h3>No orders found</h3>
-                        <p>Try adjusting your filters or create a new order.</p>
+                        <h3>${t('orderHistory.empty.title')}</h3>
+                        <p>${t('orderHistory.empty.subtitle')}</p>
                     </div>
                 `;
                 return;
@@ -869,14 +904,14 @@
                 <table class="orders-table">
                     <thead>
                         <tr>
-                            <th>Order ID</th>
-                            <th>Customer</th>
-                            <th>Delivery Date</th>
-                            <th>Guests</th>
-                            <th>Status</th>
-                            <th>Priority</th>
-                            <th>Total</th>
-                            <th>Actions</th>
+                            <th>${t('orderHistory.table.orderId')}</th>
+                            <th>${t('orderHistory.table.customer')}</th>
+                            <th>${t('orderHistory.table.deliveryDate')}</th>
+                            <th>${t('orderHistory.table.guests')}</th>
+                            <th>${t('orderHistory.table.status')}</th>
+                            <th>${t('orderHistory.table.priority')}</th>
+                            <th>${t('orderHistory.table.total')}</th>
+                            <th>${t('orderHistory.table.actions')}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -897,13 +932,13 @@
                         </td>
                         <td>${deliveryDate}</td>
                         <td>${order.guests_count}</td>
-                        <td><span class="status-badge ${statusClass}">${order.status}</span></td>
-                        <td><span class="status-badge ${priorityClass}">${order.priority}</span></td>
+                        <td><span class="status-badge ${statusClass}">${t('orderHistory.status.' + order.status)}</span></td>
+                        <td><span class="status-badge ${priorityClass}">${t('orderHistory.priority.' + order.priority)}</span></td>
                         <td><strong>${totalFormatted}</strong></td>
                         <td>
                             <div class="action-buttons">
-                                <button class="action-btn btn-primary" onclick="viewOrder(${order.id})">👁️ View</button>
-                                <button class="action-btn btn-success" onclick="updateStatus(${order.id})">🔄 Status</button>
+                                <button class="action-btn btn-primary" onclick="viewOrder(${order.id})">👁️ ${t('orderHistory.actions.view')}</button>
+                                <button class="action-btn btn-success" onclick="updateStatus(${order.id})">🔄 ${t('orderHistory.actions.status')}</button>
                             </div>
                         </td>
                     </tr>
@@ -929,7 +964,7 @@
             let paginationHTML = '<div class="pagination">';
 
             // Previous button
-            paginationHTML += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>`;
+            paginationHTML += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>${t('orderHistory.pagination.prev')}</button>`;
 
             // Page numbers
             for (let i = 1; i <= totalPages; i++) {
@@ -943,7 +978,7 @@
             }
 
             // Next button
-            paginationHTML += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>`;
+            paginationHTML += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>${t('orderHistory.pagination.next')}</button>`;
 
             paginationHTML += '</div>';
             return paginationHTML;
@@ -967,48 +1002,48 @@
             const modalFooter = document.getElementById('modalFooter');
             const modalTitle = document.getElementById('modalTitle');
 
-            modalTitle.textContent = `Order #${order.id} - ${order.customer_name}`;
+            modalTitle.textContent = `${t('orderHistory.modal.titlePrefix')} #${order.id} - ${order.customer_name}`;
 
             modalBody.innerHTML = `
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div>
-                        <h4>Customer Information</h4>
-                        <p><strong>Name:</strong> ${order.customer_name}</p>
-                        <p><strong>Email:</strong> ${order.customer_email}</p>
-                        <p><strong>Phone:</strong> ${order.customer_phone || 'N/A'}</p>
-                        <p><strong>Delivery Date:</strong> ${new Date(order.delivery_date).toLocaleDateString()}</p>
-                        <p><strong>Delivery Time:</strong> ${order.delivery_time}</p>
-                        <p><strong>Guests:</strong> ${order.guests_count}</p>
+                        <h4>${t('orderHistory.modal.customerInfo')}</h4>
+                        <p><strong>${t('orderHistory.modal.name')}</strong> ${order.customer_name}</p>
+                        <p><strong>${t('orderHistory.modal.email')}</strong> ${order.customer_email}</p>
+                        <p><strong>${t('orderHistory.modal.phone')}</strong> ${order.customer_phone || 'N/A'}</p>
+                        <p><strong>${t('orderHistory.modal.deliveryDate')}</strong> ${new Date(order.delivery_date).toLocaleDateString()}</p>
+                        <p><strong>${t('orderHistory.modal.deliveryTime')}</strong> ${order.delivery_time}</p>
+                        <p><strong>${t('orderHistory.modal.guests')}</strong> ${order.guests_count}</p>
                     </div>
                     <div>
-                        <h4>Order Details</h4>
-                        <p><strong>Status:</strong> <span class="status-badge status-${order.status}">${order.status}</span></p>
-                        <p><strong>Priority:</strong> <span class="status-badge priority-${order.priority}">${order.priority}</span></p>
-                        <p><strong>Total Amount:</strong> ₴${(order.total_amount || 0).toLocaleString()}</p>
-                        <p><strong>Created:</strong> ${new Date(order.created_at).toLocaleString()}</p>
+                        <h4>${t('orderHistory.modal.orderDetails')}</h4>
+                        <p><strong>${t('orderHistory.table.status')}</strong> <span class="status-badge status-${order.status}">${t('orderHistory.status.' + order.status)}</span></p>
+                        <p><strong>${t('orderHistory.table.priority')}</strong> <span class="status-badge priority-${order.priority}">${t('orderHistory.priority.' + order.priority)}</span></p>
+                        <p><strong>${t('orderHistory.modal.totalAmount')}</strong> ₴${(order.total_amount || 0).toLocaleString()}</p>
+                        <p><strong>${t('orderHistory.modal.created')}</strong> ${new Date(order.created_at).toLocaleString()}</p>
                     </div>
                 </div>
                 <div style="margin-top: 20px;">
-                    <h4>Customer Address</h4>
+                    <h4>${t('orderHistory.modal.customerAddress')}</h4>
                     <p>${order.customer_address || 'N/A'}</p>
                 </div>
                 <div style="margin-top: 20px;">
-                    <h4>Menu Items</h4>
+                    <h4>${t('orderHistory.modal.menuItems')}</h4>
                     <p style="white-space: pre-line;">${order.menu_items || 'N/A'}</p>
                 </div>
                 <div style="margin-top: 20px;">
-                    <h4>Special Requirements</h4>
+                    <h4>${t('orderHistory.modal.specialReq')}</h4>
                     <p>${order.special_requirements || 'None'}</p>
                 </div>
                 <div style="margin-top: 20px;">
-                    <h4>Notes</h4>
+                    <h4>${t('orderHistory.modal.notes')}</h4>
                     <p>${order.notes || 'No additional notes'}</p>
                 </div>
             `;
 
             modalFooter.innerHTML = `
-                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-                <button class="btn btn-success" onclick="updateStatus(${order.id})">Update Status</button>
+                <button class="btn btn-secondary" onclick="closeModal()">${t('orderHistory.modal.close')}</button>
+                <button class="btn btn-success" onclick="updateStatus(${order.id})">${t('orderHistory.modal.updateStatus')}</button>
             `;
 
             document.getElementById('orderModal').style.display = 'block';
@@ -1215,7 +1250,7 @@
             tableContent.innerHTML = `
                     <div class="loading">
                         <div class="spinner"></div>
-                        <p>Reloading orders...</p>
+                        <p>${t('orderHistory.loading')}</p>
                     </div>
                 `;
             // Reset to first page
