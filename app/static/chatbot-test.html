@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/static/favicon.ico" sizes="any">
-    <title>Box Catering Chatbot - Test Interface</title>
+    <title>Box Catering Chatbot - Тестовий чат</title>
     <style>
         body {
             height: 100vh;
@@ -327,18 +327,18 @@
     <div class="header">
         <h1>Box Catering Chatbot</h1>
         <div class="nav-links">
-            <a href="/dashboard" class="nav-link">Dashboard</a>
-            <a href="/chatbot-test" class="nav-link active">Chatbot Test</a>
-            <a href="/chatbot-settings" class="nav-link">Chatbot Settings</a>
-            <a href="/settings" class="nav-link">Settings</a>
-            <a href="/order-history" class="nav-link">Orders</a>
-            <a href="/conversation-history" class="nav-link">Conversations</a>
-            <a href="/customers" class="nav-link">Customers</a>
-            <a href="/user-management" class="nav-link">Users</a>
+            <a href="/dashboard" class="nav-link">Панель</a>
+            <a href="/chatbot-test" class="nav-link active">Тест чат-бота</a>
+            <a href="/chatbot-settings" class="nav-link">Налаштування чат-бота</a>
+            <a href="/settings" class="nav-link">Налаштування</a>
+            <a href="/order-history" class="nav-link">Замовлення</a>
+            <a href="/conversation-history" class="nav-link">Діалоги</a>
+            <a href="/customers" class="nav-link">Клієнти</a>
+            <a href="/user-management" class="nav-link">Користувачі</a>
             <div class="user-info">
                 <div class="user-avatar" id="user-avatar">U</div>
-                <span id="username">User</span>
-                <button class="logout-btn" onclick="logout()">Logout</button>
+                <span id="username">Користувач</span>
+                <button class="logout-btn" onclick="logout()">Вийти</button>
             </div>
         </div>
     </div>
@@ -346,7 +346,7 @@
     <div class="chat-container">
         <div class="chat-header">
             <h2>💬 Тест-чат з Марічкою</h2>
-            <p>Test and interact with your AI-powered chatbot</p>
+            <p>Тестуйте та взаємодійте з вашим чат-ботом на базі ШІ</p>
         </div>
 
         <div class="chat-messages" id="chat-messages">
@@ -370,23 +370,24 @@
         <div class="chat-input-container">
             <form class="chat-input-form" id="chat-form">
                 <div class="input-group">
-                    <label for="chat-input">Type your message:</label>
+                    <label for="chat-input">Введіть повідомлення:</label>
                     <textarea id="chat-input" class="chat-input"
-                        placeholder="Ask about our menu, place an order, or get catering advice..." rows="1"></textarea>
+                        placeholder="Запитайте про меню, зробіть замовлення або отримайте консультацію щодо кейтерингу..."
+                        rows="1"></textarea>
                 </div>
                 <button type="submit" class="send-btn" id="send-btn">
-                    Send
+                    Надіслати
                 </button>
             </form>
 
             <div class="chat-controls">
-                <button class="control-btn primary" onclick="clearChat()">Clear Chat</button>
-                <button class="control-btn" onclick="exportChat()">Export Chat</button>
+                <button class="control-btn primary" onclick="clearChat()">Очистити чат</button>
+                <button class="control-btn" onclick="exportChat()">Експортувати чат</button>
             </div>
 
             <div class="status-indicator" style="margin-top: 15px; justify-content: center;">
                 <div class="status-dot" id="status-dot"></div>
-                <span id="status-text">Connected to AI Service</span>
+                <span id="status-text">Підключено до AI-сервісу</span>
             </div>
         </div>
     </div>
@@ -523,12 +524,12 @@
 
             const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
             const url = `${protocol}://${location.host}/chat/ws${location.search || ''}`;
-            setStatus('Connecting to AI Service…', 'connecting');
+            setStatus('Підключення до AI-сервісу…', 'connecting');
 
             ws = new WebSocket(url);
 
             ws.onopen = () => {
-                setStatus('Connected to AI Service', '');
+                setStatus('Підключено до AI-сервісу', '');
                 if (reconnectTimer) {
                     clearTimeout(reconnectTimer);
                     reconnectTimer = null;
@@ -560,11 +561,11 @@
             };
 
             ws.onerror = () => {
-                setStatus('Connection error. Reconnecting…', 'connecting');
+                setStatus('Помилка з’єднання. Повторне підключення…', 'connecting');
             };
 
             ws.onclose = () => {
-                setStatus('Disconnected. Reconnecting…', 'offline');
+                setStatus('З’єднання розірвано. Повторне підключення…', 'offline');
                 reconnectTimer = setTimeout(connectWebSocket, RECONNECT_DELAY_MS);
             };
         }
@@ -631,13 +632,13 @@
 
         // Control functions
         function clearChat() {
-            if (confirm('Are you sure you want to clear the chat history?')) {
+            if (confirm('Ви впевнені, що хочете очистити історію чату?')) {
                 const messagesContainer = document.getElementById('chat-messages');
                 messagesContainer.innerHTML = `
                     <div class="message bot">
                         <div class="message-avatar">👩</div>
                         <div class="message-content">
-                            <div>Chat history cleared. How can I help you today?</div>
+                            <div>Історію чату очищено. Чим можу допомогти?</div>
                             <div class="message-time">${new Date().toLocaleTimeString()}</div>
                         </div>
                     </div>
@@ -660,7 +661,7 @@
 
         function exportChat() {
             const chatText = chatHistory.map(msg =>
-                `[${msg.timestamp}] ${msg.isUser ? 'User' : 'Bot'}: ${msg.content}`
+                `[${msg.timestamp}] ${msg.isUser ? 'Користувач' : 'Бот'}: ${msg.content}`
             ).join('\n\n');
 
             const blob = new Blob([chatText], { type: 'text/plain' });
