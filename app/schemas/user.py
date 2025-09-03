@@ -11,6 +11,7 @@ class UserBase(BaseModel):
     email: EmailStr
     full_name: str
     role: UserRole = UserRole.MANAGER
+    preferred_language: str = "uk"
     
 
 class UserCreate(UserBase):
@@ -26,6 +27,7 @@ class UserUpdate(BaseModel):
     role: Optional[UserRole] = None
     is_active: Optional[bool] = None
     password: Optional[str] = None
+    preferred_language: Optional[str] = None
 
 
 class UserResponse(UserBase):

@@ -63,6 +63,7 @@
             font-size: 16px;
             transition: border-color 0.3s ease;
             background: #f8f9fa;
+            box-sizing: border-box;
         }
 
         .form-group input:focus {
@@ -176,8 +177,8 @@
 <body>
     <div class="login-container">
         <div class="logo">
-            <h1>Box Catering Chatbot</h1>
-            <p>AI-powered customer service</p>
+            <h1 data-i18n="app.title">Box Catering Chatbot</h1>
+            <p data-i18n="app.tagline">AI-powered customer service</p>
         </div>
 
         <div id="error-message" class="error-message"></div>
@@ -185,32 +186,47 @@
 
         <form id="login-form">
             <div class="form-group">
-                <label for="username">Username</label>
+                <label for="username" data-i18n="auth.username">Username</label>
                 <input type="text" id="username" name="username" required placeholder="Enter your username">
             </div>
 
             <div class="form-group">
-                <label for="password">Password</label>
+                <label for="password" data-i18n="auth.password">Password</label>
                 <input type="password" id="password" name="password" required placeholder="Enter your password">
             </div>
 
-            <button type="submit" class="login-btn">Sign In</button>
+            <button type="submit" class="login-btn" data-i18n="auth.signIn">Sign In</button>
         </form>
 
         <div class="forgot-password">
-            <a href="#" onclick="alert('Contact your administrator to reset your password')">Forgot Password?</a>
+            <a href="#" id="forgot-link">Forgot Password?</a>
         </div>
 
         <div class="divider">
-            <span>or</span>
+            <span data-i18n="auth.or">or</span>
         </div>
 
         <div class="register-link">
-            <a href="#" onclick="alert('Contact your administrator to create an account')">Create New Account</a>
+            <a href="#" id="create-link">Create New Account</a>
         </div>
     </div>
 
     <script>
+        // Minimal I18N loader for login (no auth yet)
+        (function () {
+            const lang = (localStorage.getItem('ui_language') || (navigator.language || 'uk').slice(0, 2));
+            function apply(dict) {
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if (dict[key]) el.textContent = dict[key];
+                });
+                const forgot = document.getElementById('forgot-link');
+                if (forgot) forgot.textContent = dict['auth.forgotPassword'] || 'Forgot Password?';
+                const create = document.getElementById('create-link');
+                if (create) create.textContent = dict['auth.createAccount'] || 'Create New Account';
+            }
+            fetch(`/static/locales/${lang}.json`).then(r => r.json()).then(apply).catch(() => { });
+        })();
         document.getElementById('login-form').addEventListener('submit', async function (e) {
             e.preventDefault();
 

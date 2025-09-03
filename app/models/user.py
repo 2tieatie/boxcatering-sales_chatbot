@@ -26,6 +26,7 @@ class User(Base):
     full_name = Column(String, nullable=False)
     role = Column(SQLEnum(UserRole), nullable=False, default=UserRole.MANAGER)
     is_active = Column(Boolean, default=True)
+    preferred_language = Column(String, default="uk", nullable=False)
     created_at = Column(DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
     

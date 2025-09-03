@@ -11,20 +11,20 @@
         if (!container) return;
 
         const links = {
-            dashboard: { href: '/dashboard', label: 'Dashboard' },
-            chatbotTest: { href: '/chatbot-test', label: 'Chatbot Test' },
+            dashboard: { href: '/dashboard', label: (window.I18N && I18N.t) ? I18N.t('nav.dashboard') : 'Dashboard' },
+            chatbotTest: { href: '/chatbot-test', label: (window.I18N && I18N.t) ? I18N.t('nav.chatbotTest') : 'Chatbot Test' },
         };
 
         const workingWithCustomers = [
-            { href: '/conversation-history', label: 'Conversations' },
-            { href: '/customers', label: 'Customers' },
-            { href: '/order-history', label: 'Orders' },
+            { href: '/conversation-history', label: (window.I18N && I18N.t) ? I18N.t('nav.conversations') : 'Conversations' },
+            { href: '/customers', label: (window.I18N && I18N.t) ? I18N.t('nav.customers') : 'Customers' },
+            { href: '/order-history', label: (window.I18N && I18N.t) ? I18N.t('nav.orders') : 'Orders' },
         ];
 
         const generalSettings = [
-            { href: '/settings', label: 'Settings' },
-            { href: '/chatbot-settings', label: 'Chatbot Settings' },
-            { href: '/user-management', label: 'Users' },
+            { href: '/settings', label: (window.I18N && I18N.t) ? I18N.t('nav.settings') : 'Settings' },
+            { href: '/chatbot-settings', label: (window.I18N && I18N.t) ? I18N.t('nav.chatbotSettings') : 'Chatbot Settings' },
+            { href: '/user-management', label: (window.I18N && I18N.t) ? I18N.t('nav.users') : 'Users' },
         ];
 
         const nav = document.createElement('div');
@@ -88,7 +88,7 @@
         let title = header.querySelector('h1');
         if (!title) {
             title = document.createElement('h1');
-            title.textContent = 'Box Catering Chatbot';
+            title.textContent = (window.I18N && I18N.t) ? I18N.t('app.title') : 'Box Catering Chatbot';
             header.prepend(title);
         }
 
@@ -112,10 +112,10 @@
             avatar.textContent = 'U';
             const name = document.createElement('span');
             name.id = 'username';
-            name.textContent = 'User';
+            name.textContent = (window.I18N && I18N.t) ? I18N.t('user.label') : 'User';
             const btn = document.createElement('button');
             btn.className = 'logout-btn';
-            btn.textContent = 'Logout';
+            btn.textContent = (window.I18N && I18N.t) ? I18N.t('auth.logout') : 'Logout';
             btn.onclick = function () { try { localStorage.removeItem('access_token'); } catch { } window.location.href = '/login'; };
             userInfo.appendChild(avatar);
             userInfo.appendChild(name);
