@@ -1,5 +1,5 @@
 {
-    "app.title": "Box Catering Chatbot",
+    "app.title": "Чат-бот Box Catering",
     "app.tagline": "Служба підтримки на базі ШІ",
     "auth.username": "Ім'я користувача",
     "auth.password": "Пароль",
@@ -365,5 +365,24 @@
     "userManagement.msg.updateError": "Помилка оновлення користувача",
     "userManagement.msg.createError": "Помилка створення користувача",
     "nav.group.workingWithCustomers": "Робота з клієнтами",
-    "nav.group.generalSettings": "Загальні налаштування"
+    "nav.group.generalSettings": "Загальні налаштування",
+    "changePassword.title": "🔐 Змінити пароль",
+    "changePassword.passwordRequirementsTitle": "Вимоги до пароля:",
+    "changePassword.requirements.minLength": "Щонайменше 8 символів",
+    "changePassword.requirements.uppercase": "Містить принаймні одну велику літеру",
+    "changePassword.requirements.lowercase": "Містить принаймні одну малу літеру",
+    "changePassword.requirements.number": "Містить принаймні одну цифру",
+    "changePassword.requirements.specialChar": "Містить принаймні один спеціальний символ",
+    "changePassword.form.currentPassword": "Поточний пароль",
+    "changePassword.form.newPassword": "Новий пароль",
+    "changePassword.form.confirmPassword": "Підтвердьте новий пароль",
+    "changePassword.submit": "Змінити пароль",
+    "changePassword.btn.loading": "Зміна пароля...",
+    "changePassword.backToDashboard": "← Повернутися до панелі",
+    "changePassword.alert.allFieldsRequired": "Усі поля обов'язкові",
+    "changePassword.alert.passwordsDontMatch": "Нові паролі не збігаються",
+    "changePassword.alert.doesNotMeetRequirements": "Новий пароль не відповідає вимогам",
+    "changePassword.alert.mustBeDifferent": "Новий пароль має відрізнятися від поточного",
+    "changePassword.alert.success": "Пароль успішно змінено!",
+    "changePassword.alert.failed": "Не вдалося змінити пароль"
 }
