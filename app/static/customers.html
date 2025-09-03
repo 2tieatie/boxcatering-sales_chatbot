@@ -350,6 +350,7 @@
                         <th data-i18n="customers.table.phone">Phone</th>
                         <th data-i18n="customers.table.address">Address</th>
                         <th data-i18n="customers.table.notes">Notes</th>
+                        <th data-i18n="customers.table.actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="rows"></tbody>
@@ -387,6 +388,21 @@
                     data-i18n="customers.modal.cancel">Cancel</button>
                 <button type="submit" class="btn btn-primary" id="saveBtn" onclick="saveCustomer()"
                     data-i18n="customers.modal.save">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Details Modal -->
+    <div id="customerDetailsModal" class="modal" onclick="closeCustomerDetailsIfBackdrop(event)">
+        <div class="modal-card" style="max-width: 900px;">
+            <div class="modal-title" id="customer-details-title" data-i18n="customers.details.title">Customer Details
+            </div>
+            <div id="customer-details-content" class="card" style="margin-top:10px;">
+                <!-- Filled dynamically -->
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeCustomerDetails()"
+                    data-i18n="customers.modal.close">Close</button>
             </div>
         </div>
     </div>
@@ -493,7 +509,8 @@
                     <td>${c.email ?? ''}</td>
                     <td>${c.phone ?? ''}</td>
                     <td>${c.address ?? ''}</td>
-                    <td>${c.notes ?? ''}</td>`;
+                    <td>${c.notes ?? ''}</td>
+                    <td><button class="btn btn-primary" onclick="viewCustomerDetails(${c.id})">👁️ ${(window.I18N && I18N.t) ? I18N.t('customers.actions.view') : 'View'}</button></td>`;
                 tbody.appendChild(tr);
             }
         }
@@ -504,6 +521,128 @@
 
         function closeModal() {
             document.getElementById('modal').classList.remove('open');
+        }
+
+        function closeCustomerDetailsIfBackdrop(e) {
+            if (e.target.id === 'customerDetailsModal') closeCustomerDetails();
+        }
+
+        function closeCustomerDetails() {
+            document.getElementById('customerDetailsModal').classList.remove('open');
+        }
+
+        async function fetchJSON(url, options = {}) {
+            const headers = { ...apiHeaders(), ...(options.headers || {}) };
+            const res = await fetch(url, { ...options, headers });
+            if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+            return res.json();
+        }
+
+        async function viewCustomerDetails(customerId) {
+            try {
+                const [customer, orders, conversations] = await Promise.all([
+                    fetchJSON(`/customers/${customerId}`),
+                    fetchJSON(`/orders/customer/${customerId}?limit=200`),
+                    fetchJSON(`/conversations/?limit=500`)
+                ]);
+                const convs = (conversations || []).filter(c => c.customer_id === customerId);
+
+                const t = (k) => (window.I18N && I18N.t) ? I18N.t(k) : k;
+                const details = document.getElementById('customer-details-content');
+                document.getElementById('customer-details-title').textContent = `${t('customers.details.title') || 'Customer Details'} — #${customer.id} ${customer.name || ''}`;
+
+                const ordersRows = (orders || []).map(o => `
+                    <tr>
+                        <td>#${o.id}</td>
+                        <td>${o.order_number || ''}</td>
+                        <td>${o.state}</td>
+                        <td>${o.total_amount}</td>
+                        <td>${o.delivery_date ? new Date(o.delivery_date).toLocaleDateString() : ''}</td>
+                        <td><button class="btn btn-sm" onclick="navigateToOrder(${o.id})">${t('customers.details.viewOrder') || 'View Order'}</button></td>
+                    </tr>
+                `).join('');
+
+                const convRows = (convs || []).map(v => `
+                    <tr>
+                        <td>#${v.id}</td>
+                        <td>${v.session_id}</td>
+                        <td>${v.handover_state}</td>
+                        <td>${v.created_at ? new Date(v.created_at).toLocaleString() : ''}</td>
+                        <td><button class="btn btn-sm btn-secondary" onclick="navigateToConversation(${v.id})">${t('customers.details.viewConversation') || 'View Conversation'}</button></td>
+                    </tr>
+                `).join('');
+
+                details.innerHTML = `
+                    <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div>
+                            <label>${t('customers.table.name') || 'Name'}</label>
+                            <div class="muted">${customer.name || ''}</div>
+                        </div>
+                        <div>
+                            <label>${t('customers.table.email') || 'Email'}</label>
+                            <div class="muted">${customer.email || ''}</div>
+                        </div>
+                        <div>
+                            <label>${t('customers.table.phone') || 'Phone'}</label>
+                            <div class="muted">${customer.phone || ''}</div>
+                        </div>
+                        <div>
+                            <label>${t('customers.table.address') || 'Address'}</label>
+                            <div class="muted">${customer.address || ''}</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:16px;">
+                        <h3 style="margin-bottom:8px;">${t('customers.details.orders') || 'Orders'}</h3>
+                        <div class="table-container" style="padding:0;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>${t('customers.details.orderNumber') || 'Order #'}</th>
+                                        <th>${t('orderHistory.table.status') || 'Status'}</th>
+                                        <th>${t('orderHistory.table.total') || 'Total'}</th>
+                                        <th>${t('orderHistory.table.deliveryDate') || 'Delivery Date'}</th>
+                                        <th>${t('customers.table.actions') || 'Actions'}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${ordersRows || ''}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div style="margin-top:16px;">
+                        <h3 style="margin-bottom:8px;">${t('customers.details.conversations') || 'Conversations'}</h3>
+                        <div class="table-container" style="padding:0;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Session</th>
+                                        <th>Status</th>
+                                        <th>${t('conversationHistory.table.started') || 'Started'}</th>
+                                        <th>${t('customers.table.actions') || 'Actions'}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${convRows || ''}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('customerDetailsModal').classList.add('open');
+            } catch (e) {
+                showAlert((window.I18N && I18N.t) ? I18N.t('customers.alert.loadFailed') : 'Failed to load customer details', 'error');
+                console.error(e);
+            }
+        }
+
+        function navigateToOrder(orderId) {
+            if (!orderId) return;
+            window.location.href = `/static/order-history.html?orderId=${encodeURIComponent(orderId)}`;
+        }
+
+        function navigateToConversation(conversationId) {
+            if (!conversationId) return;
+            window.location.href = `/static/conversation-history.html?conversationId=${encodeURIComponent(conversationId)}`;
         }
 
         async function saveCustomer() {
@@ -528,7 +667,23 @@
             await reloadCustomers();
         }
 
-        document.addEventListener('DOMContentLoaded', checkAuth);
+        document.addEventListener('DOMContentLoaded', function () {
+            checkAuth();
+            // Deep-link: open customer details by id
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const customerId = parseInt(params.get('customerId'));
+                if (!isNaN(customerId)) {
+                    const timer = setInterval(() => {
+                        if (Array.isArray(customers)) {
+                            clearInterval(timer);
+                            viewCustomerDetails(customerId);
+                        }
+                    }, 300);
+                    setTimeout(() => clearInterval(timer), 8000);
+                }
+            } catch { }
+        });
     </script>
 </body>
 

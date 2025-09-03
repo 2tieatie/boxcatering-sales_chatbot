@@ -939,6 +939,8 @@
                             <div class="action-buttons">
                                 <button class="action-btn btn-primary" onclick="viewOrder(${order.id})">👁️ ${t('orderHistory.actions.view')}</button>
                                 <button class="action-btn btn-success" onclick="updateStatus(${order.id})">🔄 ${t('orderHistory.actions.status')}</button>
+                                ${order.conversation_id ? `<button class="action-btn btn-secondary" onclick="navigateToConversation(${order.conversation_id})">💬 ${t('orderHistory.actions.viewChat') || 'View Chat'}</button>` : ''}
+                                ${order.customer_id ? `<button class="action-btn" onclick="navigateToCustomer(${order.customer_id})">👤 ${t('orderHistory.actions.viewCustomer') || 'Customer'}</button>` : ''}
                             </div>
                         </td>
                     </tr>
@@ -1049,6 +1051,8 @@
             modalFooter.innerHTML = `
                 <button class="btn btn-secondary" onclick="closeModal()">${t('orderHistory.modal.close')}</button>
                 <button class="btn btn-success" onclick="updateStatus(${order.id})">${t('orderHistory.modal.updateStatus')}</button>
+                ${order.conversation_id ? `<button class="btn btn-secondary" onclick="navigateToConversation(${order.conversation_id})">💬 ${t('orderHistory.actions.viewChat') || 'View Chat'}</button>` : ''}
+                ${order.customer_id ? `<button class="btn" onclick="navigateToCustomer(${order.customer_id})">👤 ${t('orderHistory.actions.viewCustomer') || 'Customer'}</button>` : ''}
             `;
 
             document.getElementById('orderModal').style.display = 'block';
@@ -1269,6 +1273,17 @@
             document.getElementById('newOrderModal').style.display = 'none';
         }
 
+        // Navigation helpers
+        function navigateToConversation(conversationId) {
+            if (!conversationId) return;
+            window.location.href = `/static/conversation-history.html?conversationId=${encodeURIComponent(conversationId)}`;
+        }
+
+        function navigateToCustomer(customerId) {
+            if (!customerId) return;
+            window.location.href = `/static/customers.html?customerId=${encodeURIComponent(customerId)}`;
+        }
+
         // Export orders
         function exportOrders() {
             const csvContent = generateCSV(filteredOrders);
@@ -1342,7 +1357,27 @@
         }
 
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', checkAuth);
+        document.addEventListener('DOMContentLoaded', function () {
+            checkAuth();
+            // Deep link: open order by id
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const orderId = parseInt(params.get('orderId'));
+                if (!isNaN(orderId)) {
+                    // Wait for orders to load then open
+                    const openWhenReady = setInterval(() => {
+                        if (orders && orders.length) {
+                            clearInterval(openWhenReady);
+                            if (orders.find(o => o.id === orderId)) {
+                                viewOrder(orderId);
+                            }
+                        }
+                    }, 200);
+                    // Safety stop after 8 seconds
+                    setTimeout(() => clearInterval(openWhenReady), 8000);
+                }
+            } catch { }
+        });
     </script>
 </body>
 
