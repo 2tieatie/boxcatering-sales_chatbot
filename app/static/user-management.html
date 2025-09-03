@@ -810,6 +810,14 @@
             renderPagination();
         }
 
+        // Re-render dynamic content on language change
+        document.addEventListener('i18n:languageChanged', function () {
+            try {
+                renderUsers();
+                renderPagination();
+            } catch { }
+        });
+
         // Apply filters
         function applyFilters() {
             const roleFilter = document.getElementById('role-filter').value;

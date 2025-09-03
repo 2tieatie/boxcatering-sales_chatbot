@@ -33,6 +33,10 @@
             dict = {};
         }
         translatePage();
+        try {
+            const evt = new CustomEvent('i18n:languageChanged', { detail: { lang: currentLang } });
+            document.dispatchEvent(evt);
+        } catch { }
     }
 
     function t(key, vars) {
