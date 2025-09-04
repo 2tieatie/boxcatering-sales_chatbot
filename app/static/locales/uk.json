@@ -142,6 +142,8 @@
     "chatbotSettings.performance.analyticsDesc": "Відстежувати якість і швидкість відповідей",
     "chatbotSettings.performance.errorsTitle": "Звітування про помилки",
     "chatbotSettings.performance.errorsDesc": "Логувати та повідомляти про системні помилки",
+    "chatbotSettings.scrape.enabledTitle": "Увімкнути скрейпінг",
+    "chatbotSettings.scrape.enabledDesc": "Періодично отримувати та кешувати контент сайту",
     "chatbotSettings.scrape.urlLabel": "URL сайту для скрейпінгу",
     "chatbotSettings.scrape.urlPh": "https://example.com",
     "chatbotSettings.scrape.intervalLabel": "Інтервал скрейпінгу (хвилини)",

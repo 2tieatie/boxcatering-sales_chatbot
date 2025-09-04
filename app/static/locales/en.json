@@ -142,6 +142,8 @@
     "chatbotSettings.performance.analyticsDesc": "Track response quality and speed",
     "chatbotSettings.performance.errorsTitle": "Error Reporting",
     "chatbotSettings.performance.errorsDesc": "Log and report system errors",
+    "chatbotSettings.scrape.enabledTitle": "Enable Scraping",
+    "chatbotSettings.scrape.enabledDesc": "Periodically fetch and cache website content",
     "chatbotSettings.scrape.urlLabel": "Website URL to scrape",
     "chatbotSettings.scrape.urlPh": "https://example.com",
     "chatbotSettings.scrape.intervalLabel": "Scrape interval (minutes)",

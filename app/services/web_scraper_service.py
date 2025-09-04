@@ -18,6 +18,8 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 import requests
 from bs4 import BeautifulSoup  # type: ignore
 from loguru import logger
+import random
+import time
 
 from app.database import SessionLocal
 from app.models import SystemConfig
@@ -127,11 +129,13 @@ class WebScraperService:
                 step = min(30, total)
                 slept = 0
                 while slept < total and not self._stop_event.is_set():
-                    await asyncio.wait_for(self._stop_event.wait(), timeout=step)
-                    slept += step
-            except asyncio.TimeoutError:
-                # Normal path: timeout means continue
-                pass
+                    try:
+                        chunk = min(step, total - slept)
+                        await asyncio.wait_for(self._stop_event.wait(), timeout=chunk)
+                        # stop_event set
+                        break
+                    except asyncio.TimeoutError:
+                        slept += chunk
             except Exception:
                 # Ignore spurious errors and continue
                 pass
@@ -150,6 +154,15 @@ class WebScraperService:
             with SessionLocal() as db:
                 cfg = {c.key: c.value for c in db.query(SystemConfig).all()}
                 url = cfg.get("system_scrape_website_url") or None
+                # Honor global toggle
+                enabled_raw = cfg.get("system_scrape_enabled")
+                enabled = True
+                if enabled_raw is not None:
+                    s = str(enabled_raw).strip().lower()
+                    enabled = s in {"1", "true", "yes", "on"}
+                if not enabled:
+                    logger.debug("WebScraperService: disabled via system_scrape_enabled; skipping")
+                    return {"skipped": True, "reason": "disabled"}
                 self.status.url = url
                 if not url:
                     logger.info("WebScraperService: no website URL configured, skipping")
@@ -159,11 +172,14 @@ class WebScraperService:
                 target_dir = base_dir / "website_cache"
                 target_dir.mkdir(parents=True, exist_ok=True)
 
-            # Crawl footer-linked sections
-            headers = {
-                "User-Agent": "BoxCateringBot/1.0 (+https://boxcatering-chatbot.local)"
-            }
-            resp = requests.get(url, timeout=20, headers=headers)
+            # Crawl footer-linked sections using a browser-like session
+            session = self._create_session(use_cloudscraper=False)
+            resp = session.get(url, timeout=25, allow_redirects=True)
+            if resp.status_code == 403:
+                # Retry with cloudscraper (Cloudflare/WAF bypass)
+                logger.info("403 on homepage; retrying with cloudscraper")
+                session = self._create_session(use_cloudscraper=True)
+                resp = session.get(url, timeout=25, allow_redirects=True)
             resp.raise_for_status()
             soup = BeautifulSoup(resp.text, "html.parser")
 
@@ -181,7 +197,26 @@ class WebScraperService:
             docs: List[Tuple[str, str]] = []  # (filename, content)
             for link in footer_links:
                 try:
-                    p = requests.get(link, timeout=20, headers=headers)
+                    # Small randomized delay to avoid rate/anti-bot triggers
+                    time.sleep(random.uniform(0.6, 1.4))
+                    # Include referer to look more like a human navigation
+                    p = session.get(
+                        link,
+                        timeout=25,
+                        allow_redirects=True,
+                        headers={"Referer": url},
+                    )
+                    if p.status_code == 403:
+                        # Attempt retry with cloudscraper if not already
+                        if session.__class__.__name__.lower() != "cloudscrapersession":
+                            logger.info(f"403 on {link}; retrying with cloudscraper")
+                            session_cf = self._create_session(use_cloudscraper=True)
+                            p = session_cf.get(
+                                link,
+                                timeout=25,
+                                allow_redirects=True,
+                                headers={"Referer": url},
+                            )
                     p.raise_for_status()
                     sec_soup = BeautifulSoup(p.text, "html.parser")
                     title = self._extract_title(sec_soup) or link
@@ -227,6 +262,46 @@ class WebScraperService:
             return {"ok": False, "error": str(e)}
         finally:
             self.status.running = False
+
+    def _create_session(self, use_cloudscraper: bool) -> requests.Session:
+        """Create a session with realistic browser headers. Optionally use cloudscraper."""
+        sess: requests.Session
+        if use_cloudscraper:
+            try:
+                import cloudscraper  # type: ignore
+
+                sess = cloudscraper.create_scraper(
+                    browser={
+                        "browser": "chrome",
+                        "platform": "windows",
+                        "mobile": False,
+                    }
+                )
+            except Exception as e:
+                logger.warning(f"cloudscraper not available or failed to init: {e}")
+                sess = requests.Session()
+        else:
+            sess = requests.Session()
+
+        # Reasonable desktop Chrome headers
+        sess.headers.update(
+            {
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/126.0.0.0 Safari/537.36"
+                ),
+                "Accept": (
+                    "text/html,application/xhtml+xml,application/xml;q=0.9,"
+                    "image/avif,image/webp,*/*;q=0.8"
+                ),
+                "Accept-Language": "uk-UA,uk;q=0.9,en-US;q=0.8,en;q=0.7",
+                "Accept-Encoding": "gzip, deflate, br",
+                "Connection": "keep-alive",
+                "Upgrade-Insecure-Requests": "1",
+            }
+        )
+        return sess
 
     def _origin(self, url: str) -> str:
         m = re.match(r"^(https?://[^/]+)", url)
