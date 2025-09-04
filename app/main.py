@@ -19,17 +19,31 @@ from app.api import (
     stats_router,
     customers_router,
     context_docs_router,
+    scrape_router,
 )
 # from app.api.test_router import router as test_router
 # from app.api.chatbot_config_simple import router as chatbot_config_simple_router
 from app.config import settings
+from app.services.web_scraper_service import web_scraper
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler."""
     logger.info("Starting Boxcatering Chatbot API...")
-    yield
-    logger.info("Shutting down Boxcatering Chatbot API...")
+    # Start background web scraper
+    try:
+        await web_scraper.start()
+    except Exception as e:
+        logger.warning(f"Failed to start web scraper: {e}")
+    try:
+        yield
+    finally:
+        # Stop background web scraper
+        try:
+            await web_scraper.stop()
+        except Exception as e:
+            logger.warning(f"Failed to stop web scraper cleanly: {e}")
+        logger.info("Shutting down Boxcatering Chatbot API...")
 
 
 # Create FastAPI app
@@ -64,6 +78,7 @@ app.include_router(system_config_router)
 app.include_router(stats_router)
 app.include_router(customers_router)
 app.include_router(context_docs_router)
+app.include_router(scrape_router)
 # app.include_router(test_router)
 # app.include_router(chatbot_config_simple_router)
 
