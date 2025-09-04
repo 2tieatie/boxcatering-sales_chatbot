@@ -6,116 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Box Catering Chatbot - User Management</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
-            color: #333;
             min-height: 100vh;
-        }
-
-        .header {
-            background: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 100;
-        }
-
-        .header h1 {
-            color: #667eea;
-            font-size: 24px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .nav-link {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-            padding: 8px 16px;
-            border-radius: 6px;
-            transition: background-color 0.2s ease;
-        }
-
-        .nav-link:hover {
-            background: #f0f2ff;
-        }
-
-        .nav-link.active {
-            background: #667eea;
-            color: white;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .user-avatar {
-            width: 35px;
-            height: 35px;
-            background: #667eea;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .logout-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .logout-btn:hover {
-            background: #c82333;
         }
 
         .container {
             max-width: 1400px;
             margin: 40px auto;
             padding: 0 20px;
-        }
-
-        .page-header {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            text-align: center;
-        }
-
-        .page-header h2 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-
-        .page-header p {
-            color: #666;
-            font-size: 16px;
-            line-height: 1.6;
         }
 
         .stats-grid {
@@ -200,62 +98,7 @@
         .filter-actions {
             display: flex;
             gap: 15px;
-            justify-content: flex-end;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5a6fd8;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #218838;
-        }
-
-        .btn-warning {
-            background: #ffc107;
-            color: #212529;
-        }
-
-        .btn-warning:hover {
-            background: #e0a800;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
+            align-items: flex-end;
         }
 
         .table-container {
@@ -310,12 +153,6 @@
 
         .users-table tr:hover {
             background: #f8f9fa;
-        }
-
-        .user-info {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
         }
 
         .user-name {
@@ -374,12 +211,6 @@
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-            border-radius: 4px;
         }
 
         .pagination {
@@ -505,8 +336,6 @@
             margin-top: 30px;
         }
 
-
-
         /* Notification styles */
         .notification {
             animation: slideIn 0.3s ease-out;
@@ -525,23 +354,12 @@
         }
 
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-
-            .nav-links {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
             .filters-grid {
                 grid-template-columns: 1fr;
             }
 
             .filter-actions {
-                justify-content: center;
+                align-items: center;
             }
 
             .table-container {
@@ -572,82 +390,82 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 
 <body>
     <div class="header">
-        <h1>Box Catering Chatbot</h1>
-        <div class="nav-links">
-            <a href="/dashboard" class="nav-link">Dashboard</a>
-            <a href="/chatbot-test" class="nav-link">Chatbot Test</a>
-            <a href="/chatbot-settings" class="nav-link">Chatbot Settings</a>
-            <a href="/settings" class="nav-link">Settings</a>
-            <a href="/order-history" class="nav-link">Orders</a>
-            <a href="/conversation-history" class="nav-link">Conversations</a>
-            <a href="/customers" class="nav-link">Customers</a>
-            <a href="/user-management" class="nav-link active">Users</a>
-            <div class="user-info">
-                <div class="user-avatar" id="user-avatar">U</div>
-                <span id="username">User</span>
-                <button class="logout-btn" onclick="logout()">Logout</button>
-            </div>
+        <h1 data-i18n="app.title">Box Catering Chatbot</h1>
+        <div class="nav-links" id="nav"></div>
+        <div class="user-info">
+            <div class="user-avatar" id="user-avatar">U</div>
+            <span id="username">User</span>
+            <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
         </div>
     </div>
 
     <div class="container">
         <div class="page-header">
-            <h2>👥 User Management</h2>
-            <p>Manage system users, roles, and access permissions</p>
+            <h2 data-i18n="userManagement.title">👥 User Management</h2>
+            <p data-i18n="userManagement.subtitle">Manage system users, roles, and access permissions</p>
         </div>
 
         <!-- Statistics Cards -->
         <div class="stats-grid">
             <div class="stat-card">
                 <h3 id="total-users">0</h3>
-                <p>Total Users</p>
+                <p data-i18n="userManagement.stats.total">Total Users</p>
             </div>
             <div class="stat-card">
                 <h3 id="active-users">0</h3>
-                <p>Active Users</p>
+                <p data-i18n="userManagement.stats.active">Active Users</p>
             </div>
             <div class="stat-card">
                 <h3 id="admin-users">0</h3>
-                <p>Administrators</p>
+                <p data-i18n="userManagement.stats.admins">Administrators</p>
             </div>
             <div class="stat-card">
                 <h3 id="manager-users">0</h3>
-                <p>Managers</p>
+                <p data-i18n="userManagement.stats.managers">Managers</p>
             </div>
         </div>
 
         <!-- Filters Section -->
         <div class="filters-section">
-            <h3><span>🔍</span>Filters & Search</h3>
+            <h3><span>🔍</span><span data-i18n="userManagement.filters.title">Filters & Search</span></h3>
             <div class="filters-grid">
                 <div class="filter-group">
-                    <label for="role-filter">Role</label>
+                    <label for="role-filter" data-i18n="userManagement.filters.role">Role</label>
                     <select id="role-filter">
-                        <option value="">All Roles</option>
-                        <option value="system_admin">System Admin</option>
-                        <option value="admin">Admin</option>
-                        <option value="manager">Manager</option>
+                        <option value="" data-i18n="userManagement.filters.allRoles">All Roles</option>
+                        <option value="system_admin" data-i18n="userManagement.filters.role.system_admin">System Admin
+                        </option>
+                        <option value="admin" data-i18n="userManagement.filters.role.admin">Admin</option>
+                        <option value="manager" data-i18n="userManagement.filters.role.manager">Manager</option>
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label for="status-filter">Status</label>
+                    <label for="status-filter" data-i18n="userManagement.filters.status">Status</label>
                     <select id="status-filter">
-                        <option value="">All Statuses</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
+                        <option value="" data-i18n="userManagement.filters.allStatuses">All Statuses</option>
+                        <option value="active" data-i18n="userManagement.filters.status.active">Active</option>
+                        <option value="inactive" data-i18n="userManagement.filters.status.inactive">Inactive</option>
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label for="search-input">Search</label>
-                    <input type="text" id="search-input" placeholder="Search users...">
+                    <label for="search-input" data-i18n="userManagement.filters.search">Search</label>
+                    <input type="text" id="search-input" placeholder="Search users..."
+                        data-i18n-placeholder="userManagement.filters.searchPh">
                 </div>
                 <div class="filter-actions">
-                    <button class="btn btn-primary" onclick="applyFilters()">🔍 Apply</button>
-                    <button class="btn btn-secondary" onclick="clearFilters()">🔄 Clear</button>
+                    <button class="btn btn-primary" onclick="applyFilters()">
+                        <span aria-hidden="true">🔍</span>
+                        <span data-i18n="userManagement.filters.apply">Apply</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearFilters()">
+                        <span aria-hidden="true">🔄</span>
+                        <span data-i18n="userManagement.filters.clear">Clear</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -655,22 +473,28 @@
         <!-- Users Table -->
         <div class="table-container">
             <div class="table-header">
-                <h3><span>📋</span>Users</h3>
+                <h3><span>📋</span><span data-i18n="userManagement.table.title">Users</span></h3>
                 <div class="table-actions">
-                    <button class="btn btn-success" onclick="openAddUserModal()">➕ Add User</button>
-                    <button class="btn btn-secondary" onclick="refreshData()">🔄 Refresh</button>
+                    <button class="btn btn-success" onclick="openAddUserModal()">
+                        <span aria-hidden="true">➕</span>
+                        <span data-i18n="userManagement.table.add">Add User</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshData()">
+                        <span aria-hidden="true">🔄</span>
+                        <span data-i18n="userManagement.table.refresh">Refresh</span>
+                    </button>
                 </div>
             </div>
 
             <table class="users-table">
                 <thead>
                     <tr>
-                        <th>User</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Last Login</th>
-                        <th>Created</th>
-                        <th>Actions</th>
+                        <th data-i18n="userManagement.table.user">User</th>
+                        <th data-i18n="userManagement.table.role">Role</th>
+                        <th data-i18n="userManagement.table.status">Status</th>
+                        <th data-i18n="userManagement.table.lastLogin">Last Login</th>
+                        <th data-i18n="userManagement.table.created">Created</th>
+                        <th data-i18n="userManagement.table.actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="users-tbody">
@@ -689,57 +513,63 @@
     <div id="user-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modal-title">Add New User</h3>
+                <h3 id="modal-title" data-i18n="userManagement.modal.addTitle">Add New User</h3>
                 <span class="close" onclick="closeModal()">&times;</span>
             </div>
             <form id="user-form">
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="username">Username *</label>
+                        <label for="username"><span data-i18n="userManagement.modal.username">Username</span>
+                            *</span></label>
                         <input type="text" id="username" name="username" required>
                     </div>
                     <div class="form-group">
-                        <label for="email">Email *</label>
+                        <label for="email"><span data-i18n="userManagement.modal.email">Email</span> *</span></label>
                         <input type="email" id="email" name="email" required>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="full-name">Full Name *</label>
+                        <label for="full-name"><span data-i18n="userManagement.modal.fullName">Full Name</span>
+                            *</span></label>
                         <input type="text" id="full-name" name="full_name" required>
                     </div>
                     <div class="form-group">
-                        <label for="role">Role *</label>
+                        <label for="role"><span data-i18n="userManagement.modal.role">Role</span> *</span></label>
                         <select id="role" name="role" required>
-                            <option value="">Select Role</option>
-                            <option value="manager">Manager</option>
-                            <option value="admin">Admin</option>
-                            <option value="system_admin">System Admin</option>
+                            <option value="" data-i18n="userManagement.modal.selectRole">Select Role</option>
+                            <option value="manager" data-i18n="userManagement.role.manager">Manager</option>
+                            <option value="admin" data-i18n="userManagement.role.admin">Admin</option>
+                            <option value="system_admin" data-i18n="userManagement.role.system_admin">System Admin
+                            </option>
                         </select>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="password">Password <span id="password-required">*</span></label>
+                        <label for="password"><span data-i18n="userManagement.modal.password">Password</span> <span
+                                id="password-required">*</span></label>
                         <input type="password" id="password" name="password">
                     </div>
                     <div class="form-group">
-                        <label for="confirm-password">Confirm Password <span
-                                id="confirm-password-required">*</span></label>
+                        <label for="confirm-password"><span data-i18n="userManagement.modal.confirmPassword">Confirm
+                                Password</span> <span id="confirm-password-required">*</span></label>
                         <input type="password" id="confirm-password" name="confirm_password">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="status">Status</label>
+                    <label for="status" data-i18n="userManagement.modal.status">Status</label>
                     <select id="status" name="status">
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
+                        <option value="active" data-i18n="userManagement.status.active">Active</option>
+                        <option value="inactive" data-i18n="userManagement.status.inactive">Inactive</option>
                     </select>
                 </div>
 
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save User</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()"
+                        data-i18n="userManagement.modal.cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="userManagement.modal.save">Save
+                        User</button>
                 </div>
             </form>
         </div>
@@ -749,21 +579,55 @@
     <div id="delete-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Confirm Deletion</h3>
+                <h3 data-i18n="userManagement.modal.deleteTitle">Confirm Deletion</h3>
                 <span class="close" onclick="closeDeleteModal()">&times;</span>
             </div>
             <div style="margin-bottom: 20px;">
-                <p>Are you sure you want to delete this user? This action cannot be undone.</p>
-                <p><strong>User:</strong> <span id="delete-user-name"></span></p>
+                <p data-i18n="userManagement.modal.deletePrompt">Are you sure you want to delete this user? This action
+                    cannot be undone.</p>
+                <p><strong data-i18n="userManagement.modal.deleteUserLabel">User:</strong> <span
+                        id="delete-user-name"></span></p>
             </div>
             <div class="form-actions">
-                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
-                <button class="btn btn-danger" onclick="confirmDeleteUser()">Delete User</button>
+                <button class="btn btn-secondary" onclick="closeDeleteModal()"
+                    data-i18n="userManagement.modal.deleteCancel">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmDeleteUser()"
+                    data-i18n="userManagement.modal.deleteConfirm">Delete User</button>
             </div>
         </div>
     </div>
 
+    <script src="/static/i18n.js"></script>
+    <script src="/static/nav.js"></script>
+    <script src="/static/auth.js"></script>
     <script>
+        (function () {
+            async function initI18N() {
+                try {
+                    const token = localStorage.getItem('access_token');
+                    const meRes = await fetch('/users/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                    const storedLang = localStorage.getItem('ui_language');
+                    let lang = storedLang || 'uk';
+                    if (!storedLang && meRes.ok) {
+                        const me = await meRes.json();
+                        lang = me.preferred_language || lang;
+                    }
+                    if (window.I18N && I18N.setLanguage) {
+                        await I18N.setLanguage(lang);
+                    }
+                    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+                        const k = el.getAttribute('data-i18n');
+                        if (window.I18N && I18N.t) { el.textContent = I18N.t(k); }
+                    });
+                    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+                        const k = el.getAttribute('data-i18n-placeholder');
+                        if (window.I18N && I18N.t) { el.setAttribute('placeholder', I18N.t(k)); }
+                    });
+                } catch { }
+            }
+            window.__i18nReady = initI18N();
+        })();
+
         // Global variables
         let users = [];
         let currentPage = 1;
@@ -779,7 +643,7 @@
                 return;
             }
             fetchUserInfo();
-            loadUsers();
+            (window.__i18nReady || Promise.resolve()).then(loadUsers);
         }
 
         // Fetch user information
@@ -806,7 +670,8 @@
         async function loadUsers() {
             // Show loading state
             const tbody = document.getElementById('users-tbody');
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">Loading users...</td></tr>';
+            const loadingText = (window.I18N && I18N.t) ? I18N.t('userManagement.loading') : 'Loading users...';
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px;">${loadingText}</td></tr>`;
 
             try {
                 const token = localStorage.getItem('access_token');
@@ -824,19 +689,19 @@
                     renderPagination();
                 } else if (response.status === 401) {
                     // Token expired or invalid
-                    showNotification('Session expired. Please login again.', 'error');
+                    showNotification((window.I18N && I18N.t) ? I18N.t('userManagement.msg.sessionExpired') : 'Session expired. Please login again.', 'error');
                     setTimeout(() => {
                         logout();
                     }, 2000);
                 } else if (response.status === 403) {
-                    showNotification('Access denied. Insufficient permissions.', 'error');
+                    showNotification((window.I18N && I18N.t) ? I18N.t('userManagement.msg.accessDenied') : 'Access denied. Insufficient permissions.', 'error');
                 } else {
                     console.error('Failed to load users:', response.statusText);
-                    showNotification('Failed to load users', 'error');
+                    showNotification((window.I18N && I18N.t) ? I18N.t('userManagement.msg.loadFailed') : 'Failed to load users', 'error');
                 }
             } catch (error) {
                 console.error('Error loading users:', error);
-                showNotification('Network error. Please check your connection.', 'error');
+                showNotification((window.I18N && I18N.t) ? I18N.t('userManagement.msg.networkError') : 'Network error. Please check your connection.', 'error');
             }
         }
 
@@ -870,20 +735,24 @@
                     </td>
                     <td>
                         <span class="role-badge role-${user.role}">
-                            ${user.role.replace('_', ' ').toUpperCase()}
+                            ${(window.I18N && I18N.t) ? I18N.t('userManagement.role.' + user.role) : user.role.replace('_', ' ').toUpperCase()}
                         </span>
                     </td>
                     <td>
                         <span class="status-badge status-${user.is_active ? 'active' : 'inactive'}">
-                            ${user.is_active ? 'Active' : 'Inactive'}
+                            ${user.is_active ? ((window.I18N && I18N.t) ? I18N.t('userManagement.status.active') : 'Active') : ((window.I18N && I18N.t) ? I18N.t('userManagement.status.inactive') : 'Inactive')}
                         </span>
                     </td>
                     <td>${formatDateTime(user.updated_at)}</td>
                     <td>${formatDateTime(user.created_at)}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn btn-sm btn-warning" onclick="editUser(${user.id})">✏️ Edit</button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})">🗑️ Delete</button>
+                            <button class="btn btn-sm btn-warning" onclick="editUser(${user.id})">
+                                ${(window.I18N && I18N.t) ? I18N.t('userManagement.actions.edit') : 'Edit'}
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})">
+                                ${(window.I18N && I18N.t) ? I18N.t('userManagement.actions.delete') : 'Delete'}
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -892,12 +761,12 @@
 
         // Format datetime for display
         function formatDateTime(dateString) {
-            if (!dateString) return 'Never';
+            if (!dateString) return (window.I18N && I18N.t) ? I18N.t('userManagement.never') : 'Never';
             try {
                 const date = new Date(dateString);
                 return date.toLocaleString();
             } catch (error) {
-                return 'Invalid date';
+                return (window.I18N && I18N.t) ? I18N.t('userManagement.invalidDate') : 'Invalid date';
             }
         }
 
@@ -911,9 +780,13 @@
                 return;
             }
 
+            const firstLbl = (window.I18N && I18N.t) ? I18N.t('userManagement.pagination.first') : 'First';
+            const prevLbl = (window.I18N && I18N.t) ? I18N.t('userManagement.pagination.prev') : 'Previous';
+            const nextLbl = (window.I18N && I18N.t) ? I18N.t('userManagement.pagination.next') : 'Next';
+            const lastLbl = (window.I18N && I18N.t) ? I18N.t('userManagement.pagination.last') : 'Last';
             let paginationHTML = `
-                <button onclick="changePage(1)" ${currentPage === 1 ? 'disabled' : ''}>« First</button>
-                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹ Previous</button>
+                <button onclick="changePage(1)" ${currentPage === 1 ? 'disabled' : ''}>« ${firstLbl}</button>
+                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹ ${prevLbl}</button>
             `;
 
             for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
@@ -923,8 +796,8 @@
             }
 
             paginationHTML += `
-                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next ›</button>
-                <button onclick="changePage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>Last »</button>
+                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>${nextLbl} ›</button>
+                <button onclick="changePage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>${lastLbl} »</button>
             `;
 
             pagination.innerHTML = paginationHTML;
@@ -936,6 +809,14 @@
             renderUsers();
             renderPagination();
         }
+
+        // Re-render dynamic content on language change
+        document.addEventListener('i18n:languageChanged', function () {
+            try {
+                renderUsers();
+                renderPagination();
+            } catch { }
+        });
 
         // Apply filters
         function applyFilters() {
@@ -982,7 +863,7 @@
         // Open add user modal
         function openAddUserModal() {
             editingUserId = null;
-            document.getElementById('modal-title').textContent = 'Add New User';
+            document.getElementById('modal-title').textContent = (window.I18N && I18N.t) ? I18N.t('userManagement.modal.addTitle') : 'Add New User';
             document.getElementById('user-form').reset();
 
             // Make password required for new users
@@ -1000,7 +881,7 @@
             if (!user) return;
 
             editingUserId = id;
-            document.getElementById('modal-title').textContent = 'Edit User';
+            document.getElementById('modal-title').textContent = (window.I18N && I18N.t) ? I18N.t('userManagement.modal.editTitle') : 'Edit User';
 
             // Populate form
             document.getElementById('username').value = user.username;
@@ -1041,26 +922,26 @@
                 });
 
                 if (response.ok) {
-                    showNotification('User deleted successfully', 'success');
+                    showNotification((window.I18N && I18N.t) ? I18N.t('userManagement.msg.deleteSuccess') : 'User deleted successfully', 'success');
                     closeDeleteModal();
                     await loadUsers(); // Reload users from API
                 } else if (response.status === 401) {
-                    showNotification('Session expired. Please login again.', 'error');
+                    showNotification((window.I18N && I18N.t) ? I18N.t('userManagement.msg.sessionExpired') : 'Session expired. Please login again.', 'error');
                     setTimeout(() => {
                         logout();
                     }, 2000);
                 } else if (response.status === 403) {
-                    showNotification('Access denied. Insufficient permissions.', 'error');
+                    showNotification((window.I18N && I18N.t) ? I18N.t('userManagement.msg.accessDenied') : 'Access denied. Insufficient permissions.', 'error');
                 } else if (response.status === 400) {
                     const errorData = await response.json();
-                    showNotification(`Cannot delete user: ${errorData.detail || response.statusText}`, 'error');
+                    showNotification(`${(window.I18N && I18N.t) ? I18N.t('userManagement.msg.deleteFailed') : 'Cannot delete user'}: ${errorData.detail || response.statusText}`, 'error');
                 } else {
                     const errorData = await response.json();
-                    showNotification(`Failed to delete user: ${errorData.detail || response.statusText}`, 'error');
+                    showNotification(`${(window.I18N && I18N.t) ? I18N.t('userManagement.msg.deleteFailedGeneric') : 'Failed to delete user'}: ${errorData.detail || response.statusText}`, 'error');
                 }
             } catch (error) {
                 console.error('Error deleting user:', error);
-                showNotification('Error deleting user', 'error');
+                showNotification((window.I18N && I18N.t) ? I18N.t('userManagement.msg.deleteError') : 'Error deleting user', 'error');
             }
         }
 
@@ -1090,7 +971,7 @@
             };
 
             if (!editingUserId && userData.password !== formData.get('confirm_password')) {
-                showNotification('Passwords do not match!', 'error');
+                showNotification((window.I18N && I18N.t) ? I18N.t('userManagement.msg.passwordMismatch') : 'Passwords do not match!', 'error');
                 return;
             }
 
@@ -1126,27 +1007,29 @@
                 }
 
                 if (response.ok) {
-                    const message = editingUserId ? 'User updated successfully' : 'User created successfully';
+                    const message = editingUserId ? ((window.I18N && I18N.t) ? I18N.t('userManagement.msg.updateSuccess') : 'User updated successfully') : ((window.I18N && I18N.t) ? I18N.t('userManagement.msg.createSuccess') : 'User created successfully');
                     showNotification(message, 'success');
                     closeModal();
                     await loadUsers(); // Reload users from API
                 } else if (response.status === 401) {
-                    showNotification('Session expired. Please login again.', 'error');
+                    showNotification((window.I18N && I18N.t) ? I18N.t('userManagement.msg.sessionExpired') : 'Session expired. Please login again.', 'error');
                     setTimeout(() => {
                         logout();
                     }, 2000);
                 } else if (response.status === 403) {
-                    showNotification('Access denied. Insufficient permissions.', 'error');
+                    showNotification((window.I18N && I18N.t) ? I18N.t('userManagement.msg.accessDenied') : 'Access denied. Insufficient permissions.', 'error');
                 } else if (response.status === 400) {
                     const errorData = await response.json();
-                    showNotification(`Validation error: ${errorData.detail || response.statusText}`, 'error');
+                    showNotification(`${(window.I18N && I18N.t) ? I18N.t('userManagement.msg.validationError') : 'Validation error'}: ${errorData.detail || response.statusText}`, 'error');
                 } else {
                     const errorData = await response.json();
-                    showNotification(`Failed to ${editingUserId ? 'update' : 'create'} user: ${errorData.detail || response.statusText}`, 'error');
+                    const failMsg = editingUserId ? ((window.I18N && I18N.t) ? I18N.t('userManagement.msg.updateFailed') : 'Failed to update user') : ((window.I18N && I18N.t) ? I18N.t('userManagement.msg.createFailed') : 'Failed to create user');
+                    showNotification(`${failMsg}: ${errorData.detail || response.statusText}`, 'error');
                 }
             } catch (error) {
                 console.error('Error saving user:', error);
-                showNotification(`Error ${editingUserId ? 'updating' : 'creating'} user`, 'error');
+                const errMsg = editingUserId ? ((window.I18N && I18N.t) ? I18N.t('userManagement.msg.updateError') : 'Error updating user') : ((window.I18N && I18N.t) ? I18N.t('userManagement.msg.createError') : 'Error creating user');
+                showNotification(errMsg, 'error');
             }
         });
 

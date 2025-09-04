@@ -6,88 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customers</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
-            color: #333;
-        }
-
-        .header {
-            background: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            color: #667eea;
-            font-size: 24px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .nav-link {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-            padding: 8px 16px;
-            border-radius: 6px;
-            transition: background-color 0.2s ease;
-        }
-
-        .nav-link:hover {
-            background: #f0f2ff;
-        }
-
-        .nav-link.active {
-            background: #667eea;
-            color: white;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: #667eea;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-
-        .logout-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .logout-btn:hover {
-            background: #c82333;
-        }
-
         .container {
             max-width: 1400px;
             margin: 40px auto;
@@ -122,28 +40,6 @@
             border-radius: 12px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
             padding: 20px;
-        }
-
-        /* Page header */
-        .page-header {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            text-align: center;
-        }
-
-        .page-header h2 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-
-        .page-header p {
-            color: #666;
-            font-size: 16px;
-            line-height: 1.6;
         }
 
         /* Stats */
@@ -230,63 +126,7 @@
         .filter-actions {
             display: flex;
             gap: 15px;
-            justify-content: flex-end;
-        }
-
-        /* Buttons */
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5a6fd8;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #218838;
-        }
-
-        .btn-warning {
-            background: #ffc107;
-            color: #212529;
-        }
-
-        .btn-warning:hover {
-            background: #e0a800;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
+            align-items: flex-end;
         }
 
         /* Table container */
@@ -374,7 +214,7 @@
 
         .modal-card {
             background: white;
-            width: 520px;
+            width: 700px;
             max-width: calc(100% - 40px);
             border-radius: 12px;
             padding: 20px;
@@ -433,59 +273,58 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 
 <body>
     <div class="header">
-        <h1>Customers</h1>
-        <div class="nav-links">
-            <a href="/dashboard" class="nav-link">Dashboard</a>
-            <a href="/chatbot-test" class="nav-link">Chatbot Test</a>
-            <a href="/chatbot-settings" class="nav-link">Chatbot Settings</a>
-            <a href="/settings" class="nav-link">Settings</a>
-            <a href="/order-history" class="nav-link">Orders</a>
-            <a href="/conversation-history" class="nav-link">Conversations</a>
-            <a href="/customers" class="nav-link active">Customers</a>
-            <a href="/user-management" class="nav-link">Users</a>
-        </div>
+        <h1 data-i18n="app.title">Box Catering Chatbot</h1>
+        <div class="nav-links" id="nav"></div>
         <div class="user-info">
             <div class="user-avatar" id="user-avatar">U</div>
             <span id="username">User</span>
-            <button class="logout-btn" onclick="logout()">Logout</button>
+            <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
         </div>
     </div>
 
     <div class="container">
         <div class="page-header">
-            <h2>👤 Customers</h2>
-            <p>Manage your customers database, contact information, and notes.</p>
+            <h2 data-i18n="customers.title">👤 Customers</h2>
+            <p data-i18n="customers.subtitle">Manage your customers database, contact information, and notes.</p>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
                 <h3 id="total-customers">0</h3>
-                <p>Total Customers</p>
+                <p data-i18n="customers.stats.total">Total Customers</p>
             </div>
             <div class="stat-card">
                 <h3 id="with-email">0</h3>
-                <p>With Email</p>
+                <p data-i18n="customers.stats.withEmail">With Email</p>
             </div>
             <div class="stat-card">
                 <h3 id="with-phone">0</h3>
-                <p>With Phone</p>
+                <p data-i18n="customers.stats.withPhone">With Phone</p>
             </div>
         </div>
 
         <div class="filters-section">
-            <h3><span>🔍</span>Filters & Search</h3>
+            <h3><span>🔍</span><span data-i18n="customers.filters.title">Filters & Search</span></h3>
             <div class="filters-grid">
                 <div class="filter-group">
-                    <label for="search-input">Search</label>
-                    <input type="text" id="search-input" placeholder="Name, email, phone...">
+                    <label for="search-input" data-i18n="customers.filters.search">Search</label>
+                    <input type="text" id="search-input" placeholder="Name, email, phone..."
+                        data-i18n-placeholder="customers.filters.searchPh">
                 </div>
                 <div class="filter-actions">
-                    <button class="btn btn-primary" onclick="applyFilters()">🔍 Apply</button>
-                    <button class="btn btn-secondary" onclick="clearFilters()">🔄 Clear</button>
+                    <button class="btn btn-primary" onclick="applyFilters()">
+                        <span aria-hidden="true">🔍</span>
+                        <span data-i18n="customers.filters.apply">Apply</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearFilters()">
+                        <span aria-hidden="true">🔄</span>
+                        <span data-i18n="customers.filters.clear">Clear</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -494,22 +333,24 @@
 
         <div class="table-container">
             <div class="table-header">
-                <h3><span>📇</span>Customers</h3>
+                <h3><span>📇</span><span data-i18n="customers.table.title">Customers</span></h3>
                 <div class="table-actions" style="display:flex;gap:10px;">
-                    <button class="btn btn-success" onclick="openCreate()">➕ New Customer</button>
-                    <button class="btn btn-secondary" onclick="reloadCustomers()">🔄 Refresh</button>
+                    <button class="btn btn-secondary" onclick="reloadCustomers()">
+                        <span aria-hidden="true">🔄</span>
+                        <span data-i18n="customers.table.refresh">Refresh</span>
+                    </button>
                 </div>
             </div>
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Address</th>
-                        <th>Notes</th>
-                        <th style="width:160px;">Actions</th>
+                        <th data-i18n="customers.table.id">ID</th>
+                        <th data-i18n="customers.table.name">Name</th>
+                        <th data-i18n="customers.table.email">Email</th>
+                        <th data-i18n="customers.table.phone">Phone</th>
+                        <th data-i18n="customers.table.address">Address</th>
+                        <th data-i18n="customers.table.notes">Notes</th>
+                        <th data-i18n="customers.table.actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="rows"></tbody>
@@ -519,37 +360,84 @@
 
     <div id="modal" class="modal" onclick="closeIfBackdrop(event)">
         <div class="modal-card">
-            <div class="modal-title" id="modal-title">New Customer</div>
+            <div class="modal-title" id="modal-title" data-i18n="customers.modal.title.new">New Customer</div>
             <div class="form-grid">
                 <div>
-                    <label for="name">Name</label>
-                    <input id="name" />
+                    <label for="name" data-i18n="customers.modal.name">Name</label>
+                    <input id="name" data-i18n-placeholder="customers.modal.namePh" />
                 </div>
                 <div>
-                    <label for="email">Email</label>
-                    <input id="email" />
+                    <label for="email" data-i18n="customers.modal.email">Email</label>
+                    <input id="email" data-i18n-placeholder="customers.modal.emailPh" />
                 </div>
                 <div>
-                    <label for="phone">Phone</label>
-                    <input id="phone" />
+                    <label for="phone" data-i18n="customers.modal.phone">Phone</label>
+                    <input id="phone" data-i18n-placeholder="customers.modal.phonePh" />
                 </div>
                 <div>
-                    <label for="address">Address</label>
-                    <input id="address" />
+                    <label for="address" data-i18n="customers.modal.address">Address</label>
+                    <input id="address" data-i18n-placeholder="customers.modal.addressPh" />
                 </div>
                 <div style="grid-column: 1 / -1;">
-                    <label for="notes">Notes</label>
-                    <textarea id="notes" rows="3"></textarea>
+                    <label for="notes" data-i18n="customers.modal.notes">Notes</label>
+                    <textarea id="notes" rows="3" data-i18n-placeholder="customers.modal.notesPh"></textarea>
                 </div>
             </div>
             <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary" id="saveBtn" onclick="saveCustomer()">Save</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal()"
+                    data-i18n="customers.modal.cancel">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="saveBtn" onclick="saveCustomer()"
+                    data-i18n="customers.modal.save">Save</button>
             </div>
         </div>
     </div>
 
+    <!-- Customer Details Modal -->
+    <div id="customerDetailsModal" class="modal" onclick="closeCustomerDetailsIfBackdrop(event)">
+        <div class="modal-card" style="max-width: 900px;">
+            <div class="modal-title" id="customer-details-title" data-i18n="customers.details.title">Customer Details
+            </div>
+            <div id="customer-details-content" class="card" style="margin-top:10px;">
+                <!-- Filled dynamically -->
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeCustomerDetails()"
+                    data-i18n="customers.modal.close">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/auth.js"></script>
+    <script src="/static/i18n.js"></script>
+    <script src="/static/nav.js"></script>
     <script>
+        (function () {
+            async function initI18N() {
+                try {
+                    const token = localStorage.getItem('access_token');
+                    const meRes = await fetch('/users/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                    const storedLang = localStorage.getItem('ui_language');
+                    let lang = storedLang || 'uk';
+                    if (!storedLang && meRes.ok) {
+                        const me = await meRes.json();
+                        lang = me.preferred_language || lang;
+                    }
+                    if (window.I18N && I18N.setLanguage) {
+                        await I18N.setLanguage(lang);
+                    }
+                    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+                        const k = el.getAttribute('data-i18n');
+                        if (window.I18N && I18N.t) { el.textContent = I18N.t(k); }
+                    });
+                    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+                        const k = el.getAttribute('data-i18n-placeholder');
+                        if (window.I18N && I18N.t) { el.setAttribute('placeholder', I18N.t(k)); }
+                    });
+                } catch { }
+            }
+            window.__i18nReady = initI18N();
+        })();
+
         let editingId = null;
         let customers = [];
 
@@ -571,9 +459,22 @@
         function checkAuth() {
             const token = localStorage.getItem('access_token');
             if (!token) { window.location.href = '/login'; return; }
-            document.getElementById('username').textContent = 'System Admin';
-            document.getElementById('user-avatar').textContent = 'S';
-            reloadCustomers();
+            updateHeaderUser();
+            (window.__i18nReady || Promise.resolve()).then(reloadCustomers);
+        }
+
+        async function updateHeaderUser() {
+            try {
+                const token = localStorage.getItem('access_token');
+                const res = await fetch('/users/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res && res.ok) {
+                    const me = await res.json();
+                    const name = (me.full_name && me.full_name.trim()) ? me.full_name : (me.username || 'User');
+                    const initial = (name || 'U').charAt(0).toUpperCase();
+                    document.getElementById('username').textContent = name;
+                    document.getElementById('user-avatar').textContent = initial;
+                }
+            } catch (e) { console.warn('Failed to update header user', e); }
         }
 
         function apiHeaders() {
@@ -622,38 +523,15 @@
                     <td>${c.phone ?? ''}</td>
                     <td>${c.address ?? ''}</td>
                     <td>${c.notes ?? ''}</td>
-                    <td>
-                        <div class="actions">
-                            <button class="secondary" onclick="openEdit(${c.id}, ${encodeURIComponent(JSON.stringify(c))})">Edit</button>
-                            <button class="danger" onclick="removeCustomer(${c.id})">Delete</button>
-                        </div>
-                    </td>`;
+                    <td><button class="btn btn-primary" onclick="viewCustomerDetails(${c.id})">👁️ ${(window.I18N && I18N.t) ? I18N.t('customers.actions.view') : 'View'}</button></td>`;
                 tbody.appendChild(tr);
             }
         }
 
-        function openCreate() {
-            editingId = null;
-            document.getElementById('modal-title').textContent = 'New Customer';
-            document.getElementById('name').value = '';
-            document.getElementById('email').value = '';
-            document.getElementById('phone').value = '';
-            document.getElementById('address').value = '';
-            document.getElementById('notes').value = '';
-            document.getElementById('modal').classList.add('open');
-        }
-
-        function openEdit(id, encodedJson) {
-            const data = JSON.parse(decodeURIComponent(encodedJson));
-            editingId = id;
-            document.getElementById('modal-title').textContent = `Edit Customer #${id}`;
-            document.getElementById('name').value = data.name ?? '';
-            document.getElementById('email').value = data.email ?? '';
-            document.getElementById('phone').value = data.phone ?? '';
-            document.getElementById('address').value = data.address ?? '';
-            document.getElementById('notes').value = data.notes ?? '';
-            document.getElementById('modal').classList.add('open');
-        }
+        // Re-render dynamic row buttons on language change
+        document.addEventListener('i18n:languageChanged', function () {
+            try { renderRows(customers || []); } catch { }
+        });
 
         function closeIfBackdrop(e) {
             if (e.target.id === 'modal') closeModal();
@@ -661,6 +539,128 @@
 
         function closeModal() {
             document.getElementById('modal').classList.remove('open');
+        }
+
+        function closeCustomerDetailsIfBackdrop(e) {
+            if (e.target.id === 'customerDetailsModal') closeCustomerDetails();
+        }
+
+        function closeCustomerDetails() {
+            document.getElementById('customerDetailsModal').classList.remove('open');
+        }
+
+        async function fetchJSON(url, options = {}) {
+            const headers = { ...apiHeaders(), ...(options.headers || {}) };
+            const res = await fetch(url, { ...options, headers });
+            if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+            return res.json();
+        }
+
+        async function viewCustomerDetails(customerId) {
+            try {
+                const [customer, orders, conversations] = await Promise.all([
+                    fetchJSON(`/customers/${customerId}`),
+                    fetchJSON(`/orders/customer/${customerId}?limit=200`),
+                    fetchJSON(`/conversations/?limit=500`)
+                ]);
+                const convs = (conversations || []).filter(c => c.customer_id === customerId);
+
+                const t = (k) => (window.I18N && I18N.t) ? I18N.t(k) : k;
+                const details = document.getElementById('customer-details-content');
+                document.getElementById('customer-details-title').textContent = `${t('customers.details.title') || 'Customer Details'} — #${customer.id} ${customer.name || ''}`;
+
+                const ordersRows = (orders || []).map(o => `
+                    <tr>
+                        <td>#${o.id}</td>
+                        <td>${o.order_number || ''}</td>
+                        <td>${o.state}</td>
+                        <td>${o.total_amount}</td>
+                        <td>${o.delivery_date ? new Date(o.delivery_date).toLocaleDateString() : ''}</td>
+                        <td><button class="btn btn-sm" onclick="navigateToOrder(${o.id})">${t('customers.details.viewOrder') || 'View Order'}</button></td>
+                    </tr>
+                `).join('');
+
+                const convRows = (convs || []).map(v => `
+                    <tr>
+                        <td>#${v.id}</td>
+                        <td>${v.session_id}</td>
+                        <td>${v.handover_state}</td>
+                        <td>${v.created_at ? new Date(v.created_at).toLocaleString() : ''}</td>
+                        <td><button class="btn btn-sm btn-secondary" onclick="navigateToConversation(${v.id})">${t('customers.details.viewConversation') || 'View Conversation'}</button></td>
+                    </tr>
+                `).join('');
+
+                details.innerHTML = `
+                    <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div>
+                            <label>${t('customers.table.name') || 'Name'}</label>
+                            <div class="muted">${customer.name || ''}</div>
+                        </div>
+                        <div>
+                            <label>${t('customers.table.email') || 'Email'}</label>
+                            <div class="muted">${customer.email || ''}</div>
+                        </div>
+                        <div>
+                            <label>${t('customers.table.phone') || 'Phone'}</label>
+                            <div class="muted">${customer.phone || ''}</div>
+                        </div>
+                        <div>
+                            <label>${t('customers.table.address') || 'Address'}</label>
+                            <div class="muted">${customer.address || ''}</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:16px;">
+                        <h3 style="margin-bottom:8px;">${t('customers.details.orders') || 'Orders'}</h3>
+                        <div class="table-container" style="padding:0;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>${t('customers.details.orderNumber') || 'Order #'}</th>
+                                        <th>${t('orderHistory.table.status') || 'Status'}</th>
+                                        <th>${t('orderHistory.table.total') || 'Total'}</th>
+                                        <th>${t('orderHistory.table.deliveryDate') || 'Delivery Date'}</th>
+                                        <th>${t('customers.table.actions') || 'Actions'}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${ordersRows || ''}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div style="margin-top:16px;">
+                        <h3 style="margin-bottom:8px;">${t('customers.details.conversations') || 'Conversations'}</h3>
+                        <div class="table-container" style="padding:0;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>${t('conversationHistory.csv.sessionId') || 'Session ID'}</th>
+                                        <th>${t('conversationHistory.table.status') || 'Status'}</th>
+                                        <th>${t('conversationHistory.table.started') || 'Started'}</th>
+                                        <th>${t('customers.table.actions') || 'Actions'}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${convRows || ''}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('customerDetailsModal').classList.add('open');
+            } catch (e) {
+                showAlert((window.I18N && I18N.t) ? I18N.t('customers.alert.loadFailed') : 'Failed to load customer details', 'error');
+                console.error(e);
+            }
+        }
+
+        function navigateToOrder(orderId) {
+            if (!orderId) return;
+            window.location.href = `/static/order-history.html?orderId=${encodeURIComponent(orderId)}`;
+        }
+
+        function navigateToConversation(conversationId) {
+            if (!conversationId) return;
+            window.location.href = `/static/conversation-history.html?conversationId=${encodeURIComponent(conversationId)}`;
         }
 
         async function saveCustomer() {
@@ -672,28 +672,36 @@
                 notes: document.getElementById('notes').value.trim() || null,
             };
 
-            if (!payload.name) { showAlert('Name is required', 'error'); return; }
+            if (!payload.name) { showAlert((window.I18N && I18N.t) ? I18N.t('customers.alert.nameRequired') : 'Name is required', 'error'); return; }
 
             let url = '/customers/';
             let method = 'POST';
             if (editingId !== null) { url = `/customers/${editingId}`; method = 'PUT'; }
 
             const res = await fetch(url, { method, headers: apiHeaders(), body: JSON.stringify(payload) });
-            if (!res.ok) { showAlert('Failed to save customer', 'error'); return; }
-            showAlert('Saved successfully');
+            if (!res.ok) { showAlert((window.I18N && I18N.t) ? I18N.t('customers.alert.saveFailed') : 'Failed to save customer', 'error'); return; }
+            showAlert((window.I18N && I18N.t) ? I18N.t('customers.alert.saveSuccess') : 'Saved successfully');
             closeModal();
             await reloadCustomers();
         }
 
-        async function removeCustomer(id) {
-            if (!confirm('Delete this customer?')) return;
-            const res = await fetch(`/customers/${id}`, { method: 'DELETE', headers: apiHeaders() });
-            if (!res.ok) { showAlert('Failed to delete customer', 'error'); return; }
-            showAlert('Deleted successfully');
-            await reloadCustomers();
-        }
-
-        document.addEventListener('DOMContentLoaded', checkAuth);
+        document.addEventListener('DOMContentLoaded', function () {
+            checkAuth();
+            // Deep-link: open customer details by id
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const customerId = parseInt(params.get('customerId'));
+                if (!isNaN(customerId)) {
+                    const timer = setInterval(() => {
+                        if (Array.isArray(customers)) {
+                            clearInterval(timer);
+                            viewCustomerDetails(customerId);
+                        }
+                    }, 300);
+                    setTimeout(() => clearInterval(timer), 8000);
+                }
+            } catch { }
+        });
     </script>
 </body>
 
