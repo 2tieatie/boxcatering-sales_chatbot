@@ -426,5 +426,6 @@
     "chatTest.clear.confirm": "Are you sure you want to clear the chat history?",
     "chatTest.cleared.message": "Chat history cleared. How can I help you?",
     "chatTest.export.user": "User",
-    "chatTest.export.bot": "Bot"
+    "chatTest.export.bot": "Bot",
+    "chatbotSettings.readOnlyNotice": "View only. System Administrator required to edit."
 }

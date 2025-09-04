@@ -426,5 +426,6 @@
     "chatTest.clear.confirm": "Ви впевнені, що хочете очистити історію чату?",
     "chatTest.cleared.message": "Історію чату очищено. Чим можу допомогти?",
     "chatTest.export.user": "Користувач",
-    "chatTest.export.bot": "Бот"
+    "chatTest.export.bot": "Бот",
+    "chatbotSettings.readOnlyNotice": "Лише перегляд. Для редагування потрібні права системного адміністратора."
 }

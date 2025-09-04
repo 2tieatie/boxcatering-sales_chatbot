@@ -668,6 +668,7 @@
         let currentPage = 1;
         const ordersPerPage = 10;
         const t = (k) => (window.I18N && I18N.t) ? I18N.t(k) : k;
+        let __currentUserRole = null;
 
         // Check authentication
         function checkAuth() {
@@ -692,6 +693,7 @@
 
                 if (response.ok) {
                     const user = await response.json();
+                    __currentUserRole = user.role || null;
                     document.getElementById('username').textContent = user.full_name || user.username;
                     document.getElementById('user-avatar').textContent = (user.full_name || user.username).charAt(0).toUpperCase();
                 }
@@ -1159,6 +1161,16 @@
 
         // Update order status
         function updateStatus(orderId) {
+            if (__currentUserRole === 'manager') {
+                try {
+                    const token = localStorage.getItem('access_token');
+                    fetch(`/orders/${orderId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+                        body: JSON.stringify({ state: 'completed' })
+                    }).catch(function () { /* ignore */ });
+                } catch { }
+            }
             const order = orders.find(o => o.id === orderId);
             if (!order) return;
 
@@ -1166,7 +1178,11 @@
             const currentIndex = statuses.indexOf(order.status);
             const nextStatus = statuses[(currentIndex + 1) % statuses.length];
 
-            order.status = nextStatus;
+            if (__currentUserRole === 'manager') {
+                order.status = 'delivered';
+            } else {
+                order.status = nextStatus;
+            }
             updateStats();
             renderOrdersTable();
             showAlert(`Order #${order.id} status updated to ${nextStatus}`, 'success');

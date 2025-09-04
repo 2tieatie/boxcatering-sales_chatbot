@@ -740,6 +740,7 @@
         // Initialize settings
         let currentSettings = {};
         let pendingContextFiles = [];
+        let __currentUserRole = null;
 
         // Default settings
         const defaultSettings = {
@@ -792,6 +793,7 @@
 
                 if (response.ok) {
                     const user = await response.json();
+                    __currentUserRole = user.role || null;
                     document.getElementById('username').textContent = user.full_name || user.username;
                     document.getElementById('user-avatar').textContent = (user.full_name || user.username).charAt(0).toUpperCase();
                 }
@@ -844,47 +846,54 @@
                 setDefaults();
                 return;
             }
-            // Load system settings for context documents and scraping
-            try {
-                const token = localStorage.getItem('access_token');
-                const sysResp = await fetch('/system-config/settings/all', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                if (sysResp.ok) {
-                    const sysSettings = await sysResp.json();
-                    const system = sysSettings.system || {};
-                    if (system.scrape_enabled !== undefined) {
-                        currentSettings.scrapeEnabled = (system.scrape_enabled === true || system.scrape_enabled === 'true');
-                    }
-                    if (system.context_docs_enabled !== undefined) {
-                        currentSettings.contextDocsEnabled = system.context_docs_enabled === true || system.context_docs_enabled === 'true';
-                    }
-                    if (system.context_docs_dir) {
-                        currentSettings.contextDocsDir = system.context_docs_dir;
-                    }
-                    if (system.context_docs_max_chars) {
-                        const n = parseInt(system.context_docs_max_chars);
-                        if (!isNaN(n)) currentSettings.contextDocsMaxChars = n;
-                    }
-                    if (system.scrape_website_url) {
-                        currentSettings.scrapeWebsiteUrl = system.scrape_website_url;
-                    }
-                    if (system.scrape_interval_minutes) {
-                        const m = parseInt(system.scrape_interval_minutes);
-                        if (!isNaN(m)) currentSettings.scrapeIntervalMinutes = m;
-                    }
-                }
-                // Local override for context docs toggle (persist UI interactions)
+            // Load system settings for context documents and scraping (system admin only)
+            if (__currentUserRole === 'system_admin') {
                 try {
-                    const override = localStorage.getItem('context_docs_enabled');
-                    if (override !== null) {
-                        currentSettings.contextDocsEnabled = (override === 'true');
+                    const token = localStorage.getItem('access_token');
+                    const sysResp = await fetch('/system-config/settings/all', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    if (sysResp.ok) {
+                        const sysSettings = await sysResp.json();
+                        const system = sysSettings.system || {};
+                        if (system.scrape_enabled !== undefined) {
+                            currentSettings.scrapeEnabled = (system.scrape_enabled === true || system.scrape_enabled === 'true');
+                        }
+                        if (system.context_docs_enabled !== undefined) {
+                            currentSettings.contextDocsEnabled = system.context_docs_enabled === true || system.context_docs_enabled === 'true';
+                        }
+                        if (system.context_docs_dir) {
+                            currentSettings.contextDocsDir = system.context_docs_dir;
+                        }
+                        if (system.context_docs_max_chars) {
+                            const n = parseInt(system.context_docs_max_chars);
+                            if (!isNaN(n)) currentSettings.contextDocsMaxChars = n;
+                        }
+                        if (system.scrape_website_url) {
+                            currentSettings.scrapeWebsiteUrl = system.scrape_website_url;
+                        }
+                        if (system.scrape_interval_minutes) {
+                            const m = parseInt(system.scrape_interval_minutes);
+                            if (!isNaN(m)) currentSettings.scrapeIntervalMinutes = m;
+                        }
                     }
+                    // Local override for context docs toggle (persist UI interactions)
+                    try {
+                        const override = localStorage.getItem('context_docs_enabled');
+                        if (override !== null) {
+                            currentSettings.contextDocsEnabled = (override === 'true');
+                        }
+                    } catch { }
+                } catch (e) {
+                    console.warn('Could not load system settings:', e);
+                }
+            } else {
+                // Make system-admin-only sections read-only and show notice
+                try {
+                    setReadOnlyForSystemCards();
                 } catch { }
-            } catch (e) {
-                console.warn('Could not load system settings:', e);
             }
             applySettings();
         }
@@ -1038,27 +1047,29 @@
 
                     showAlert('Settings saved successfully to database!', 'success');
                     updateStatus('Configuration saved successfully', 'success');
-                    // Save system settings for context documents and scraping
-                    try {
-                        const systemSettings = {
-                            scrape_enabled: document.getElementById('scrape-enabled').checked,
-                            context_docs_enabled: document.getElementById('context-docs-enabled').checked,
-                            context_docs_dir: document.getElementById('context-docs-dir').value.trim() || 'agent_context_documents',
-                            context_docs_max_chars: parseInt(document.getElementById('context-docs-max-chars').value) || 4000,
-                            scrape_website_url: (document.getElementById('scrape-website-url').value || '').trim(),
-                            scrape_interval_minutes: parseInt(document.getElementById('scrape-interval-minutes').value) || 1440
-                        };
-                        const sysToken = localStorage.getItem('access_token');
-                        await fetch('/system-config/settings/system', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${sysToken}`
-                            },
-                            body: JSON.stringify(systemSettings)
-                        });
-                    } catch (e) {
-                        console.warn('Failed to save system settings:', e);
+                    // Save system settings for context documents and scraping (system admin only)
+                    if (__currentUserRole === 'system_admin') {
+                        try {
+                            const systemSettings = {
+                                scrape_enabled: document.getElementById('scrape-enabled').checked,
+                                context_docs_enabled: document.getElementById('context-docs-enabled').checked,
+                                context_docs_dir: document.getElementById('context-docs-dir').value.trim() || 'agent_context_documents',
+                                context_docs_max_chars: parseInt(document.getElementById('context-docs-max-chars').value) || 4000,
+                                scrape_website_url: (document.getElementById('scrape-website-url').value || '').trim(),
+                                scrape_interval_minutes: parseInt(document.getElementById('scrape-interval-minutes').value) || 1440
+                            };
+                            const sysToken = localStorage.getItem('access_token');
+                            await fetch('/system-config/settings/system', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${sysToken}`
+                                },
+                                body: JSON.stringify(systemSettings)
+                            });
+                        } catch (e) {
+                            console.warn('Failed to save system settings:', e);
+                        }
                     }
                 } else {
                     const errorData = await response.json();
@@ -1181,6 +1192,7 @@
         }
 
         function setupContextUploader() {
+            if (__currentUserRole !== 'system_admin') return;
             const area = document.getElementById('context-upload-area');
             const input = document.getElementById('context-file-input');
             const uploadBtn = document.getElementById('upload-context-files');
@@ -1322,6 +1334,27 @@
             });
         }
 
+        function setReadOnlyForSystemCards() {
+            const makeReadOnly = function (card) {
+                if (!card) return;
+                // Banner
+                const note = document.createElement('div');
+                note.className = 'alert alert-warning';
+                note.style.display = 'block';
+                note.setAttribute('data-i18n', 'chatbotSettings.readOnlyNotice');
+                note.textContent = (window.I18N && I18N.t) ? I18N.t('chatbotSettings.readOnlyNotice') : 'View only. System Administrator required to edit.';
+                card.prepend(note);
+                // Disable inputs/buttons inside
+                card.querySelectorAll('input, select, textarea, button').forEach(function (el) {
+                    if (el) { el.disabled = true; }
+                });
+            };
+            try {
+                makeReadOnly(document.querySelector('.settings-card.large-card'));
+                makeReadOnly(document.querySelector('.settings-card.small-card-2'));
+            } catch { }
+        }
+
         // Reset to defaults
         function resetToDefaults() {
             if (confirm('Are you sure you want to reset all settings to default values? This action cannot be undone.')) {
@@ -1451,8 +1484,8 @@
             checkAuth();
             setupContextUploader();
             setupContextDocsTogglePersistence();
-            // Load the initial list a bit later to ensure auth token is set
-            setTimeout(listContextFiles, 400);
+            // Load the initial list only for system admins (after role likely set)
+            setTimeout(function () { if (__currentUserRole === 'system_admin') { listContextFiles(); } }, 400);
         });
     </script>
 </body>

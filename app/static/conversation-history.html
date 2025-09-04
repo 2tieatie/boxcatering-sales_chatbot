@@ -638,6 +638,7 @@
     <script>
         // Conversations will be loaded from the API
         let conversations = [];
+        let __currentUserRole = null;
         let convIdToOrderId = {};
         let ordersCache = [];
 
@@ -668,6 +669,7 @@
 
                 if (response.ok) {
                     const user = await response.json();
+                    __currentUserRole = user.role || null;
                     document.getElementById('username').textContent = user.full_name || user.username;
                     document.getElementById('user-avatar').textContent = (user.full_name || user.username).charAt(0).toUpperCase();
                 }
@@ -907,7 +909,9 @@
             if (orderId) {
                 buttons.push(`<button class="btn btn-sm" onclick="navigateToOrder(${orderId})">🧾 ${t('conversationHistory.actions.viewOrder') || 'Order'}</button>`);
             }
-            buttons.push(`<button class="btn btn-sm btn-delete" onclick="deleteConversation(${conversation.id})">🗑️ ${t('conversationHistory.actions.delete')}</button>`);
+            if (__currentUserRole !== 'manager') {
+                buttons.push(`<button class="btn btn-sm btn-delete" onclick="deleteConversation(${conversation.id})">🗑️ ${t('conversationHistory.actions.delete')}</button>`);
+            }
             return buttons.join('');
         }
 
