@@ -162,7 +162,7 @@
     <div class="container">
         <div class="welcome-section">
             <h2 data-i18n="dashboard.welcome">Welcome back!</h2>
-            <p data-i18n="dashboard.subtitle">Manage your boxcatering business efficiently with AI-powered customer
+            <p data-i18n="dashboard.subtitle">Manage your box catering business efficiently with AI-powered customer
                 service and comprehensive analytics.</p>
         </div>
 
@@ -268,18 +268,24 @@
             // Fetch user info
             fetchUserInfo();
             fetchDashboardStats();
+            // Handle any flash notice (e.g., access denied redirect) after i18n is ready
+            (window.__i18nReady || Promise.resolve()).then(handleFlashNotice);
         }
 
         // Fetch user information
         async function fetchUserInfo() {
             try {
                 const token = localStorage.getItem('access_token');
-                // Skip user info fetch for now due to 422 errors
-                // We'll set a default display name
-                document.getElementById('username').textContent = 'System Admin';
-                document.getElementById('user-avatar').textContent = 'S';
+                const res = await fetch('/users/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res && res.ok) {
+                    const me = await res.json();
+                    const name = (me.full_name && me.full_name.trim()) ? me.full_name : (me.username || 'User');
+                    const initial = (name || 'U').charAt(0).toUpperCase();
+                    document.getElementById('username').textContent = name;
+                    document.getElementById('user-avatar').textContent = initial;
+                }
             } catch (error) {
-                console.error('Error setting user info:', error);
+                console.error('Error fetching user info:', error);
             }
         }
 
@@ -309,6 +315,34 @@
         function logout() {
             localStorage.removeItem('access_token');
             window.location.href = '/login';
+        }
+
+        // Read and display flash notice set by auth helper on 403 redirects
+        function handleFlashNotice() {
+            try {
+                const key = (window.Auth && Auth.__FLASH_STORAGE_KEY) ? Auth.__FLASH_STORAGE_KEY : 'flash_notice';
+                const raw = sessionStorage.getItem(key);
+                if (!raw) return;
+                sessionStorage.removeItem(key);
+                const data = JSON.parse(raw || '{}') || {};
+                if (data && data.code === 'access_denied') {
+                    const container = document.querySelector('.container') || document.body;
+                    const banner = document.createElement('div');
+                    banner.setAttribute('role', 'status');
+                    banner.style.cssText = 'margin-bottom: 16px; padding: 12px 14px; border-radius: 8px; background: #fff3cd; color: #856404; border: 1px solid #ffe8a1; display: flex; align-items: center; gap: 8px;';
+                    const icon = document.createElement('span');
+                    icon.textContent = '⚠️';
+                    const msg = document.createElement('div');
+                    const base = (window.I18N && I18N.t) ? I18N.t('userManagement.msg.accessDenied') : 'Access denied. Insufficient permissions.';
+                    const path = String(data.apiPath || data.attemptedPath || '').replace(/^https?:\/\/[^/]+/, '');
+                    msg.textContent = path ? base + ' (' + path + ')' : base;
+                    banner.appendChild(icon);
+                    banner.appendChild(msg);
+                    container.insertBefore(banner, container.firstChild);
+                    // Auto-hide after a while
+                    setTimeout(function () { try { banner.remove(); } catch { } }, 6000);
+                }
+            } catch { }
         }
 
         // Check authentication on page load

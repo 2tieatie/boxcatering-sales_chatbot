@@ -60,7 +60,7 @@
     "settings.security.dangerText": "Ці дії незворотні та можуть вплинути на безпеку.",
     "settings.security.regenerate": "🔄 Перегенерувати секрет JWT",
     "dashboard.welcome": "З поверненням!",
-    "dashboard.subtitle": "Керуйте бізнесом boxcatering ефективно завдяки службі підтримки на базі ШІ та розширеній аналітиці.",
+    "dashboard.subtitle": "Керуйте бізнесом ефективно завдяки службі підтримки на базі ШІ та розширеній аналітиці.",
     "dashboard.totalConversations": "Усього чатів",
     "dashboard.activeOrders": "Активні замовлення",
     "dashboard.totalCustomers": "Усього клієнтів",

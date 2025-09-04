@@ -5,7 +5,9 @@
 
 (function () {
     const LOGIN_PATH = '/login';
+    const DASHBOARD_PATH = '/dashboard';
     const TOKEN_KEY = 'access_token';
+    const FLASH_STORAGE_KEY = 'flash_notice';
 
     let expiryTimerId = null;
 
@@ -21,7 +23,10 @@
         try {
             const parts = token.split('.');
             if (parts.length !== 3) return null;
-            const payload = JSON.parse(atob(parts[1]));
+            let b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+            const pad = b64.length % 4;
+            if (pad) b64 += '='.repeat(4 - pad);
+            const payload = JSON.parse(atob(b64));
             const exp = payload && payload.exp;
             return (typeof exp === 'number') ? exp : null; // seconds since epoch
         } catch {
@@ -33,6 +38,19 @@
         try { localStorage.removeItem(TOKEN_KEY); } catch { }
         if (window.location.pathname !== LOGIN_PATH) {
             window.location.href = LOGIN_PATH;
+        }
+    }
+
+    function setFlashNotice(data) {
+        try {
+            sessionStorage.setItem(FLASH_STORAGE_KEY, JSON.stringify(data || {}));
+        } catch { }
+    }
+
+    function redirectToDashboardWithAccessWarning(attemptedPath, meta) {
+        setFlashNotice({ code: 'access_denied', attemptedPath: attemptedPath || window.location.pathname, ...(meta || {}) });
+        if (window.location.pathname !== DASHBOARD_PATH) {
+            window.location.href = DASHBOARD_PATH;
         }
     }
 
@@ -73,11 +91,13 @@
             return null;
         }
         const exp = parseJwtExp(token);
-        if (!exp || exp * 1000 <= Date.now()) {
+        if (typeof exp === 'number' && exp * 1000 <= Date.now()) {
             redirectToLogin();
             return null;
         }
-        scheduleExpiryRedirect(token);
+        if (typeof exp === 'number') {
+            scheduleExpiryRedirect(token);
+        }
         return token;
     }
 
@@ -88,8 +108,16 @@
         const originalFetch = window.fetch.bind(window);
         window.fetch = async function (input, init) {
             const response = await originalFetch(input, init);
-            if (response && (response.status === 401 || response.status === 403)) {
+            if (!response) return response;
+            if (response.status === 401) {
                 redirectToLogin();
+            } else if (response.status === 403) {
+                try {
+                    const apiPath = (typeof input === 'string') ? input : (input && input.url) ? input.url : undefined;
+                    redirectToDashboardWithAccessWarning(window.location.pathname, { apiPath });
+                } catch {
+                    redirectToDashboardWithAccessWarning(window.location.pathname);
+                }
             }
             return response;
         };
@@ -99,6 +127,8 @@
     window.Auth = {
         getToken,
         ensureTokenValidOrRedirect,
+        // expose for dashboard flash reader (no-op on other pages)
+        __FLASH_STORAGE_KEY: FLASH_STORAGE_KEY,
     };
 
     // Expose locale helper minimal surface if available
