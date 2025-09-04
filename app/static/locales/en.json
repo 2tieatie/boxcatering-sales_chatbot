@@ -60,7 +60,7 @@
     "settings.security.dangerText": "These actions cannot be undone and may affect system security.",
     "settings.security.regenerate": "🔄 Regenerate JWT Secret",
     "dashboard.welcome": "Welcome back!",
-    "dashboard.subtitle": "Manage your boxcatering business efficiently with AI-powered customer service and comprehensive analytics.",
+    "dashboard.subtitle": "Manage your box catering business efficiently with AI-powered customer service and comprehensive analytics.",
     "dashboard.totalConversations": "Total Conversations",
     "dashboard.activeOrders": "Active Orders",
     "dashboard.totalCustomers": "Total Customers",

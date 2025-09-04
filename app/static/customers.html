@@ -459,9 +459,22 @@
         function checkAuth() {
             const token = localStorage.getItem('access_token');
             if (!token) { window.location.href = '/login'; return; }
-            document.getElementById('username').textContent = 'System Admin';
-            document.getElementById('user-avatar').textContent = 'S';
+            updateHeaderUser();
             (window.__i18nReady || Promise.resolve()).then(reloadCustomers);
+        }
+
+        async function updateHeaderUser() {
+            try {
+                const token = localStorage.getItem('access_token');
+                const res = await fetch('/users/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res && res.ok) {
+                    const me = await res.json();
+                    const name = (me.full_name && me.full_name.trim()) ? me.full_name : (me.username || 'User');
+                    const initial = (name || 'U').charAt(0).toUpperCase();
+                    document.getElementById('username').textContent = name;
+                    document.getElementById('user-avatar').textContent = initial;
+                }
+            } catch (e) { console.warn('Failed to update header user', e); }
         }
 
         function apiHeaders() {

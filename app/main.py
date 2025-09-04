@@ -82,6 +82,16 @@ app.include_router(scrape_router)
 # app.include_router(test_router)
 # app.include_router(chatbot_config_simple_router)
 
+@app.get("/static/auth.js")
+async def auth_js() -> FileResponse:
+    """Serve auth.js with no-store caching to ensure latest client auth logic."""
+    resp = FileResponse("app/static/auth.js")
+    # Prevent caching so updates take effect without cache-busting query params
+    resp.headers["Cache-Control"] = "no-store"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
+
 @app.get("/")
 async def root():
     """Serve the login page."""

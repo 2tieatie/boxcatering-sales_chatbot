@@ -240,6 +240,24 @@
             const targetUserInfo = header.querySelector('.user-info');
             if (targetUserInfo) { ensureLangToggle(targetUserInfo); }
         } catch { }
+
+        // Populate current user name/avatar if authenticated
+        try {
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                const nameEl = header.querySelector('#username');
+                const avatarEl = header.querySelector('#user-avatar');
+                fetch('/users/me', { headers: { 'Authorization': `Bearer ${token}` } })
+                    .then(function (res) { return res && res.ok ? res.json() : null; })
+                    .then(function (me) {
+                        if (!me || !nameEl || !avatarEl) return;
+                        const name = (me.full_name && String(me.full_name).trim()) ? me.full_name : (me.username || 'User');
+                        nameEl.textContent = name;
+                        avatarEl.textContent = String(name).charAt(0).toUpperCase() || 'U';
+                    })
+                    .catch(function () { /* ignore */ });
+            }
+        } catch { }
     }
 
     if (document.readyState === 'loading') {
