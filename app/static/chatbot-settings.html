@@ -22,6 +22,32 @@
             gap: 30px;
         }
 
+        /* Special layout only for one row */
+        .special-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 30px;
+            grid-template-areas:
+                "large small1"
+                "large small2";
+
+            /* Make sure this row spans the whole parent grid width */
+            grid-column: 1 / -1;
+        }
+
+        .large-card {
+            grid-area: large;
+        }
+
+        .small-card-1 {
+            grid-area: small1;
+        }
+
+        .small-card-2 {
+            grid-area: small2;
+        }
+
         .settings-card {
             background: white;
             border-radius: 15px;
@@ -40,6 +66,24 @@
 
         .settings-card h3 .icon {
             font-size: 24px;
+        }
+
+        /* Compact variant to reduce vertical space (approx half height) */
+        .settings-card.compact {
+            padding: 16px;
+        }
+
+        .settings-card.compact h3 {
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+
+        .settings-card.compact .form-group {
+            margin-bottom: 14px;
+        }
+
+        .settings-card.compact .toggle-group {
+            padding: 8px 0;
         }
 
         .form-group {
@@ -172,6 +216,7 @@
             border-radius: 3px;
             background: #e1e5e9;
             outline: none;
+            appearance: none;
             -webkit-appearance: none;
         }
 
@@ -276,6 +321,17 @@
                 grid-template-columns: 1fr;
             }
 
+            .special-row {
+                /* one column only */
+                grid-template-columns: 1fr;
+                /* rows auto-expand */
+                grid-template-rows: auto;
+                grid-template-areas:
+                    "large"
+                    "small1"
+                    "small2";
+            }
+
             .action-buttons {
                 flex-direction: column;
                 align-items: stretch;
@@ -368,105 +424,134 @@
                 </div>
             </div>
 
-            <!-- Context Documents -->
-            <div class="settings-card">
-                <h3><span class="icon">📚</span><span data-i18n="chatbotSettings.section.contextDocs">Context
-                        Documents</span></h3>
+            <div class="special-row">
+                <!-- Context Documents -->
+                <div class="settings-card large-card">
+                    <h3><span class="icon">📚</span><span data-i18n="chatbotSettings.section.contextDocs">Context
+                            Documents</span></h3>
 
-                <div class="toggle-group">
-                    <div class="toggle-label">
-                        <span class="title" data-i18n="chatbotSettings.ctx.enableTitle">Enable Context Documents</span>
-                        <span class="description" data-i18n="chatbotSettings.ctx.enableDesc">Include knowledge from
-                            /agent_context_documents in AI prompt</span>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="context-docs-enabled" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-
-                <div class="form-group">
-                    <label for="context-docs-dir" data-i18n="chatbotSettings.ctx.dir">Context Docs Directory</label>
-                    <input type="text" id="context-docs-dir" placeholder="agent_context_documents"
-                        value="agent_context_documents">
-                    <div class="help-text" data-i18n="chatbotSettings.ctx.dirHelp">Relative to project root. Supports
-                        .md, .txt, .pdf, .docx, .csv</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="context-docs-max-chars" data-i18n="chatbotSettings.ctx.maxChars">Max Characters in
-                        Prompt</label>
-                    <input type="number" id="context-docs-max-chars" min="1000" step="500" value="4000">
-                    <div class="help-text" data-i18n="chatbotSettings.ctx.maxCharsHelp">Upper limit of concatenated
-                        context injected into the model prompt.</div>
-                </div>
-
-                <div class="form-group">
-                    <label data-i18n="chatbotSettings.ctx.manage">Manage Context Documents</label>
-                    <div id="context-upload-area"
-                        style="border: 2px dashed #e1e5e9; border-radius: 10px; padding: 20px; background: #fafbfc; text-align: center; cursor: pointer;">
-                        <div style="font-size: 28px;">📤</div>
-                        <div style="font-weight: 600; margin-top: 8px;" data-i18n="chatbotSettings.ctx.drop">Drag & drop
-                            files here, or click to select</div>
-                        <div style="font-size: 12px; color: #666; margin-top: 6px;"
-                            data-i18n="chatbotSettings.ctx.allowed">Allowed: .md, .txt, .pdf, .docx, .csv</div>
-                        <input id="context-file-input" type="file" multiple style="display:none"
-                            accept=".md,.txt,.pdf,.docx,.csv">
-                    </div>
-                    <div id="context-selected-files"
-                        style="margin-top: 10px; border:1px solid #eef0f3; border-radius:8px; background:white; max-height: 150px; overflow:auto;">
-                        <div style="padding: 8px; font-size: 13px; color:#666;"
-                            data-i18n="chatbotSettings.ctx.noSelected">No files selected</div>
-                    </div>
-                    <div style="margin-top: 12px; display:flex; gap: 8px; justify-content: flex-end;">
-                        <button class="btn-sm btn-secondary" id="refresh-context-files"
-                            data-i18n="chatbotSettings.ctx.refresh">Refresh List</button>
-                        <button class="btn-sm btn-primary" id="upload-context-files"
-                            data-i18n="chatbotSettings.ctx.upload">Upload Selected</button>
-                    </div>
-                    <div id="context-files-list"
-                        style="margin-top: 15px; max-height: 220px; overflow:auto; border:1px solid #eef0f3; border-radius: 8px; background:white;">
-                        <div style="padding: 10px; font-size: 14px; color:#666;"
-                            data-i18n="chatbotSettings.ctx.noFiles">No files loaded</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Chatbot Language Configuration -->
-            <div class="settings-card">
-                <h3><span class="icon">🌍</span><span data-i18n="chatbotSettings.section.language">Language
-                        Settings</span></h3>
-
-                <div class="form-group">
-                    <label for="chatbot-language" data-i18n="chatbotSettings.lang.label">Chatbot Language</label>
-                    <select id="chatbot-language">
-                        <option value="uk">🇺🇦 Ukrainian (Українська)</option>
-                        <option value="en">🇺🇸 English</option>
-                        <option value="de">🇩🇪 German (Deutsch)</option>
-                        <option value="fr">🇫🇷 French (Français)</option>
-                        <option value="es">🇪🇸 Spanish (Español)</option>
-                    </select>
-                    <div class="help-text" data-i18n="chatbotSettings.lang.help">Language the AI agent will use to
-                        communicate with customers</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="force-language" data-i18n="chatbotSettings.lang.forceLabel">Force Language
-                        Compliance</label>
                     <div class="toggle-group">
                         <div class="toggle-label">
-                            <span class="title" data-i18n="chatbotSettings.lang.forceTitle">Strict Language
-                                Enforcement</span>
-                            <span class="description" data-i18n="chatbotSettings.lang.forceDesc">AI will only respond in
-                                the selected language</span>
+                            <span class="title" data-i18n="chatbotSettings.ctx.enableTitle">Enable Context
+                                Documents</span>
+                            <span class="description" data-i18n="chatbotSettings.ctx.enableDesc">Include knowledge from
+                                /agent_context_documents in AI prompt</span>
                         </div>
                         <label class="toggle-switch">
-                            <input type="checkbox" id="force-language" checked>
+                            <input type="checkbox" id="context-docs-enabled" checked>
                             <span class="slider"></span>
                         </label>
                     </div>
-                    <div class="help-text" data-i18n="chatbotSettings.lang.forceHelp">When enabled, the AI will strictly
-                        respond only in the selected language
+
+                    <div class="form-group">
+                        <label for="context-docs-dir" data-i18n="chatbotSettings.ctx.dir">Context Docs Directory</label>
+                        <input type="text" id="context-docs-dir" placeholder="agent_context_documents"
+                            value="agent_context_documents">
+                        <div class="help-text" data-i18n="chatbotSettings.ctx.dirHelp">Relative to project root.
+                            Supports
+                            .md, .txt, .pdf, .docx, .csv</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="context-docs-max-chars" data-i18n="chatbotSettings.ctx.maxChars">Max Characters in
+                            Prompt</label>
+                        <input type="number" id="context-docs-max-chars" min="1000" step="500" value="4000">
+                        <div class="help-text" data-i18n="chatbotSettings.ctx.maxCharsHelp">Upper limit of concatenated
+                            context injected into the model prompt.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label data-i18n="chatbotSettings.ctx.manage">Manage Context Documents</label>
+                        <div id="context-upload-area"
+                            style="border: 2px dashed #e1e5e9; border-radius: 10px; padding: 20px; background: #fafbfc; text-align: center; cursor: pointer;">
+                            <div style="font-size: 28px;">📤</div>
+                            <div style="font-weight: 600; margin-top: 8px;" data-i18n="chatbotSettings.ctx.drop">Drag &
+                                drop
+                                files here, or click to select</div>
+                            <div style="font-size: 12px; color: #666; margin-top: 6px;"
+                                data-i18n="chatbotSettings.ctx.allowed">Allowed: .md, .txt, .pdf, .docx, .csv</div>
+                            <input id="context-file-input" type="file" multiple style="display:none"
+                                accept=".md,.txt,.pdf,.docx,.csv">
+                        </div>
+                        <div id="context-selected-files"
+                            style="margin-top: 10px; border:1px solid #eef0f3; border-radius:8px; background:white; max-height: 150px; overflow:auto;">
+                            <div style="padding: 8px; font-size: 13px; color:#666;"
+                                data-i18n="chatbotSettings.ctx.noSelected">No files selected</div>
+                        </div>
+                        <div style="margin-top: 12px; display:flex; gap: 8px; justify-content: flex-end;">
+                            <button class="btn-sm btn-secondary" id="refresh-context-files"
+                                data-i18n="chatbotSettings.ctx.refresh">Refresh List</button>
+                            <button class="btn-sm btn-primary" id="upload-context-files"
+                                data-i18n="chatbotSettings.ctx.upload">Upload Selected</button>
+                        </div>
+                        <div id="context-files-list"
+                            style="margin-top: 15px; max-height: 220px; overflow:auto; border:1px solid #eef0f3; border-radius: 8px; background:white;">
+                            <div style="padding: 10px; font-size: 14px; color:#666;"
+                                data-i18n="chatbotSettings.ctx.noFiles">No files loaded</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chatbot Language Configuration -->
+                <div class="settings-card small-card-1">
+                    <h3><span class="icon">🌍</span><span data-i18n="chatbotSettings.section.language">Language
+                            Settings</span></h3>
+
+                    <div class="form-group">
+                        <label for="chatbot-language" data-i18n="chatbotSettings.lang.label">Chatbot Language</label>
+                        <select id="chatbot-language">
+                            <option value="uk">🇺🇦 Ukrainian (Українська)</option>
+                            <option value="en">🇺🇸 English</option>
+                            <option value="de">🇩🇪 German (Deutsch)</option>
+                            <option value="fr">🇫🇷 French (Français)</option>
+                            <option value="es">🇪🇸 Spanish (Español)</option>
+                        </select>
+                        <div class="help-text" data-i18n="chatbotSettings.lang.help">Language the AI agent will use to
+                            communicate with customers</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="force-language" data-i18n="chatbotSettings.lang.forceLabel">Force Language
+                            Compliance</label>
+                        <div class="toggle-group">
+                            <div class="toggle-label">
+                                <span class="title" data-i18n="chatbotSettings.lang.forceTitle">Strict Language
+                                    Enforcement</span>
+                                <span class="description" data-i18n="chatbotSettings.lang.forceDesc">AI will only
+                                    respond in
+                                    the selected language</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="force-language" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="help-text" data-i18n="chatbotSettings.lang.forceHelp">When enabled, the AI will
+                            strictly
+                            respond only in the selected language
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Website Scraping Configuration -->
+                <div class="settings-card small-card-2">
+                    <h3><span class="icon">🌐</span><span data-i18n="chatbotSettings.section.scraping">Website
+                            Scraping</span></h3>
+
+                    <div class="form-group">
+                        <label for="scrape-website-url" data-i18n="chatbotSettings.scrape.urlLabel">Website URL to
+                            scrape</label>
+                        <input type="url" id="scrape-website-url" placeholder="https://example.com"
+                            data-i18n-placeholder="chatbotSettings.scrape.urlPh">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="scrape-interval-minutes" data-i18n="chatbotSettings.scrape.intervalLabel">Scrape
+                            interval (minutes)</label>
+                        <input type="number" id="scrape-interval-minutes" min="5" step="5" value="1440">
+                        <div class="help-text" data-i18n="chatbotSettings.scrape.intervalHelp">How often to fetch and
+                            update
+                            context from the site</div>
                     </div>
                 </div>
             </div>
@@ -661,7 +746,10 @@
             // Context Documents defaults
             contextDocsEnabled: true,
             contextDocsDir: 'agent_context_documents',
-            contextDocsMaxChars: 4000
+            contextDocsMaxChars: 4000,
+            // Website Scraping defaults
+            scrapeWebsiteUrl: '',
+            scrapeIntervalMinutes: 1440
         };
 
         // Check authentication
@@ -739,7 +827,7 @@
                 setDefaults();
                 return;
             }
-            // Load system settings for context documents
+            // Load system settings for context documents and scraping
             try {
                 const token = localStorage.getItem('access_token');
                 const sysResp = await fetch('/system-config/settings/all', {
@@ -760,7 +848,21 @@
                         const n = parseInt(system.context_docs_max_chars);
                         if (!isNaN(n)) currentSettings.contextDocsMaxChars = n;
                     }
+                    if (system.scrape_website_url) {
+                        currentSettings.scrapeWebsiteUrl = system.scrape_website_url;
+                    }
+                    if (system.scrape_interval_minutes) {
+                        const m = parseInt(system.scrape_interval_minutes);
+                        if (!isNaN(m)) currentSettings.scrapeIntervalMinutes = m;
+                    }
                 }
+                // Local override for context docs toggle (persist UI interactions)
+                try {
+                    const override = localStorage.getItem('context_docs_enabled');
+                    if (override !== null) {
+                        currentSettings.contextDocsEnabled = (override === 'true');
+                    }
+                } catch { }
             } catch (e) {
                 console.warn('Could not load system settings:', e);
             }
@@ -811,6 +913,12 @@
             if (ctxEnabledEl) ctxEnabledEl.checked = currentSettings.contextDocsEnabled;
             if (ctxDirEl) ctxDirEl.value = currentSettings.contextDocsDir;
             if (ctxMaxEl) ctxMaxEl.value = currentSettings.contextDocsMaxChars;
+
+            // Website Scraping
+            const scrapeUrlEl = document.getElementById('scrape-website-url');
+            const scrapeIntEl = document.getElementById('scrape-interval-minutes');
+            if (scrapeUrlEl) scrapeUrlEl.value = currentSettings.scrapeWebsiteUrl || '';
+            if (scrapeIntEl) scrapeIntEl.value = currentSettings.scrapeIntervalMinutes || 1440;
         }
 
         // Save settings
@@ -896,17 +1004,26 @@
                         responseTimeout: parseInt(document.getElementById('response-timeout').value),
                         conversationLogging: document.getElementById('conversation-logging').checked,
                         performanceAnalytics: document.getElementById('performance-analytics').checked,
-                        errorReporting: document.getElementById('error-reporting').checked
+                        errorReporting: document.getElementById('error-reporting').checked,
+                        // Context Documents
+                        contextDocsEnabled: document.getElementById('context-docs-enabled').checked,
+                        contextDocsDir: document.getElementById('context-docs-dir').value.trim() || 'agent_context_documents',
+                        contextDocsMaxChars: parseInt(document.getElementById('context-docs-max-chars').value) || 4000,
+                        // Website Scraping
+                        scrapeWebsiteUrl: (document.getElementById('scrape-website-url').value || '').trim(),
+                        scrapeIntervalMinutes: parseInt(document.getElementById('scrape-interval-minutes').value) || 1440
                     };
 
                     showAlert('Settings saved successfully to database!', 'success');
                     updateStatus('Configuration saved successfully', 'success');
-                    // Save system settings for context documents
+                    // Save system settings for context documents and scraping
                     try {
                         const systemSettings = {
                             context_docs_enabled: document.getElementById('context-docs-enabled').checked,
                             context_docs_dir: document.getElementById('context-docs-dir').value.trim() || 'agent_context_documents',
-                            context_docs_max_chars: parseInt(document.getElementById('context-docs-max-chars').value) || 4000
+                            context_docs_max_chars: parseInt(document.getElementById('context-docs-max-chars').value) || 4000,
+                            scrape_website_url: (document.getElementById('scrape-website-url').value || '').trim(),
+                            scrape_interval_minutes: parseInt(document.getElementById('scrape-interval-minutes').value) || 1440
                         };
                         const sysToken = localStorage.getItem('access_token');
                         await fetch('/system-config/settings/system', {
@@ -1142,6 +1259,46 @@
             }
         }
 
+        // Persist and restore Context Documents toggle across language changes and reloads
+        function setupContextDocsTogglePersistence() {
+            const el = document.getElementById('context-docs-enabled');
+            if (!el) return;
+            // Initialize from localStorage if present (does not overwrite loaded value unless explicitly set)
+            try {
+                const stored = localStorage.getItem('context_docs_enabled');
+                if (stored !== null) {
+                    el.checked = (stored === 'true');
+                }
+            } catch { }
+            // On user change, persist locally and to backend immediately
+            el.addEventListener('change', async function () {
+                const v = !!this.checked;
+                try { localStorage.setItem('context_docs_enabled', String(v)); } catch { }
+                try {
+                    const token = localStorage.getItem('access_token');
+                    await fetch('/system-config/settings/system', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ context_docs_enabled: v })
+                    });
+                } catch (e) {
+                    console.warn('Failed to persist context_docs_enabled', e);
+                }
+            });
+            // Re-apply stored state when UI language changes to avoid visual reset
+            document.addEventListener('i18n:languageChanged', function () {
+                try {
+                    const stored = localStorage.getItem('context_docs_enabled');
+                    if (stored !== null) {
+                        el.checked = (stored === 'true');
+                    }
+                } catch { }
+            });
+        }
+
         // Reset to defaults
         function resetToDefaults() {
             if (confirm('Are you sure you want to reset all settings to default values? This action cannot be undone.')) {
@@ -1186,7 +1343,10 @@
                 // Context Documents
                 contextDocsEnabled: document.getElementById('context-docs-enabled').checked,
                 contextDocsDir: document.getElementById('context-docs-dir').value,
-                contextDocsMaxChars: parseInt(document.getElementById('context-docs-max-chars').value)
+                contextDocsMaxChars: parseInt(document.getElementById('context-docs-max-chars').value),
+                // Website Scraping
+                scrapeWebsiteUrl: document.getElementById('scrape-website-url').value,
+                scrapeIntervalMinutes: parseInt(document.getElementById('scrape-interval-minutes').value)
             };
 
             const settingsData = JSON.stringify(exportSettings, null, 2);
@@ -1266,6 +1426,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             checkAuth();
             setupContextUploader();
+            setupContextDocsTogglePersistence();
             // Load the initial list a bit later to ensure auth token is set
             setTimeout(listContextFiles, 400);
         });
