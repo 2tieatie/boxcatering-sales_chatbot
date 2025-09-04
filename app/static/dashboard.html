@@ -7,88 +7,6 @@
     <link rel="icon" href="/static/favicon.ico" sizes="any">
     <title>Box Catering Chatbot - Dashboard</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
-            color: #333;
-        }
-
-        .header {
-            background: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            color: #667eea;
-            font-size: 24px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .nav-link {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-            padding: 8px 16px;
-            border-radius: 6px;
-            transition: background-color 0.2s ease;
-        }
-
-        .nav-link:hover {
-            background: #f0f2ff;
-        }
-
-        .nav-link.active {
-            background: #667eea;
-            color: white;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: #667eea;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-
-        .logout-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .logout-btn:hover {
-            background: #c82333;
-        }
-
         .container {
             max-width: 1200px;
             margin: 40px auto;
@@ -218,17 +136,6 @@
         }
 
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-
-            .nav-links {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
             .stats-grid {
                 grid-template-columns: 1fr;
             }
@@ -238,83 +145,81 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 
 <body>
     <div class="header">
-        <h1>Box Catering Chatbot Dashboard</h1>
-        <div class="nav-links">
-            <a href="/dashboard" class="nav-link active">Dashboard</a>
-            <a href="/chatbot-test" class="nav-link">Chatbot Test</a>
-            <a href="/chatbot-settings" class="nav-link">Chatbot Settings</a>
-            <a href="/settings" class="nav-link">Settings</a>
-            <a href="/order-history" class="nav-link">Orders</a>
-            <a href="/conversation-history" class="nav-link">Conversations</a>
-            <a href="/customers" class="nav-link">Customers</a>
-            <a href="/user-management" class="nav-link">Users</a>
-        </div>
+        <h1 data-i18n="app.title">Box Catering Chatbot</h1>
+        <div class="nav-links" id="nav"></div>
         <div class="user-info">
             <div class="user-avatar" id="user-avatar">U</div>
             <span id="username">User</span>
-            <button class="logout-btn" onclick="logout()">Logout</button>
+            <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
         </div>
     </div>
 
     <div class="container">
         <div class="welcome-section">
-            <h2>Welcome back!</h2>
-            <p>Manage your boxcatering business efficiently with AI-powered customer service and comprehensive
-                analytics.</p>
+            <h2 data-i18n="dashboard.welcome">Welcome back!</h2>
+            <p data-i18n="dashboard.subtitle">Manage your box catering business efficiently with AI-powered customer
+                service and comprehensive analytics.</p>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-number" id="total-conversations">0</div>
-                <div class="stat-label">Total Conversations</div>
+                <div class="stat-label" data-i18n="dashboard.totalConversations">Total Conversations</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="active-orders">0</div>
-                <div class="stat-label">Active Orders</div>
+                <div class="stat-label" data-i18n="dashboard.activeOrders">Active Orders</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="total-customers">0</div>
-                <div class="stat-label">Total Customers</div>
+                <div class="stat-label" data-i18n="dashboard.totalCustomers">Total Customers</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="handovers">0</div>
-                <div class="stat-label">Manager Handovers</div>
+                <div class="stat-label" data-i18n="dashboard.handovers">Manager Handovers</div>
             </div>
         </div>
 
         <div class="actions-grid">
             <div class="action-card">
-                <h3>👩 Chatbot Testing</h3>
-                <p>Test and interact with your AI-powered chatbot, simulate customer conversations, and validate
-                    responses.</p>
-                <button class="action-btn" onclick="window.location.href='/chatbot-test'">Test Chatbot</button>
+                <h3 data-i18n="dashboard.card.testTitle">👩 Chatbot Testing</h3>
+                <p data-i18n="dashboard.card.testDesc">Test and interact with your AI-powered chatbot, simulate customer
+                    conversations, and validate responses.</p>
+                <button class="action-btn" onclick="window.location.href='/chatbot-test'"
+                    data-i18n="dashboard.card.testButton">Test Chatbot</button>
             </div>
             <div class="action-card">
-                <h3>Chat Management</h3>
-                <p>Monitor and manage ongoing conversations, review chat history, and handle customer inquiries.</p>
-                <button class="action-btn" onclick="window.location.href='/conversation-history'">Manage Chats</button>
+                <h3 data-i18n="dashboard.card.chatTitle">Chat Management</h3>
+                <p data-i18n="dashboard.card.chatDesc">Monitor and manage ongoing conversations, review chat history,
+                    and handle customer inquiries.</p>
+                <button class="action-btn" onclick="window.location.href='/conversation-history'"
+                    data-i18n="dashboard.card.chatButton">Manage Chats</button>
             </div>
             <div class="action-card">
-                <h3>Order Management</h3>
-                <p>Track orders, update statuses, manage inventory, and ensure timely delivery to customers.</p>
-                <button class="action-btn" onclick="window.location.href='/order-history'">Manage
-                    Orders</button>
+                <h3 data-i18n="dashboard.card.orderTitle">Order Management</h3>
+                <p data-i18n="dashboard.card.orderDesc">Track orders, update statuses, manage inventory, and ensure
+                    timely delivery to customers.</p>
+                <button class="action-btn" onclick="window.location.href='/order-history'"
+                    data-i18n="dashboard.card.orderButton">Manage Orders</button>
             </div>
             <div class="action-card">
-                <h3>Customer Database</h3>
-                <p>Access customer information, view order history, and maintain customer relationships.</p>
-                <button class="action-btn" onclick="window.location.href='/customers'">View
-                    Customers</button>
+                <h3 data-i18n="dashboard.card.customersTitle">Customer Database</h3>
+                <p data-i18n="dashboard.card.customersDesc">Access customer information, view order history, and
+                    maintain customer relationships.</p>
+                <button class="action-btn" onclick="window.location.href='/customers'"
+                    data-i18n="dashboard.card.customersButton">View Customers</button>
             </div>
 
             <div class="action-card">
-                <h3>🔐 Change Password</h3>
-                <p>Update your account password for enhanced security.</p>
-                <button class="action-btn" onclick="window.location.href='/change-password'">Change Password</button>
+                <h3 data-i18n="dashboard.card.passwordTitle">🔐 Change Password</h3>
+                <p data-i18n="dashboard.card.passwordDesc">Update your account password for enhanced security.</p>
+                <button class="action-btn" onclick="window.location.href='/change-password'"
+                    data-i18n="dashboard.card.passwordButton">Change Password</button>
             </div>
         </div>
     </div>
@@ -323,6 +228,34 @@
         💬
     </div>
 
+    <script src="/static/auth.js"></script>
+    <script src="/static/i18n.js"></script>
+    <script>
+        (function () {
+            async function initI18N() {
+                try {
+                    const token = localStorage.getItem('access_token');
+                    const meRes = await fetch('/users/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                    const storedLang = localStorage.getItem('ui_language');
+                    let lang = storedLang || 'uk';
+                    if (!storedLang && meRes.ok) {
+                        const me = await meRes.json();
+                        lang = me.preferred_language || lang;
+                    }
+                    if (window.I18N && I18N.setLanguage) {
+                        await I18N.setLanguage(lang);
+                    }
+                    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+                        const k = el.getAttribute('data-i18n');
+                        const txt = (window.I18N && I18N._dict && I18N._dict[k]) ? I18N._dict[k] : null;
+                        if (txt) el.textContent = txt;
+                    });
+                } catch { }
+            }
+            window.__i18nReady = initI18N();
+        })();
+    </script>
+    <script src="/static/nav.js"></script>
     <script>
         // Check if user is authenticated
         function checkAuth() {
@@ -335,18 +268,24 @@
             // Fetch user info
             fetchUserInfo();
             fetchDashboardStats();
+            // Handle any flash notice (e.g., access denied redirect) after i18n is ready
+            (window.__i18nReady || Promise.resolve()).then(handleFlashNotice);
         }
 
         // Fetch user information
         async function fetchUserInfo() {
             try {
                 const token = localStorage.getItem('access_token');
-                // Skip user info fetch for now due to 422 errors
-                // We'll set a default display name
-                document.getElementById('username').textContent = 'System Admin';
-                document.getElementById('user-avatar').textContent = 'S';
+                const res = await fetch('/users/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res && res.ok) {
+                    const me = await res.json();
+                    const name = (me.full_name && me.full_name.trim()) ? me.full_name : (me.username || 'User');
+                    const initial = (name || 'U').charAt(0).toUpperCase();
+                    document.getElementById('username').textContent = name;
+                    document.getElementById('user-avatar').textContent = initial;
+                }
             } catch (error) {
-                console.error('Error setting user info:', error);
+                console.error('Error fetching user info:', error);
             }
         }
 
@@ -376,6 +315,34 @@
         function logout() {
             localStorage.removeItem('access_token');
             window.location.href = '/login';
+        }
+
+        // Read and display flash notice set by auth helper on 403 redirects
+        function handleFlashNotice() {
+            try {
+                const key = (window.Auth && Auth.__FLASH_STORAGE_KEY) ? Auth.__FLASH_STORAGE_KEY : 'flash_notice';
+                const raw = sessionStorage.getItem(key);
+                if (!raw) return;
+                sessionStorage.removeItem(key);
+                const data = JSON.parse(raw || '{}') || {};
+                if (data && data.code === 'access_denied') {
+                    const container = document.querySelector('.container') || document.body;
+                    const banner = document.createElement('div');
+                    banner.setAttribute('role', 'status');
+                    banner.style.cssText = 'margin-bottom: 16px; padding: 12px 14px; border-radius: 8px; background: #fff3cd; color: #856404; border: 1px solid #ffe8a1; display: flex; align-items: center; gap: 8px;';
+                    const icon = document.createElement('span');
+                    icon.textContent = '⚠️';
+                    const msg = document.createElement('div');
+                    const base = (window.I18N && I18N.t) ? I18N.t('userManagement.msg.accessDenied') : 'Access denied. Insufficient permissions.';
+                    const path = String(data.apiPath || data.attemptedPath || '').replace(/^https?:\/\/[^/]+/, '');
+                    msg.textContent = path ? base + ' (' + path + ')' : base;
+                    banner.appendChild(icon);
+                    banner.appendChild(msg);
+                    container.insertBefore(banner, container.firstChild);
+                    // Auto-hide after a while
+                    setTimeout(function () { try { banner.remove(); } catch { } }, 6000);
+                }
+            } catch { }
         }
 
         // Check authentication on page load
