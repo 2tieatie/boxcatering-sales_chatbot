@@ -125,6 +125,28 @@
                         await I18N.setLanguage(lang);
                     }
                 } catch { }
+
+                // Persist preference to backend when possible
+                try {
+                    const token = localStorage.getItem('access_token');
+                    if (token) {
+                        const meRes = await fetch('/users/me', {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (meRes && meRes.ok) {
+                            const me = await meRes.json();
+                            await fetch(`/users/${me.id}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ preferred_language: lang })
+                            }).catch(() => { });
+                        }
+                    }
+                } catch { }
+
                 updateActive();
             }
 
@@ -148,6 +170,9 @@
         }
 
         updateActive();
+        try {
+            document.addEventListener('i18n:languageChanged', function () { updateActive(); });
+        } catch { }
         try {
             if (window.__i18nReady && typeof window.__i18nReady.then === 'function') {
                 window.__i18nReady.then(function () { updateActive(); });
@@ -180,6 +205,11 @@
             if (window.__i18nReady && typeof window.__i18nReady.then === 'function') {
                 window.__i18nReady.then(function () { renderNav(navContainer); });
             }
+        } catch { }
+
+        // Re-render nav when language changes to update labels immediately
+        try {
+            document.addEventListener('i18n:languageChanged', function () { renderNav(navContainer); });
         } catch { }
 
         // Ensure user-info exists

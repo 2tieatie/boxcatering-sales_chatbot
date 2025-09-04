@@ -895,6 +895,20 @@
             }
         });
 
+        // Keep the "Your UI Language" dropdown in sync with header toggle changes
+        try {
+            document.addEventListener('i18n:languageChanged', function (e) {
+                try {
+                    const lang = (e && e.detail && e.detail.lang) ? e.detail.lang : ((window.I18N && I18N.lang) ? I18N.lang : null);
+                    if (!lang) return;
+                    const select = document.getElementById('user-language');
+                    if (select && select.value !== lang) {
+                        select.value = lang;
+                    }
+                } catch { }
+            });
+        } catch { }
+
         // Save security settings
         document.getElementById('security-form').addEventListener('submit', async function (e) {
             e.preventDefault();
