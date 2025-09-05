@@ -1,0 +1,27 @@
+# sys files
+*.swp
+*.tmp
+*.log
+*.bak
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+venv/
+.env
+
+# Git
+.git
+.gitignore
+
+# IDE/Editor
+.vscode/
+.idea/
+
+# Docker not copy
+Docker/
