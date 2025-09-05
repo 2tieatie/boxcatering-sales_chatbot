@@ -36,6 +36,22 @@
             { href: '/user-management', key: 'nav.users', label: (window.I18N && I18N.t) ? I18N.t('nav.users') : 'Users' },
         ];
 
+        // Get current user role for access control
+        let currentUserRole = null;
+        try {
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                // Try to get role from a stored user info or make a quick API call
+                const storedUserInfo = localStorage.getItem('user_info');
+                if (storedUserInfo) {
+                    const userInfo = JSON.parse(storedUserInfo);
+                    currentUserRole = userInfo.role;
+                }
+            }
+        } catch (e) {
+            // Ignore errors, will fall back to showing all navigation
+        }
+
         const nav = document.createElement('div');
         nav.className = 'nav-links';
 
@@ -92,7 +108,11 @@
         }
 
         nav.appendChild(createDropdown('nav.group.workingWithCustomers', 'Working with Customers', workingWithCustomers));
-        nav.appendChild(createDropdown('nav.group.generalSettings', 'General Settings', generalSettings));
+
+        // Only show General Settings dropdown for non-MANAGER users
+        if (currentUserRole !== 'manager') {
+            nav.appendChild(createDropdown('nav.group.generalSettings', 'General Settings', generalSettings));
+        }
 
         // Replace existing nav or append if none
         container.innerHTML = '';
@@ -212,6 +232,11 @@
             document.addEventListener('i18n:languageChanged', function () { renderNav(navContainer); });
         } catch { }
 
+        // Re-render nav when user info changes (for role-based access control)
+        try {
+            document.addEventListener('userInfoUpdated', function () { renderNav(navContainer); });
+        } catch { }
+
         // Ensure user-info exists
         let userInfo = header.querySelector('.user-info');
         if (!userInfo) {
@@ -254,6 +279,22 @@
                         const name = (me.full_name && String(me.full_name).trim()) ? me.full_name : (me.username || 'User');
                         nameEl.textContent = name;
                         avatarEl.textContent = String(name).charAt(0).toUpperCase() || 'U';
+
+                        // Store user info in localStorage for navigation access control
+                        try {
+                            localStorage.setItem('user_info', JSON.stringify({
+                                role: me.role,
+                                username: me.username,
+                                full_name: me.full_name
+                            }));
+
+                            // Trigger navigation re-render for role-based access control
+                            document.dispatchEvent(new CustomEvent('userInfoUpdated', {
+                                detail: { role: me.role }
+                            }));
+                        } catch (e) {
+                            // Ignore localStorage errors
+                        }
                     })
                     .catch(function () { /* ignore */ });
             }
