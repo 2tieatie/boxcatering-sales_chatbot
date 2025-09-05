@@ -778,7 +778,6 @@
                 return;
             }
             fetchUserInfo();
-            loadSettings();
         }
 
         // Fetch user information
@@ -796,6 +795,16 @@
                     __currentUserRole = user.role || null;
                     document.getElementById('username').textContent = user.full_name || user.username;
                     document.getElementById('user-avatar').textContent = (user.full_name || user.username).charAt(0).toUpperCase();
+
+                    // Check if user has access to this page
+                    if (__currentUserRole === 'manager') {
+                        // MANAGER role cannot access General Settings pages
+                        showAccessDeniedMessage();
+                        return;
+                    }
+
+                    // Load settings only if user has access
+                    loadSettings();
                 }
             } catch (error) {
                 console.error('Error fetching user info:', error);
@@ -1471,6 +1480,25 @@
                     responseTimeoutValueEl.textContent = this.value;
                 }
             });
+        }
+
+        // Show access denied message and redirect
+        function showAccessDeniedMessage() {
+            // Hide the main content
+            const container = document.querySelector('.container');
+            if (container) {
+                container.innerHTML = `
+                    <div class="page-header">
+                        <h2>🚫 Access Denied</h2>
+                        <p>You do not have permission to access this page. Only administrators and system administrators can access General Settings.</p>
+                    </div>
+                    <div style="text-align: center; margin-top: 40px;">
+                        <button class="btn btn-primary" onclick="window.location.href='/dashboard'">
+                            🏠 Return to Dashboard
+                        </button>
+                    </div>
+                `;
+            }
         }
 
         // Logout function
