@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: chatbot_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: boxcatering_chatbot
+    volumes:
+      - .\postgres_data:/var/lib/postgresql/data
+  
+  chatbot:
+    image: test:latest
+    container_name: chatbot
+    ports:
+      - "8000:8000"
+    depends_on: 
+      - postgres  
+    environment:
+      - DATABASE_URL=postgresql://admin:admin123@postgres:5432/boxcatering_chatbot
+      - OPENAI_API_KEY=qwerty321321
+      - SECRET_KEY=321321clear
