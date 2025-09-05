@@ -9,7 +9,12 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     """Application settings."""
-    
+    #Host environment variables
+    db_host: str = Field(..., alias="DB_HOST")
+    db_name: str = Field(..., alias="POSTGRES_DB")
+    postgres_user: str = Field(..., alias="POSTGRES_USER")
+    postgres_password: str = Field(..., alias="POSTGRES_PASSWORD")
+
     # Database
     database_url: str = Field(..., env="DATABASE_URL")
     
@@ -45,6 +50,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = False
+        extra = "allow"
 
 
 # Lazy loading of settings - only load when accessed
