@@ -33,20 +33,33 @@ class ChatbotService:
         max_tokens: int | None = None,
         debug: bool = False,
         config: Optional[Dict[str, Any]] = None,
+        conversation_history: Optional[list] = None,
     ) -> ChatResponse:
         """Process a chat message and return response."""
         try:
             # Build the system prompt with language settings and context docs
             system_prompt = self._build_system_prompt(language, force_language, config)
             
+            # Build conversation messages with history
+            messages = [{"role": "system", "content": system_prompt}]
+            
+            # Add conversation history if provided
+            if conversation_history:
+                for msg in conversation_history[-10:]:  # Keep last 10 messages for context
+                    if isinstance(msg, dict) and "role" in msg and "content" in msg:
+                        messages.append({
+                            "role": msg["role"],
+                            "content": msg["content"]
+                        })
+            
+            # Add current user message
+            messages.append({"role": "user", "content": chat_request.message})
+            
             # Create the chat completion
             chosen_model = model or self.model
             request_kwargs = {
                 "model": chosen_model,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": chat_request.message},
-                ],
+                "messages": messages,
             }
 
             # Respect model capabilities: only send temperature if supported
@@ -247,6 +260,7 @@ class ChatbotService:
     ) -> str:
         """Build the system prompt for the AI using chatbot settings."""
 
+        # More natural language instruction
         language_instruction = ""
         if language == "uk":
             language_instruction = """
@@ -261,19 +275,23 @@ class ChatbotService:
         All your responses must be in {language}.
         """
 
-        # Persona instruction: adopt a polite, friendly female assistant persona
+        # Enhanced persona with more personality
         persona_instruction = ""
         if language == "uk":
             persona_instruction = """
-        Персона: Ви — чемна й доброзичлива жіноча асистентка.
-        Пишіть завжди від першої особи в жіночому роді.
-        Уникайте звертання в чоловічому роді.
+        Ваша особистість: Ви — Марічка, дружня та професійна асистентка з кейтерингу. 
+        Ви ентузіастка свого діла, завжди готова допомогти клієнтам знайти ідеальне рішення для їх заходів.
+        Спілкуйтеся тепло та природно, як справжня людина. Використовуйте емоції, емодзі (але не надто багато), 
+        та робіть розмову живою та цікавою. Пам'ятайте деталі з попередніх повідомлень та не повторюйте питання.
+        Пишіть завжди від першої особи в жіночому роді. Уникайте чоловічих висловлювань.
         """
         else:
             persona_instruction = """
-        Persona: You are a polite, friendly female assistant.
-        Write in first person using feminine wording when applicable.
-        Avoid masculine phrasing.
+        Your personality: You are Marichka, a friendly and professional catering assistant. 
+        You're passionate about your work and always ready to help customers find the perfect solution for their events.
+        Communicate warmly and naturally, like a real person. Use emotions, emojis (but not too many), 
+        and make conversations lively and engaging. Remember details from previous messages and don't repeat questions.
+        Write in first person using feminine wording when applicable. Avoid masculine phrasing.
         """
 
         company_name = (config or {}).get("company_name")
@@ -292,15 +310,42 @@ class ChatbotService:
         if specializations:
             context_lines.append(f"Specializations: {specializations}")
 
+        # Enhanced conversational style instructions
         style_lines = []
-        if friendly_tone:
-            style_lines.append("Use a friendly and welcoming tone.")
-        if professional_style:
-            style_lines.append("Maintain professional, concise communication.")
-        if suggestive_responses:
-            style_lines.append(
-                "When appropriate, suggest 1-3 short next steps or options to the customer."
-            )
+        if language == "uk":
+            if friendly_tone:
+                style_lines.append("Спілкуйтеся тепло та дружньо, як з близькою людиною.")
+            if professional_style:
+                style_lines.append("Залишайтеся професійною, але не формальною. Будьте природною та живою.")
+            if suggestive_responses:
+                style_lines.append(
+                    "Коли це доречно, пропонуйте 1-3 короткі наступні кроки або варіанти клієнту. "
+                    "Завжди пояснюйте, чому саме ці варіанти підходять."
+                )
+            style_lines.extend([
+                "Використовуйте природні переходи між темами та питаннями.",
+                "Показуйте справжній інтерес до потреб клієнта.",
+                "Якщо клієнт згадував щось раніше, посилайтеся на це в розмові.",
+                "Задавайте уточнюючі питання, але не надто багато одночасно.",
+                "Використовуйте емодзі помірно (1-2 на повідомлення), щоб зробити розмову живішою."
+            ])
+        else:
+            if friendly_tone:
+                style_lines.append("Communicate warmly and friendly, like with a close person.")
+            if professional_style:
+                style_lines.append("Stay professional but not formal. Be natural and lively.")
+            if suggestive_responses:
+                style_lines.append(
+                    "When appropriate, suggest 1-3 short next steps or options to the customer. "
+                    "Always explain why these options are suitable."
+                )
+            style_lines.extend([
+                "Use natural transitions between topics and questions.",
+                "Show genuine interest in the customer's needs.",
+                "If the customer mentioned something earlier, refer to it in the conversation.",
+                "Ask clarifying questions, but not too many at once.",
+                "Use emojis moderately (1-2 per message) to make conversations livelier."
+            ])
 
         handover_block = ""
         
@@ -338,19 +383,19 @@ class ChatbotService:
         context_docs_block = self._get_context_block(config)
 
         return f"""
-        You are a helpful AI assistant for a box catering business.
+        You are a helpful AI assistant for a catering business.
         {language_instruction}
         {persona_instruction}
 
         {('\n'.join(context_lines)) if context_lines else ''}
 
-        Your role is to:
-        1. Answer customer questions about services, menus, and pricing
-        2. Help customers place orders
-        3. Provide information about discounts and special offers
-        4. Handle basic customer service inquiries
+        Your goal is to make customers' ordering experience as convenient and pleasant as possible:
+        • Answer questions about menus, prices, and services
+        • Help customers place orders step by step
+        • Share information about discounts and special offers
+        • Handle any customer service inquiries
 
-        {' '.join(style_lines)}
+        {'\n'.join(style_lines)}
 
         {handover_block}
 
@@ -543,3 +588,31 @@ class ChatbotService:
         """Return True if the model expects 'max_completion_tokens' instead of 'max_tokens'."""
         # Based on error message and current assumptions for GPT-5 family
         return model_name.startswith("gpt-5")
+    
+    def get_conversation_history(self, conversation_id: int, db_session) -> list:
+        """Retrieve conversation history for context."""
+        try:
+            from app.models.message import Message, MessageSender
+            
+            # Get last 20 messages from the conversation
+            messages = (
+                db_session.query(Message)
+                .filter(Message.chat_id == conversation_id)
+                .order_by(Message.timestamp.desc())
+                .limit(20)
+                .all()
+            )
+            
+            # Convert to OpenAI format and reverse to chronological order
+            history = []
+            for msg in reversed(messages):
+                role = "user" if msg.sender == MessageSender.USER else "assistant"
+                history.append({
+                    "role": role,
+                    "content": msg.text
+                })
+            
+            return history
+        except Exception as e:
+            logger.warning(f"Failed to retrieve conversation history: {e}")
+            return []
