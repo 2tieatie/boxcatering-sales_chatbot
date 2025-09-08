@@ -110,7 +110,7 @@
     "chatbotSettings.ctx.enableDesc": "Додавати знання з /agent_context_documents до підказки ШІ",
     "chatbotSettings.ctx.dir": "Каталог контекстних документів",
     "chatbotSettings.ctx.dirHelp": "Відносно кореня проєкту. Підтримує .md, .txt, .pdf, .docx, .csv",
-    "chatbotSettings.ctx.maxChars": "Максимум символів у підказці",
+    "chatbotSettings.ctx.maxChars": "Максимум символів в промпті",
     "chatbotSettings.ctx.maxCharsHelp": "Граничний розмір об’єднаного контексту, що додається до підказки.",
     "chatbotSettings.ctx.manage": "Керування контекстними документами",
     "chatbotSettings.ctx.drop": "Перетягніть файли сюди або натисніть для вибору",
