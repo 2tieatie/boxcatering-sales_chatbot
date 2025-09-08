@@ -157,11 +157,29 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 if active_config and active_config.conversation_logging is not None:
                     should_log = bool(active_config.conversation_logging)
                 if should_log:
+                    # Sanitize customer-visible text to avoid leaking JSON action payloads
+                    visible_text = str(chat_response.response or "")
+                    try:
+                        # Remove any trailing JSON block if accidentally appended by the model
+                        # Keep everything before the last balanced JSON object marker
+                        last_open = visible_text.rfind("{")
+                        last_close = visible_text.rfind("}")
+                        if last_open != -1 and last_close != -1 and last_close > last_open:
+                            candidate = visible_text[last_open:last_close + 1]
+                            # Try to parse to confirm it's JSON; if yes, strip it from visible text
+                            try:
+                                json.loads(candidate)
+                                visible_text = visible_text[:last_open].rstrip()
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
+
                     bot_message = Message(
                         chat_id=conversation.id,
                         sender=MessageSender.BOT,
                         channel=MessageChannel.WEB,
-                        text=chat_response.response,
+                        text=visible_text,
                     )
                     db.add(bot_message)
 
