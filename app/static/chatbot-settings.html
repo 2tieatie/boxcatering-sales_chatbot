@@ -802,7 +802,11 @@
                         showAccessDeniedMessage();
                         return;
                     }
-
+                    // Initialize context uploader and list files once role is known
+                    try { setupContextUploader(); } catch { }
+                    if (__currentUserRole === 'system_admin') {
+                        try { listContextFiles(); } catch { }
+                    }
                     // Load settings only if user has access
                     loadSettings();
                 }
@@ -1510,10 +1514,7 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async () => {
             checkAuth();
-            setupContextUploader();
             setupContextDocsTogglePersistence();
-            // Load the initial list only for system admins (after role likely set)
-            setTimeout(function () { if (__currentUserRole === 'system_admin') { listContextFiles(); } }, 400);
         });
     </script>
 </body>
