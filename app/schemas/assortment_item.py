@@ -1,0 +1,31 @@
+"""Schemas for assortment items API."""
+
+from __future__ import annotations
+
+from decimal import Decimal
+from typing import Optional, List
+from pydantic import BaseModel
+
+
+class AssortmentItemResponse(BaseModel):
+    """Response schema representing an assortment item."""
+
+    id: int
+    name: str
+    description: Optional[str] = None
+    price_uah: Decimal
+
+    class Config:
+        from_attributes = True
+
+
+class AssortmentUploadResult(BaseModel):
+    """Response schema for Excel upload results."""
+
+    replaced: bool
+    total_rows: int
+    imported: int
+    skipped: int
+    errors: Optional[List[str]] = None
+
+

@@ -20,6 +20,7 @@ from app.api import (
     customers_router,
     context_docs_router,
     scrape_router,
+    assortment_router,
 )
 # from app.api.test_router import router as test_router
 # from app.api.chatbot_config_simple import router as chatbot_config_simple_router
@@ -79,6 +80,7 @@ app.include_router(stats_router)
 app.include_router(customers_router)
 app.include_router(context_docs_router)
 app.include_router(scrape_router)
+app.include_router(assortment_router)
 # app.include_router(test_router)
 # app.include_router(chatbot_config_simple_router)
 
@@ -162,6 +164,12 @@ async def customers_page():
 async def change_password_page():
     """Serve the change password page."""
     return FileResponse("app/static/change-password.html")
+
+
+@app.get("/assortment")
+async def assortment_page():
+    """Serve the assortment page."""
+    return FileResponse("app/static/assortment.html")
 
 
 @app.head("/.well-known/appspecific/com.chrome.devtools.json")
