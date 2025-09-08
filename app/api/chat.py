@@ -117,6 +117,9 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 logger.error(f"Failed to save user message: {msg_err}")
                 # Continue processing; DB failure shouldn't break user chat entirely
 
+            # Get conversation history for context
+            conversation_history = chatbot_service.get_conversation_history(conversation.id, db)
+            
             # Process message with AI (respect model capabilities)
             chat_response = await chatbot_service.process_message(
                 chat_request,
@@ -145,6 +148,7 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                     if active_config
                     else None
                 ),
+                conversation_history=conversation_history,
             )
             
             # Persist bot response and update conversation state
