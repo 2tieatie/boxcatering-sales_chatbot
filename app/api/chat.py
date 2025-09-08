@@ -311,6 +311,12 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                         menu_items=order_create.menu_items,
                     )
                     db.add(new_order)
+                    # Ensure conversation is linked to this customer for cross-linking in UI
+                    try:
+                        if conversation and (conversation.customer_id is None) and customer_id:
+                            conversation.customer_id = customer_id
+                    except Exception:
+                        pass
                     db.commit()
                     db.refresh(new_order)
 
