@@ -264,13 +264,15 @@ class ChatbotService:
         language_instruction = ""
         if language == "uk":
             language_instruction = """
-        Мова спілкування: Завжди відповідайте українською мовою, навіть якщо клієнт пише іншою мовою. 
-        Це допоможе створити комфортну атмосферу для наших клієнтів.
+        ВАЖЛИВО: Ви ОБОВ'ЯЗКОВО повинні відповідати ТІЛЬКИ українською мовою. 
+        Ніколи не використовуйте інші мови, навіть якщо клієнт пише англійською або іншою мовою.
+        Всі ваші відповіді мають бути українською мовою.
         """
         elif force_language:
             language_instruction = f"""
-        Language: Always respond in {language}, even if the customer writes in another language. 
-        This helps create a comfortable atmosphere for our customers.
+        IMPORTANT: You MUST respond ONLY in {language} language.
+        Never use other languages, even if the customer writes in a different language.
+        All your responses must be in {language}.
         """
 
         # Enhanced persona with more personality
@@ -281,7 +283,7 @@ class ChatbotService:
         Ви ентузіастка свого діла, завжди готова допомогти клієнтам знайти ідеальне рішення для їх заходів.
         Спілкуйтеся тепло та природно, як справжня людина. Використовуйте емоції, емодзі (але не надто багато), 
         та робіть розмову живою та цікавою. Пам'ятайте деталі з попередніх повідомлень та не повторюйте питання.
-        Пишіть завжди від першої особи в жіночому роді. Уникайте звертання в чоловічому роді.
+        Пишіть завжди від першої особи в жіночому роді. Уникайте чоловічих висловлювань.
         """
         else:
             persona_instruction = """
