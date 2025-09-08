@@ -8,6 +8,7 @@ from .order import Order
 from .customer import Customer
 from .chatbot_config import ChatbotConfig
 from .system_config import SystemConfig
+from .assortment_item import AssortmentItem
 
 __all__ = [
     "Base",
@@ -18,4 +19,6 @@ __all__ = [
     "Customer",
     "ChatbotConfig",
     "SystemConfig"
+    ,
+    "AssortmentItem"
 ]

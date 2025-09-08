@@ -28,6 +28,7 @@
             { href: '/conversation-history', key: 'nav.conversations', label: (window.I18N && I18N.t) ? I18N.t('nav.conversations') : 'Conversations' },
             { href: '/customers', key: 'nav.customers', label: (window.I18N && I18N.t) ? I18N.t('nav.customers') : 'Customers' },
             { href: '/order-history', key: 'nav.orders', label: (window.I18N && I18N.t) ? I18N.t('nav.orders') : 'Orders' },
+            { href: '/assortment', key: 'nav.assortment', label: (window.I18N && I18N.t) ? I18N.t('nav.assortment') : 'Assortment' },
         ];
 
         const generalSettings = [
