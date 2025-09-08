@@ -185,6 +185,15 @@ async def create_order(
         notes=order_data.notes,
     )
     db.add(new_order)
+    # If order references a conversation, ensure that conversation points to this customer
+    try:
+        if new_order.conversation_id:
+            from app.models import Conversation
+            conv = db.query(Conversation).filter(Conversation.id == new_order.conversation_id).first()
+            if conv and (conv.customer_id is None):
+                conv.customer_id = customer_id
+    except Exception:
+        pass
     db.commit()
     db.refresh(new_order)
     return new_order

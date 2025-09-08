@@ -220,6 +220,28 @@ class ChatbotService:
                 action = None
                 data = None
 
+            # Validate create_order payload and request missing details step-by-step
+            if action == "create_order":
+                try:
+                    valid, missing_fields = self._is_valid_order_payload(data)
+                except Exception:
+                    valid, missing_fields = False, [
+                        "menu_items",
+                        "delivery_date",
+                        "customer_name",
+                        "customer_phone",
+                        "customer_address",
+                    ]
+
+                if not valid:
+                    # Ask only for the missing details, preserving language
+                    user_text = self._compose_missing_order_details_prompt(
+                        language=language, missing_fields=missing_fields
+                    )
+                    # Do not emit action until all required fields are present
+                    action = None
+                    data = None
+
             return ChatResponse(
                 response=user_text,
                 handover_to_manager=needs_handover,
@@ -382,6 +404,36 @@ class ChatbotService:
 
         context_docs_block = self._get_context_block(config)
 
+        order_flow_block_uk = """
+        Послідовність оформлення замовлення (дуже важливо дотримуватися кроків):
+        1) З'ясуй, що саме хоче замовити клієнт (страви/бокси) та допоможи вибрати.
+           Якщо клієнт каже "підходять такі бокси" / "беремо ці" / подібне — вважай, що позиції обрано.
+           У полі menu_items зафіксуй вибрані позиції коротким переліком; якщо кількість не вказана,
+           вважай 1 шт. на кожну вибрану позицію (не питай додатково про кількість, якщо це не критично).
+        2) Коли клієнт визначився з позиціями, запитай дату доставки.
+           Якщо дата надана без року (формат DD.MM або DD/MM), вважай поточний рік і перетвори у формат YYYY-MM-DD.
+        3) Потім попроси дані для доставки: ім'я, телефон, адреса доставки.
+        4) Якщо чогось не вистачає — запитуй лише відсутні дані одним-двома питаннями. Не запитуй нічого зайвого.
+        5) Лише коли є: menu_items, delivery_date, customer_name, customer_phone, customer_address —
+           сформуй дію create_order без додаткового підтвердження.
+        """
+
+        order_flow_block_en = """
+        Order intake sequence (follow the steps strictly):
+        1) Clarify what the customer wants to order and help choose items.
+           If the customer says "these boxes work" / "we'll take these" / similar — treat items as chosen.
+           In menu_items, record a concise list of the chosen items; if quantity is not specified,
+           assume 1 per selected item (do not ask for quantity unless critical).
+        2) Once items are chosen, ask for the delivery date.
+           If the date is provided without a year (DD.MM or DD/MM), assume the current year and convert to YYYY-MM-DD.
+        3) Then ask for delivery details: name, phone number, delivery address.
+        4) If something is missing, ask only for the missing details concisely. Do not ask anything extra.
+        5) Only when you have: menu_items, delivery_date, customer_name, customer_phone,
+           customer_address — emit the create_order action without extra confirmation.
+        """
+
+        order_flow_block = order_flow_block_uk if language == "uk" else order_flow_block_en
+
         return f"""
         You are a helpful AI assistant for a catering business.
         {language_instruction}
@@ -395,14 +447,20 @@ class ChatbotService:
         • Share information about discounts and special offers
         • Handle any customer service inquiries
 
+        {order_flow_block}
+
         {'\n'.join(style_lines)}
 
         {handover_block}
 
-        If the customer clearly wants to place an order, ask for the customer's
-        name and phone number, customer address and menu items to include in the order,
-        then emit a JSON object with `create_order` action, followed by a short human-friendly
-        confirmation message. Use this format exactly:
+        When and only when the customer clearly wants to place an order and all
+        required details are collected (menu_items, delivery_date, customer_name,
+        customer_phone, customer_address), IMMEDIATELY emit ONLY a JSON object with
+        `create_order` action. Do NOT include any additional text outside the JSON.
+        The customer-visible confirmation message must be inside the JSON as the
+        value of the "response" field (e.g., UA: "Все супер, дякуємо за замовлення! Менеджер зв'яжеться з вами.").
+        Do not ask for an extra confirmation if the user already provided all required details.
+        Use this format exactly:
 
         {{
             "response": "<your short confirmation to the user in {language}>",
@@ -415,15 +473,15 @@ class ChatbotService:
                 "menu_items": "<menu items>",
                 "total_amount": <number>,
                 "delivery_date": "<date in ISO format YYYY-MM-DD>",
-                "delivery_time": "<time>",
+                "delivery_time": "<optional time>",
                 "notes": "<optional notes>",
                 "currency": "UAH",
             }}
         }}
 
-        If some required details are missing (like name or phone number), ask a
-        concise follow-up question instead of emitting the action. When all non-optional
-        info is gathered, emit the `create_order` action as above.
+        If some required details are missing, ask a concise follow-up question for the
+        missing details instead of emitting the action. As soon as all required fields
+        are present, emit ONLY the `create_order` action JSON as above and nothing else.
 
         {context_docs_block}
 
@@ -567,16 +625,130 @@ class ChatbotService:
 
     def _parse_ai_response(self, response: str) -> dict:
         """Parse AI response to extract handover information."""
+        # 1) Try strict JSON parse when response starts with a JSON object
         try:
-            # Try to parse as JSON
             if response.strip().startswith("{"):
-                parsed = json.loads(response)
-                return parsed
-        except json.JSONDecodeError:
+                return json.loads(response)
+        except Exception:
             pass
-        
-        # If not JSON, return as regular response
+
+        # 2) Try to find a JSON object appended to the end of a natural language message
+        #    Heuristic: scan for candidate '{' positions and attempt json.loads from there
+        try:
+            text = response or ""
+            brace_positions: list[int] = [i for i, ch in enumerate(text) if ch == "{"]
+            for start in brace_positions:
+                candidate = text[start:].strip()
+                if not candidate or not candidate.startswith("{"):
+                    continue
+                try:
+                    parsed = json.loads(candidate)
+                    # If parsed looks like our structured format, return it
+                    if isinstance(parsed, dict) and (
+                        "action" in parsed
+                        or "handover_to_manager" in parsed
+                        or "response" in parsed
+                    ):
+                        return parsed
+                except Exception:
+                    continue
+        except Exception:
+            pass
+
+        # 3) Fallback: return plain text as customer-visible response
         return {"response": response, "handover_to_manager": False}
+
+    def _is_valid_order_payload(self, data: Optional[dict]) -> tuple[bool, list[str]]:
+        """Validate the create_order payload and return validity and missing fields.
+
+        Args:
+            data: The payload from the model with order details.
+
+        Returns:
+            A tuple of (is_valid, missing_fields). missing_fields contains keys that
+            must be provided: ["menu_items", "delivery_date", "customer_name",
+            "customer_phone", "customer_address"].
+        """
+        required_fields = [
+            "menu_items",
+            "delivery_date",
+            "customer_name",
+            "customer_phone",
+            "customer_address",
+        ]
+        if not isinstance(data, dict):
+            return False, required_fields
+
+        missing: list[str] = []
+        for key in required_fields:
+            value = data.get(key)
+            if value is None:
+                missing.append(key)
+                continue
+            if isinstance(value, str) and not value.strip():
+                missing.append(key)
+
+        # Very light phone sanity check
+        phone = data.get("customer_phone")
+        if isinstance(phone, str):
+            digits = "".join(ch for ch in phone if ch.isdigit())
+            if len(digits) < 9:
+                if "customer_phone" not in missing:
+                    missing.append("customer_phone")
+
+        return (len(missing) == 0), missing
+
+    def _compose_missing_order_details_prompt(
+        self, *, language: str, missing_fields: list[str]
+    ) -> str:
+        """Compose a localized prompt asking only for missing order details.
+
+        Args:
+            language: Target language code, e.g., "uk".
+            missing_fields: List of missing field names.
+
+        Returns:
+            A short, polite message asking the customer for the missing details.
+        """
+        # Map technical keys to user-friendly labels
+        labels_uk = {
+            "menu_items": "позиції замовлення",
+            "delivery_date": "дату доставки",
+            "customer_name": "ім'я",
+            "customer_phone": "номер телефону",
+            "customer_address": "адресу доставки",
+        }
+        labels_en = {
+            "menu_items": "order items",
+            "delivery_date": "delivery date",
+            "customer_name": "name",
+            "customer_phone": "phone number",
+            "customer_address": "delivery address",
+        }
+
+        labels = labels_uk if language == "uk" else labels_en
+        parts = [labels.get(key, key) for key in missing_fields]
+
+        if language == "uk":
+            if len(parts) == 1:
+                return f"Будь ласка, надайте {parts[0]}."
+            if len(parts) == 2:
+                return f"Будь ласка, надайте {parts[0]} та {parts[1]}."
+            return (
+                "Будь ласка, надайте відсутні дані: "
+                + ", ".join(parts[:-1])
+                + f" та {parts[-1]}."
+            )
+        else:
+            if len(parts) == 1:
+                return f"Please provide the {parts[0]}."
+            if len(parts) == 2:
+                return f"Please provide the {parts[0]} and {parts[1]}."
+            return (
+                "Please provide the missing details: "
+                + ", ".join(parts[:-1])
+                + f" and {parts[-1]}."
+            )
 
     def _model_supports_temperature(self, model_name: str) -> bool:
         """Return True if temperature is supported for the given model."""
