@@ -391,7 +391,7 @@
     "nav.group.generalSettings": "Загальні налаштування",
     "assortment.title": "Асортимент",
     "assortment.heading": "Асортимент",
-    "assortment.subtitle": "Керуйте переліком товарів. Завантаження з Excel.",
+    "assortment.subtitle": "Керуйте переліком товарів. Завантаження з Excel або CSV.",
     "assortment.uploadTitle": "Завантаження Excel",
     "assortment.replace": "Замінити наявні",
     "assortment.uploadBtn": "Завантажити",

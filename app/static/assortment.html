@@ -102,7 +102,7 @@
         <div class="nav-links" id="nav"></div>
         <div class="user-info">
             <div class="user-avatar" id="user-avatar">U</div>
-            <span id="username" data-i18n="user.label">User</span>
+            <span id="username">User</span>
             <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
         </div>
     </div>
@@ -110,7 +110,7 @@
     <div class="container">
         <div class="page-header">
             <h2 data-i18n="assortment.heading">Assortment</h2>
-            <p data-i18n="assortment.subtitle">Manage products offered to customers. Upload from Excel.</p>
+            <p data-i18n="assortment.subtitle">Manage products offered to customers. Upload from Excel or CSV.</p>
         </div>
 
         <div class="card" style="margin-bottom: 20px;">
@@ -211,7 +211,8 @@
                 out.textContent = (window.I18N && I18N.t) ? I18N.t('assortment.uploadError') : 'Upload failed';
             }
         }
-
+    </script>
+    <script>
         (function init() {
             // Initialize i18n like other pages
             (async function initI18N() {
