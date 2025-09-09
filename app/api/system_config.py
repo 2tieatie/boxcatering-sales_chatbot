@@ -10,7 +10,10 @@ from telegram import Bot
 from app.database import get_db
 from app.models import SystemConfig, User
 from app.schemas.system_config import SystemConfigCreate, SystemConfigUpdate, SystemConfigResponse
-from app.dependencies import require_system_admin_dependency
+from app.dependencies import (
+    require_system_admin_dependency,
+    require_admin_or_system_admin_dependency,
+)
 from app.config import settings
 
 router = APIRouter(prefix="/system-config", tags=["system-config"])
@@ -141,6 +144,27 @@ async def get_all_settings(
             settings["security"][config.key.replace("security_", "")] = config.value
     
     return settings
+
+
+@router.get("/settings/public", response_model=Dict[str, Any])
+async def get_public_settings(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_or_system_admin_dependency),
+) -> Dict[str, Any]:
+    """Return non-sensitive system settings for Admins and System Admins.
+
+    Returns only the "system" category keys (prefixed with `system_`) with the
+    prefix removed, so the structure matches the `settings/all` response shape
+    for the `system` category. This allows Admins to view effective values in
+    read-only UIs without exposing sensitive OpenAI/Telegram/Security data.
+    """
+    # Build { "system": { key: value } }
+    result: Dict[str, Any] = {"system": {}}
+    configs = db.query(SystemConfig).all()
+    for cfg in configs:
+        if cfg.key.startswith("system_"):
+            result["system"][cfg.key.replace("system_", "")] = cfg.value
+    return result
 
 
 @router.post("/settings/bulk", response_model=Dict[str, str])
