@@ -391,7 +391,7 @@
     "nav.group.generalSettings": "General Settings",
     "assortment.title": "Assortment",
     "assortment.heading": "Assortment",
-    "assortment.subtitle": "Manage products offered to customers. Upload from Excel.",
+    "assortment.subtitle": "Manage products offered to customers. Upload from Excel or CSV.",
     "assortment.uploadTitle": "Upload Excel",
     "assortment.replace": "Replace existing",
     "assortment.uploadBtn": "Upload",
