@@ -31,4 +31,10 @@ else
   fi
 fi
 
+echo "Running Alembic migrations..."
+alembic upgrade head || {
+  echo "Alembic failed, attempting init_db fallback..."
+  python /app/scripts/init_db.py
+}
+
 exec python /app/main.py
