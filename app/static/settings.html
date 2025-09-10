@@ -375,6 +375,28 @@
                 </div>
             </div>
 
+            <!-- Widget Configuration -->
+            <div class="settings-card">
+                <h3><span>📱</span><span data-i18n="settings.widget.title">Widget Configuration</span></h3>
+                <form id="widget-form">
+                    <div class="form-group">
+                        <label for="widget-telegram" data-i18n="settings.widget.telegram">Telegram Bot Name</label>
+                        <input type="text" id="widget-telegram" name="widget_telegram" value="" />
+                    </div>
+                    <div class="form-group">
+                        <label for="widget-viber" data-i18n="settings.widget.viber">Viber Bot Name</label>
+                        <input type="text" id="widget-viber" name="widget_viber" value="" />
+                    </div>
+                    <div class="form-group">
+                        <label for="widget-facebook" data-i18n="settings.widget.facebook">Facebook Bot Name</label>
+                        <input type="text" id="widget-facebook" name="widget_facebook" value="" />
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" data-i18n="settings.widget.save">💾 Save Widget Settings</button>
+                    </div>
+                </form>
+            </div>
+
             <!-- System Configuration -->
             <div class="settings-card">
                 <h3><span>🔧</span><span data-i18n="settings.system.cardTitle">System Configuration</span></h3>
@@ -588,6 +610,13 @@
                         if (settings.telegram.bot_token) document.getElementById('telegram-bot-token').value = settings.telegram.bot_token;
                         if (settings.telegram.chat_id) document.getElementById('telegram-chat-id').value = settings.telegram.chat_id;
                         if (settings.telegram.notifications) document.getElementById('telegram-notifications').value = settings.telegram.notifications;
+                    }
+
+                    // Load widget settings
+                    if (settings.widget) {
+                        if (settings.widget.telegram) document.getElementById("widget-telegram").value = settings.widget.telegram;
+                        if (settings.widget.viber) document.getElementById("widget-viber").value = settings.widget.viber;
+                        if (settings.widget.facebook) document.getElementById("widget-facebook").value = settings.widget.facebook;
                     }
 
                     // Load system settings
