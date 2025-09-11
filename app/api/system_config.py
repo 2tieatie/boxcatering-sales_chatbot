@@ -129,6 +129,7 @@ async def get_all_settings(
     settings = {
         "openai": {},
         "telegram": {},
+        "widget": {},
         "system": {},
         "security": {}
     }
@@ -138,6 +139,8 @@ async def get_all_settings(
             settings["openai"][config.key.replace("openai_", "")] = config.value
         elif config.key.startswith("telegram_"):
             settings["telegram"][config.key.replace("telegram_", "")] = config.value
+        elif config.key.startswith("widget_"):
+            settings["widget"][config.key.replace("widget_", "")] = config.value
         elif config.key.startswith("system_"):
             settings["system"][config.key.replace("system_", "")] = config.value
         elif config.key.startswith("security_"):
@@ -145,6 +148,23 @@ async def get_all_settings(
     
     return settings
 
+@router.get("/settings/widget", response_model=Dict[str, Any])
+async def get_all_widget_settings(
+    db: Session = Depends(get_db),
+):
+    """Get all widget settings."""
+    configs = db.query(SystemConfig).all()
+    
+    # Organize settings by category
+    settings = {
+        "widget": {},
+    }
+    
+    for config in configs:
+        if config.key.startswith("widget_"):
+            settings["widget"][config.key.replace("widget_", "")] = config.value
+    
+    return settings
 
 @router.get("/settings/public", response_model=Dict[str, Any])
 async def get_public_settings(
@@ -288,6 +308,41 @@ async def save_system_settings(
     for key, value in settings.items():
         if value is not None and value != "":
             full_key = f"system_{key}"
+            
+            # Check if config exists
+            existing_config = db.query(SystemConfig).filter(SystemConfig.key == full_key).first()
+            
+            if existing_config:
+                # Update existing config
+                existing_config.value = str(value)
+                results[full_key] = "updated"
+            else:
+                # Create new config
+                new_config = SystemConfig(
+                    key=full_key,
+                    value=str(value),
+                    description=f"System {key.replace('_', ' ').title()}",
+                    is_sensitive=False
+                )
+                db.add(new_config)
+                results[full_key] = "created"
+    
+    db.commit()
+    return results
+
+
+@router.post("/settings/widget", response_model=Dict[str, str])
+async def save_system_settings(
+    settings: Dict[str, Any],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_system_admin_dependency)
+):
+    """Save widget settings (system admin only)."""
+    results = {}
+    
+    for key, value in settings.items():
+        if value is not None and value != "":
+            full_key = f"widget_{key}"
             
             # Check if config exists
             existing_config = db.query(SystemConfig).filter(SystemConfig.key == full_key).first()

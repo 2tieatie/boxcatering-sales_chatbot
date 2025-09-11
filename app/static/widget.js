@@ -16,7 +16,7 @@ function loadWidget() {
         try {
             // Fetch auth data
             const token = localStorage.getItem("access_token");
-            const response = await fetch("/system-config/settings/all", {
+            const response = await fetch("/system-config/settings/widget", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -52,13 +52,14 @@ function loadWidget() {
 
                     <div class="chat-container callback-widget-button-hide hide-container">
                         <div class="chat-header">
-                            <h2 data-i18n="chatTest.headerTitle">💬 Test chat with Marichka</h2>
-                            <p data-i18n="chatTest.headerSubtitle">Test and interact with your AI-powered chatbot</p>
+                            <div class="avatar">👩</div>
+                            <h2 data-i18n="chatTest.headerTitleName">Marichka</h2>
+                            <button class="close-btn" onclick="closeChat()">&times;</svg>
+                            </button>
                         </div>
 
                         <div class="chat-messages" id="chat-messages">
                             <div class="message bot">
-                                <div class="message-avatar">👩</div>
                                 <div class="message-content">
                                     <div id="bot-welcome-content" data-i18n="chatTest.welcome.loading">Loading welcome message…</div>
                                     <div class="message-time" id="bot-welcome-time"></div>
@@ -77,13 +78,12 @@ function loadWidget() {
                         <div class="chat-input-container">
                             <form class="chat-input-form" id="chat-form">
                                 <div class="input-group">
-                                    <label for="chat-input" data-i18n="chatTest.input.label">Enter a message:</label>
-                                    <textarea id="chat-input" class="chat-input" placeholder="" rows="1"></textarea>
+                                    <textarea id="chat-input" class="chat-input"  data-i18n="chatTest.input.label" placeholder="Enter a message:" rows="1"></textarea>
                                 </div>
                                 <button type="submit" class="send-btn" id="send-btn" data-i18n="chatTest.send">Send</button>
                             </form>
 
-                            <div class="status-indicator" style="margin-top: 15px; justify-content: center;">
+                            <div class="status-indicator" style="display: none; margin-top: 15px; justify-content: center;">
                                 <div class="status-dot" id="status-dot"></div>
                                 <span id="status-text" data-i18n="chatTest.status.connectedToAI">Connected to AI service</span>
                             </div>
@@ -125,7 +125,7 @@ function loadWidget() {
                             ${
                                 settings.widget?.viber
                                     ? `
-                            <a class="callback-widget-button-social-item ui-icon ui-icon-service-viber connector-icon-45" title="" href="${settings.widget?.viber}" target="_blank" id="viber-btn">
+                            <a class="callback-widget-button-social-item ui-icon ui-icon-service-viber connector-icon-45" title="" href="viber://pa?chatURI=${settings.widget?.viber}" target="_blank" id="viber-btn">
                                 <i></i>
                                 <span class="callback-widget-button-social-tooltip">Viber</span> </a
                             >
@@ -138,7 +138,7 @@ function loadWidget() {
                             <a
                                 class="callback-widget-button-social-item ui-icon ui-icon-service-telegram connector-icon-45"
                                 title=""
-                                href="${settings.widget?.telegram}"
+                                href="https://t.me/${settings.widget?.telegram}"
                                 target="_blank"
                                 rel="nofollow"
                                 id="telegram-btn"
@@ -216,12 +216,14 @@ function loadWidget() {
                 </div>
                 `;
                 setTimeout(() => {
-                    document.body.appendChild(widget);
-                    fetchActiveChatbotConfig();
-                    setTimeout(() => {
-                        document.querySelector(".chat-container").classList.remove("hide-container");
-                    }, 500);
-                    initChat();
+                    (async () => {
+                        document.body.appendChild(widget);
+                        await fetchActiveChatbotConfig();
+                        setTimeout(() => {
+                            document.querySelector(".chat-container").classList.remove("hide-container");
+                        }, 500);
+                        initChat();
+                    })();
                 }, 250);
             }
         } catch (error) {
@@ -351,11 +353,9 @@ function addMessage(content, isUser = false, timestamp = null) {
     const messageDiv = document.createElement("div");
     messageDiv.className = `message ${isUser ? "user" : "bot"}`;
 
-    const avatar = isUser ? "👤" : "👩";
     const time = timestamp || new Date().toLocaleTimeString();
 
     messageDiv.innerHTML = `
-                <div class="message-avatar">${avatar}</div>
                 <div class="message-content">
                     <div>${content}</div>
                     <div class="message-time">${time}</div>
