@@ -427,6 +427,7 @@
     "changePassword.alert.success": "Пароль успішно змінено!",
     "changePassword.alert.failed": "Не вдалося змінити пароль",
     "chatTest.headerTitle": "💬 Тест-чат з Марічкою",
+    "chatTest.headerTitleName": "Марічкa",
     "chatTest.headerSubtitle": "Тестуйте та взаємодійте з вашим чат-ботом на базі ШІ",
     "chatTest.input.label": "Введіть повідомлення:",
     "chatTest.input.placeholder": "Запитайте про меню, зробіть замовлення або отримайте консультацію щодо кейтерингу...",
