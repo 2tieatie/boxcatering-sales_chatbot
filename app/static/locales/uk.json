@@ -397,7 +397,7 @@
     "assortment.title": "Асортимент",
     "assortment.heading": "Асортимент",
     "assortment.subtitle": "Керуйте переліком товарів. Завантаження з Excel або CSV.",
-    "assortment.uploadTitle": "Завантаження Excel",
+    "assortment.uploadTitle": "Завантаження файлу (Excel або CSV)",
     "assortment.replace": "Замінити наявні",
     "assortment.uploadBtn": "Завантажити",
     "assortment.uploading": "Завантаження...",
