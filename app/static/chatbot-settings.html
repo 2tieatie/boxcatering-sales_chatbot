@@ -806,6 +806,8 @@
                     try { setupContextUploader(); } catch { }
                     if (__currentUserRole === 'system_admin') {
                         try { listContextFiles(); } catch { }
+                        // Enable context-docs toggle persistence only for system admins
+                        try { setupContextDocsTogglePersistence(); } catch { }
                     }
                     // Load settings only if user has access
                     loadSettings();
@@ -859,11 +861,14 @@
                 setDefaults();
                 return;
             }
-            // Load system settings for context documents and scraping (system admin only)
-            if (__currentUserRole === 'system_admin') {
+            // Load system settings for context documents and scraping (admin and system admin)
+            if (__currentUserRole === 'system_admin' || __currentUserRole === 'admin') {
                 try {
                     const token = localStorage.getItem('access_token');
-                    const sysResp = await fetch('/system-config/settings/all', {
+                    const sysUrl = (__currentUserRole === 'system_admin')
+                        ? '/system-config/settings/all'
+                        : '/system-config/settings/public';
+                    const sysResp = await fetch(sysUrl, {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
@@ -891,14 +896,20 @@
                             const m = parseInt(system.scrape_interval_minutes);
                             if (!isNaN(m)) currentSettings.scrapeIntervalMinutes = m;
                         }
-                    }
-                    // Local override for context docs toggle (persist UI interactions)
-                    try {
-                        const override = localStorage.getItem('context_docs_enabled');
-                        if (override !== null) {
-                            currentSettings.contextDocsEnabled = (override === 'true');
+                        // Ensure Admin sees read-only state
+                        if (__currentUserRole === 'admin') {
+                            try { setReadOnlyForSystemCards(); } catch { }
                         }
-                    } catch { }
+                    }
+                    // Local override for context docs toggle (persist UI interactions) - system admin only
+                    if (__currentUserRole === 'system_admin') {
+                        try {
+                            const override = localStorage.getItem('context_docs_enabled');
+                            if (override !== null) {
+                                currentSettings.contextDocsEnabled = (override === 'true');
+                            }
+                        } catch { }
+                    }
                 } catch (e) {
                     console.warn('Could not load system settings:', e);
                 }
@@ -1307,8 +1318,9 @@
             }
         }
 
-        // Persist and restore Context Documents toggle across language changes and reloads
+        // Persist and restore Context Documents toggle across language changes and reloads (system admin only)
         function setupContextDocsTogglePersistence() {
+            if (__currentUserRole !== 'system_admin') return;
             const el = document.getElementById('context-docs-enabled');
             if (!el) return;
             // Initialize from localStorage if present (does not overwrite loaded value unless explicitly set)
@@ -1514,7 +1526,6 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async () => {
             checkAuth();
-            setupContextDocsTogglePersistence();
         });
     </script>
 </body>
