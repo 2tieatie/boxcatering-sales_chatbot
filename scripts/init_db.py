@@ -76,13 +76,13 @@ def create_default_system_configs(db):
             },
             {
                 "key": "openai_model",
-                "value": "gpt-4o",
+                "value": "gpt-4o-mini",
                 "description": "OpenAI model to use (gpt-4o, gpt-4, gpt-3.5-turbo)",
                 "is_sensitive": False
             },
             {
                 "key": "openai_max_tokens",
-                "value": "1000",
+                "value": "5000",
                 "description": "Maximum tokens for OpenAI responses",
                 "is_sensitive": False
             },
@@ -116,13 +116,13 @@ def create_default_system_configs(db):
             # System Configuration
             {
                 "key": "system_name",
-                "value": "Boxcatering Chatbot",
+                "value": "Box Catering Chatbot",
                 "description": "System name for the application",
                 "is_sensitive": False
             },
             {
                 "key": "system_version",
-                "value": "1.0.0",
+                "value": "1.3.0",
                 "description": "System version number",
                 "is_sensitive": False
             },
@@ -235,10 +235,10 @@ def create_default_chatbot_config(db):
             # Create new default configuration
             default_config = ChatbotConfig(
                 name="Boxcatering Chatbot Configuration",
-                welcome_message=("Привіт! Я Марічка, ваш AI-помічник з бокскейтерингу."
+                welcome_message=("Привіт! Я - Марічка, ваш AI-помічник з кейтерингу."
                         "Я можу допомогти вам з вибором меню, цінами, дієтичними вимогами та плануванням заходів. "
                         "Як я можу вам допомогти сьогодні?"),
-                business_context=("Ми є преміум сервісом бокскейтерингу, що спеціалізується на корпоративних заходах, "
+                business_context=("Ми є преміум сервісом кейтерингу в коробках, що спеціалізується на корпоративних заходах, "
                                   "весіллях та приватних вечірках. Ми пропонуємо гурманську їжу, винятковий сервіс та налаштовувані "
                                   "меню для задоволення всіх дієтичних вимог."),
                 language="uk",  # Ukrainian
