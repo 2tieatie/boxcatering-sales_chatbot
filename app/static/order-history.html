@@ -714,6 +714,15 @@
 
                 if (response.ok) {
                     orders = await response.json();
+
+                    orders.forEach((order) => {
+                        order.customer_name = order.customer.name || "";
+                        order.customer_email = order.customer.email || "";
+                        order.customer_phone = order.customer.phone || "";
+                        order.delivery_address = order.customer.address || "";
+                        order.status = this.mapStateToStatus(order.state);
+                    });
+                    
                     filteredOrders = [...orders];
                     updateStats();
                     renderOrdersTable();
