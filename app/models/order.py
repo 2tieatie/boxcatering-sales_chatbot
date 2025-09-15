@@ -39,6 +39,8 @@ class Order(Base):
     processed_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    priority = Column(String, nullable=True)
+    guests_count = Column(Integer, nullable=True)
     
     # Relationships
     customer = relationship("Customer", back_populates="orders")
