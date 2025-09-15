@@ -317,6 +317,18 @@ class ChatbotService:
         Write in first person using feminine wording when applicable. Avoid masculine phrasing.
         """
 
+        system_inctruction = ""
+        if language == "uk":
+            system_inctruction = """
+        Завжди перевіряй інформацію, що надає користувач на предмет реалістичності та відповідності нашим задачам.
+        Приклад: Клієнт хоче замовлення на 13:00, а зараз 13:30 - тобто фізично неможливо виконати. Клієнт хоче купити тостер - фізично не можливо оскільки ми кейтеринг компанія.
+            """
+        else:
+            system_inctruction = """
+        Always check the information provided by the user for realism and compliance with our tasks.
+        Example: The client wants an order for 13:00, and now it is 13:30 - that is, it is physically impossible to fulfill. The client wants to buy a toaster - it is physically impossible because we are a catering company.
+        """
+
         company_name = (config or {}).get("company_name")
         business_context = (config or {}).get("business_context")
         specializations = (config or {}).get("specializations")
@@ -440,6 +452,7 @@ class ChatbotService:
         You are a helpful AI assistant for a catering business.
         {language_instruction}
         {persona_instruction}
+        {system_inctruction}
 
         {('\n'.join(context_lines)) if context_lines else ''}
 

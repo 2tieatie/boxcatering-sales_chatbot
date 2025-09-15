@@ -6,6 +6,7 @@ from decimal import Decimal
 from pydantic import BaseModel
 
 from app.models.order import OrderState
+from app.schemas.customer import CustomerResponse
 
 
 class OrderCreate(BaseModel):
@@ -27,6 +28,8 @@ class OrderCreate(BaseModel):
     delivery_date: Optional[datetime] = None
     delivery_time: Optional[str] = None
     menu_items: Optional[str] = None
+    priority: Optional[str] = None
+    guests_count: Optional[int] = None
 
 
 class OrderResponse(BaseModel):
@@ -46,6 +49,9 @@ class OrderResponse(BaseModel):
     processed_by: Optional[int] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
+    customer: Optional[CustomerResponse] = None
+    priority: Optional[str] = None
+    guests_count: Optional[int] = None
     
     class Config:
         from_attributes = True
@@ -58,3 +64,4 @@ class OrderUpdate(BaseModel):
     notes: Optional[str] = None
     is_processed: Optional[bool] = None
     processed_by: Optional[int] = None
+    priority: Optional[str] = None
