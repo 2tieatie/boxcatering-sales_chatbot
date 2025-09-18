@@ -56,29 +56,29 @@ class ChatbotService:
             # Add current user message
             messages.append({"role": "user", "content": chat_request.message})
 
-            # Functions to search and make specific actions
-            function_schema = {
-                "name": "get_products",
-                "description": "Повертає список товарів, що відповідають запиту користувача",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "Запит користувача, наприклад 'салати', 'круасани', 'вегетаріанське', 'порадити бокси', 'чи є такі в наявності'"
-                        }
-                    },
-                    "required": ["query"]
-                }
-            }
+            # # Functions to search and make specific actions
+            # function_schema = {
+            #     "name": "get_products",
+            #     "description": "Повертає список товарів, що відповідають запиту користувача",
+            #     "parameters": {
+            #         "type": "object",
+            #         "properties": {
+            #             "query": {
+            #                 "type": "string",
+            #                 "description": "Запит користувача, наприклад 'салати', 'круасани', 'вегетаріанське', 'порадити бокси', 'чи є такі в наявності'"
+            #             }
+            #         },
+            #         "required": ["query"]
+            #     }
+            # }
             
             # Create the chat completion
             chosen_model = model or self.model
             request_kwargs = {
                 "model": chosen_model,
                 "messages": messages,
-                "functions": [function_schema],
-                "function_call": "auto",
+                # "functions": [function_schema],
+                # "function_call": "auto",
             }
 
             # Respect model capabilities: only send temperature if supported
@@ -149,6 +149,8 @@ class ChatbotService:
             logger.debug(f"Handover reason: {handover_reason}")
             handover_desc = parsed_response.get("handover_reason_description")
             logger.debug(f"Handover description: {handover_desc}")
+            summary = parsed_response.get("debug", {}).get("summary")
+            logger.debug(f"Conversation summary: {summary}")
 
             # Messages from configuration or localized defaults
             default_fallback = (
@@ -177,6 +179,7 @@ class ChatbotService:
                         handover_to_manager=True,
                         handover_reason=HandoverReason.OUT_OF_SCOPE,
                         handover_reason_description=(handover_desc or "Model returned empty response"),
+                        summary=summary,
                         debug=(
                             {
                                 "model": request_kwargs.get("model"),
@@ -339,9 +342,12 @@ class ChatbotService:
         if language == "uk":
             system_inctruction = """
         Завжди перевіряй інформацію, що надає користувач на предмет реалістичності та відповідності нашим задачам.
-        Приклад: Клієнт хоче замовлення на 13:00, а зараз 13:30 - тобто фізично неможливо виконати, оскільки доставка 2 години від часу замовлення. Клієнт хоче купити тостер - фізично не можливо оскільки ми кейтеринг компанія.
+        Приклад: Клієнт хоче замовлення на 13:00, а зараз 13:30 - тобто фізично неможливо виконати, оскільки доставка 2 години від часу замовлення (детальніше в документах). Клієнт хоче купити тостер - фізично не можливо оскільки ми кейтеринг компанія.
         Не уточнюй додатково конфліктну інформацію.
         Приклад: Якщо вказана адреса доставки, значить клієнт хоче замовити доставку, не самовивіз.
+        Не пропонуй те чого немає в асортименті.
+        Завжди перевіряй чи додайється вартість доставки до загальної суми (детальніше в документах).
+        Перевіряй контактні дані що вказує користувач, формати телефона, емейла, тощо.
             """
         else:
             system_inctruction = """
@@ -422,6 +428,7 @@ class ChatbotService:
             "handover_to_manager": true,
             "handover_reason": "<REASON_CODE>",
             "handover_reason_description": "Brief description of why handover is needed"
+            "summary": "Summary of the conversation"
         }
 
         Important:
@@ -573,6 +580,7 @@ class ChatbotService:
             combined = self._context_docs_cache.get(cache_key)
             if combined is None:
                 combined = self._load_context_documents(docs_dir, max_chars)
+                # logger.debug(f"Loaded context docs: {combined}")
                 # Cache even empty string so we don't keep hitting disk
                 self._context_docs_cache[cache_key] = combined
 
@@ -837,3 +845,4 @@ class ChatbotService:
         except Exception as e:
             logger.warning(f"Failed to retrieve conversation history: {e}")
             return []
+        
