@@ -20,6 +20,7 @@ from bs4 import BeautifulSoup  # type: ignore
 from loguru import logger
 import random
 import time
+import re
 
 from app.database import SessionLocal
 from app.models import SystemConfig
@@ -211,6 +212,7 @@ class WebScraperService:
                         if session.__class__.__name__.lower() != "cloudscrapersession":
                             logger.info(f"403 on {link}; retrying with cloudscraper")
                             session_cf = self._create_session(use_cloudscraper=True)
+                            logger.debug(f"Session {session_cf}")
                             p = session_cf.get(
                                 link,
                                 timeout=25,
@@ -218,14 +220,21 @@ class WebScraperService:
                                 headers={"Referer": url},
                             )
                     p.raise_for_status()
+                    
                     sec_soup = BeautifulSoup(p.text, "html.parser")
                     title = self._extract_title(sec_soup) or link
                     content = self._extract_main_text(sec_soup)
+                    ############################
+                    products = self._scrape_catalog_pages("https://box-catering.ua")
+                    # self._save_products_to_db(products)
+                    logger.info(f"Scraped and saved {len(products)} products")
+                    logger.info(f"Scraped and saved {products}")
+                    ############################
                     if content.strip():
                         fname = _slugify(link.replace(domain, "")).replace("/", "-")
                         if not fname or fname == "-":
                             fname = "index"
-                        fname = f"{fname}.md"
+                        fname = f"{fname}_auto_catalog.md"
                         md = f"# {title}\n\n{content}\n"
                         docs.append((fname, md))
                         pages_scraped += 1
@@ -249,6 +258,8 @@ class WebScraperService:
 
             self.status.pages_scraped = pages_scraped
             self.status.last_run_utc = datetime.now(timezone.utc)
+
+            logger.info(f" Scraped {pages_scraped} pages from {url}")
 
             return {
                 "ok": True,
@@ -361,6 +372,96 @@ class WebScraperService:
         lines = [ln.strip() for ln in text.splitlines()]
         clean = "\n".join([ln for ln in lines if ln])
         return clean
+    
+    def _scrape_catalog_pages(self, base_url: str) -> List[Dict[str, str]]:
+        import cloudscraper
+        from bs4 import BeautifulSoup
+
+        scraper = cloudscraper.create_scraper()
+        products = []
+        page = 1
+
+        while True:
+            url = f"{base_url}/catalog/"
+            if page > 1:
+                url = f"{base_url}/catalog/?page={page}"
+
+            try:
+                response = scraper.get(url)
+                response.raise_for_status()
+            except Exception as e:
+                logger.warning(f"Failed to fetch page {page}: {e}")
+                break
+
+            soup = BeautifulSoup(response.text, "html.parser")
+
+            # Витягуємо всі посилання на товари
+            product_links = []
+            for card in soup.select(".product-card a[href]"):
+                href = card.get("href")
+                if href and href.startswith("/product/"):
+                    product_links.append(f"{base_url}{href}")
+
+            logger.debug(f"Page {page}: found {len(product_links)} product links")
+
+            if not product_links:
+                break  # кінець пагінації
+
+            # Обробляємо кожен товар
+            for link in product_links:
+                try:
+                    response = scraper.get(link)
+                    response.raise_for_status()
+                    item = BeautifulSoup(response.text, "html.parser")
+
+                    title_el = item.select_one(".product-info__title")
+                    title = title_el.get_text(strip=True) if title_el else ""
+
+                    ds_el = item.select_one(".product-info__descr")
+                    description = ds_el.get_text(strip=True) if ds_el else ""
+
+                    dm_el = item.select_one(".product-info__description")
+                    description_more = dm_el.get_text(strip=True) if dm_el else ""
+
+                    pr_el = item.select_one(".product-values__price-default")
+                    price_raw = pr_el.get_text(strip=True) if pr_el else None
+
+                    if price_raw is None:
+                        pr_actual_el = item.select_one(".product-values__price-actual")
+                        price_raw = pr_actual_el.get_text(strip=True) if pr_actual_el else ""
+
+                    price = self.extract_number(price_raw)
+
+                    qs_el = item.select_one(".product-calculated__val")
+                    guests_raw = qs_el.get_text(strip=True) if qs_el else "1"
+                    guests = self.extract_number(guests_raw, default="1")
+
+                    wt_el = item.select_one(".product-values__weight")
+                    weight_raw = wt_el.get_text(strip=True) if wt_el else "0"
+                    weight = self.extract_number(weight_raw, default="0")
+
+                    products.append({
+                        "title": title,
+                        "description": f"{description}\n{description_more}",
+                        "price": price,
+                        "guests": guests,
+                        "weight": weight,
+                        "link": link
+                    })
+
+                except Exception as e:
+                    logger.warning(f"Failed to fetch item {link}: {e}")
+                    continue  # не зупиняємо цикл через один товар
+
+            page += 1  # інкремент сторінки після обробки всіх товарів
+
+        return products
+
+    def extract_number(text: str, default: str = "0") -> str:
+        """Витягує перше число з рядка, включаючи десяткові"""
+        match = re.search(r"\d+(?:[.,]\d+)?", text.replace(",", "."))
+        return match.group(0) if match else default
+
 
 
 # Expose a singleton for app/main and API modules
