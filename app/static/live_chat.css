@@ -125,6 +125,10 @@
     position: relative;
 }
 
+.message-content > div:first-child {
+    white-space: break-spaces;
+}
+
 .message.user .message-content {
     background: #d6cefe;
     /* color: white; */
