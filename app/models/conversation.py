@@ -31,6 +31,7 @@ class Conversation(Base):
     handover_reason_description = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    summary = Column(Text, nullable=True)
     
     # Relationships
     customer = relationship("Customer", back_populates="conversations")

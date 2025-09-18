@@ -20,6 +20,8 @@ class AssortmentItem(Base):
     name = Column(String, nullable=False, index=True)
     description = Column(String, nullable=True)
     price_uah = Column(Numeric(10, 2), nullable=False, default=0)
+    guests = Column(Integer, nullable=True)
+    weight = Column(Numeric(10, 2), nullable=True, default=1)
     created_at = Column(
         DateTime(timezone=True), default=datetime.utcnow, nullable=False
     )

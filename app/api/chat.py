@@ -257,6 +257,8 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                         total_amount=payload.get("total_amount"),
                         currency=payload.get("currency"),
                         notes=payload.get("notes"),
+                        guests_count=payload.get("guests_count"),
+                        priority=payload.get("priority"),
                     )
 
                     # Generate an order number similarly to POST /orders

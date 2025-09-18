@@ -18,6 +18,7 @@ class ConversationResponse(BaseModel):
     handover_reason_description: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
+    summary: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -29,3 +30,4 @@ class ConversationUpdate(BaseModel):
     handover_state: Optional[HandoverState] = None
     handover_reason: Optional[str] = None
     handover_reason_description: Optional[str] = None
+    summary: Optional[str] = None

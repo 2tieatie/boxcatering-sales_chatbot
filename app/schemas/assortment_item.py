@@ -14,6 +14,8 @@ class AssortmentItemResponse(BaseModel):
     name: str
     description: Optional[str] = None
     price_uah: Decimal
+    guests: Optional[int] = None
+    weight: Optional[Decimal] = None
 
     class Config:
         from_attributes = True

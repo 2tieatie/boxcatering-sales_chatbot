@@ -6,6 +6,7 @@ import csv
 import re
 from openai import OpenAI
 from loguru import logger
+import requests
 
 from app.config import settings
 from app.schemas.chat import ChatRequest, ChatResponse, HandoverReason
@@ -55,12 +56,30 @@ class ChatbotService:
             
             # Add current user message
             messages.append({"role": "user", "content": chat_request.message})
+
+            # # Functions to search and make specific actions
+            # function_schema = {
+            #     "name": "get_products",
+            #     "description": "Повертає список товарів, що відповідають запиту користувача",
+            #     "parameters": {
+            #         "type": "object",
+            #         "properties": {
+            #             "query": {
+            #                 "type": "string",
+            #                 "description": "Запит користувача, наприклад 'салати', 'круасани', 'вегетаріанське', 'порадити бокси', 'чи є такі в наявності'"
+            #             }
+            #         },
+            #         "required": ["query"]
+            #     }
+            # }
             
             # Create the chat completion
             chosen_model = model or self.model
             request_kwargs = {
                 "model": chosen_model,
                 "messages": messages,
+                # "functions": [function_schema],
+                # "function_call": "auto",
             }
 
             # Respect model capabilities: only send temperature if supported
@@ -131,6 +150,8 @@ class ChatbotService:
             logger.debug(f"Handover reason: {handover_reason}")
             handover_desc = parsed_response.get("handover_reason_description")
             logger.debug(f"Handover description: {handover_desc}")
+            summary = parsed_response.get("debug", {}).get("summary")
+            logger.debug(f"Conversation summary: {summary}")
 
             # Messages from configuration or localized defaults
             default_fallback = (
@@ -159,6 +180,7 @@ class ChatbotService:
                         handover_to_manager=True,
                         handover_reason=HandoverReason.OUT_OF_SCOPE,
                         handover_reason_description=(handover_desc or "Model returned empty response"),
+                        summary=summary,
                         debug=(
                             {
                                 "model": request_kwargs.get("model"),
@@ -316,18 +338,23 @@ class ChatbotService:
         and make conversations lively and engaging. Remember details from previous messages and don't repeat questions.
         Write in first person using feminine wording when applicable. Avoid masculine phrasing.
         """
-
+        
         system_inctruction = ""
         if language == "uk":
             system_inctruction = """
         Завжди перевіряй інформацію, що надає користувач на предмет реалістичності та відповідності нашим задачам.
-        Приклад: Клієнт хоче замовлення на 13:00, а зараз 13:30 - тобто фізично неможливо виконати. Клієнт хоче купити тостер - фізично не можливо оскільки ми кейтеринг компанія.
+        Приклад: Клієнт хоче замовлення на 13:00, а зараз 13:30 - тобто фізично неможливо виконати, оскільки доставка 2 години від часу замовлення (детальніше в документах). Клієнт хоче купити тостер - фізично не можливо оскільки ми кейтеринг компанія.
+        Не уточнюй додатково конфліктну інформацію.
+        Приклад: Якщо вказана адреса доставки, значить клієнт хоче замовити доставку, не самовивіз.
+        Не пропонуй те чого немає в асортименті.
+        Завжди перевіряй чи додайється вартість доставки до загальної суми (детальніше в документах).
+        Перевіряй контактні дані що вказує користувач, формати телефона, емейла, тощо.
             """
         else:
             system_inctruction = """
         Always check the information provided by the user for realism and compliance with our tasks.
-        Example: The client wants an order for 13:00, and now it is 13:30 - that is, it is physically impossible to fulfill. The client wants to buy a toaster - it is physically impossible because we are a catering company.
-        """
+        Example: The customer wants an order for 13:00, and now it is 13:30 - that is, it is physically impossible to fulfill it, since delivery is 2 hours from the time of the order. The customer wants to buy a toaster - it is physically impossible because we are a catering company.
+            """
 
         company_name = (config or {}).get("company_name")
         business_context = (config or {}).get("business_context")
@@ -402,6 +429,7 @@ class ChatbotService:
             "handover_to_manager": true,
             "handover_reason": "<REASON_CODE>",
             "handover_reason_description": "Brief description of why handover is needed"
+            "summary": "Summary of the conversation"
         }
 
         Important:
@@ -418,18 +446,31 @@ class ChatbotService:
         context_docs_block = self._get_context_block(config)
         examples_block = self._get_examples_block(config)
 
-        order_flow_block_uk = """
+        order_flow_block_uk = f"""
         Послідовність оформлення замовлення (дуже важливо дотримуватися кроків):
         1) З'ясуй, що саме хоче замовити клієнт (страви/бокси) та допоможи вибрати.
            Якщо клієнт каже "підходять такі бокси" / "беремо ці" / подібне — вважай, що позиції обрано.
            У полі menu_items зафіксуй вибрані позиції коротким переліком; якщо кількість не вказана,
            вважай 1 шт. на кожну вибрану позицію (не питай додатково про кількість, якщо це не критично).
+           Додатково внеси у поле guests_count кількість гостей, виходячи із позицій.
         2) Коли клієнт визначився з позиціями, запитай дату доставки.
            Якщо дата надана без року (формат DD.MM або DD/MM), вважай поточний рік і перетвори у формат YYYY-MM-DD.
-        3) Потім попроси дані для доставки: ім'я, телефон, адреса доставки.
-        4) Якщо чогось не вистачає — запитуй лише відсутні дані одним-двома питаннями. Не запитуй нічого зайвого.
-        5) Лише коли є: menu_items, delivery_date, customer_name, customer_phone, customer_address —
+        3) Зафіксуй у полі priority срочність замовлення ('low', 'medium', 'high') із розрахунку на години до доставки.
+        4) Потім попроси дані для доставки: ім'я, телефон, адреса доставки.
+        5) Якщо чогось не вистачає — запитуй лише відсутні дані одним-двома питаннями. Не запитуй нічого зайвого.
+        6) Лише коли є: menu_items, delivery_date, customer_name, customer_phone, customer_address —
            сформуй дію create_order без додаткового підтвердження.
+           Якщо потрібне якесь уточнення із виводом всіх даних, виведи дані у форматі:
+
+            "Ім'я": "<customer_name>",
+            "Телефон": "<customer_phone>",
+            "Email": "<customer_email>",
+            "Адреса": "<customer_address>",
+            "Перелік позицій": "<menu items>",
+                - "<item name>, <item quantity>, <item price>, <item_weight>",
+                - "<item name>, <item quantity>, <item price>, <item_weight>",
+            "Дата доставки": "<date in ISO format YYYY-MM-DD> <optional time>",
+            "Загальна сума": "UAH"
         """
 
         order_flow_block_en = """
@@ -508,6 +549,8 @@ class ChatbotService:
                 "delivery_time": "<optional time>",
                 "notes": "<optional notes>",
                 "currency": "UAH",
+                "guests_count": <optional number of guests>
+                "priority": "<optional priority>"
             }}
         }}
 
@@ -558,6 +601,7 @@ class ChatbotService:
             combined = self._context_docs_cache.get(cache_key)
             if combined is None:
                 combined = self._load_context_documents(docs_dir, max_chars)
+                # logger.debug(f"Loaded context docs: {combined}")
                 # Cache even empty string so we don't keep hitting disk
                 self._context_docs_cache[cache_key] = combined
 
@@ -900,3 +944,4 @@ class ChatbotService:
         except Exception as e:
             logger.warning(f"Failed to retrieve conversation history: {e}")
             return []
+        
