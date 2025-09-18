@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 import io
 import csv
+import re
 from openai import OpenAI
 from loguru import logger
 import requests
@@ -443,6 +444,7 @@ class ChatbotService:
             """
 
         context_docs_block = self._get_context_block(config)
+        examples_block = self._get_examples_block(config)
 
         order_flow_block_uk = f"""
         Послідовність оформлення замовлення (дуже важливо дотримуватися кроків):
@@ -503,6 +505,23 @@ class ChatbotService:
 
         {order_flow_block}
 
+        {('Стиль спілкування на основі реальних розмов із клієнтами:' if language == 'uk' else 
+        'Conversation style inspired by real customer calls:')}
+        {('• Починайте з ввічливого вітання і короткого запитання, чим можете допомогти.' if language == 'uk' else 
+        '• Start with a polite greeting and a short offer to help.')}
+        {('• Уточнюйте місто, дату/інтервал доставки та терміновість.' if language == 'uk' else 
+        '• Confirm city, delivery date/time window, and urgency.')}
+        {('• Пропонуйте 1–3 релевантні варіанти (набори/бокси) і допоміжні позиції (келихи, тарілки, прибори).' if language == 'uk' else 
+        '• Offer 1–3 relevant menu sets and helpful add-ons (cups, plates, utensils).')}
+        {('• Пояснюйте логіку поради просто і коротко.' if language == 'uk' else 
+        '• Explain recommendations briefly and clearly.')}
+        {('• Тактовно повідомляйте про доставку/самовивіз і можливі знижки/умови.' if language == 'uk' else 
+        '• Mention delivery/pickup and any fees/discounts tactfully.')}
+        {('• Не ставте забагато питань одночасно — рухайтеся крок за кроком.' if language == 'uk' else 
+        '• Avoid asking too many questions at once; proceed step by step.')}
+        {('• Підсумовуйте домовленості коротко перед оформленням.' if language == 'uk' else 
+        '• Summarize agreements briefly before finalizing.')}
+
         {'\n'.join(style_lines)}
 
         {handover_block}
@@ -540,6 +559,8 @@ class ChatbotService:
         are present, emit ONLY the `create_order` action JSON as above and nothing else.
 
         {context_docs_block}
+
+        {examples_block}
 
         Otherwise, respond normally with just your message to the customer.
         """
@@ -678,6 +699,84 @@ class ChatbotService:
             return combined
         except Exception as e:
             logger.warning(f"Failed loading context documents: {e}")
+            return ""
+
+    def _get_examples_block(self, config: Optional[Dict[str, Any]] = None) -> str:
+        """Return a formatted examples block built from transcript files.
+
+        Loads files that look like conversational transcripts (e.g.,
+        boxcatering-chat_example-*.txt) and provides them as style samples.
+        Timestamps like (0:01) are stripped to reduce noise.
+        """
+        try:
+            enabled_override = None
+            if config is not None:
+                enabled_override = config.get("context_docs_enabled")
+            enabled = (
+                bool(enabled_override)
+                if enabled_override is not None
+                else bool(getattr(settings, "context_docs_enabled", True))
+            )
+            if not enabled:
+                return ""
+
+            dir_override = (config or {}).get("context_docs_dir") if config else None
+            docs_dir = Path(dir_override or getattr(settings, "context_docs_dir", "agent_context_documents"))
+            if not docs_dir.is_absolute():
+                docs_dir = Path.cwd() / docs_dir
+
+            cache_key = f"{str(docs_dir)}#examples"
+            combined = self._context_docs_cache.get(cache_key)
+            if combined is None:
+                combined = self._load_transcript_examples(docs_dir)
+                self._context_docs_cache[cache_key] = combined
+
+            if not combined:
+                return ""
+
+            return (
+                "Use the following real call snippets ONLY as tone and structure examples. "
+                "Do not copy specific facts (names, addresses, prices) and do not output "
+                "timestamps. Paraphrase in your own words while preserving the style.\n\n"
+                "[Conversation Style Examples]\n" + combined
+            )
+        except Exception as e:
+            logger.warning(f"Failed to build examples block: {e}")
+            return ""
+
+    def _load_transcript_examples(self, docs_dir: Path) -> str:
+        """Load transcript example files and return a combined, cleaned string."""
+        try:
+            if not docs_dir.exists() or not docs_dir.is_dir():
+                return ""
+
+            example_files: list[Path] = []
+            for path in sorted(docs_dir.rglob("*.txt")):
+                name = path.name.lower()
+                if name.startswith("boxcatering-chat_example-") or name.startswith("boxcatering-chat_example_") or \
+                    name.startswith("boxcatering-chat_example"):
+                    example_files.append(path)
+
+            if not example_files:
+                return ""
+
+            parts: list[str] = []
+            timestamp_pattern = re.compile(r"\(\d{1,2}:\d{2}\)")
+            for path in example_files:
+                try:
+                    text = path.read_text(encoding="utf-8")
+                    # Remove inline timestamps and collapse extra whitespace
+                    text = timestamp_pattern.sub("", text)
+                    cleaned = "\n".join([line.strip() for line in text.splitlines() if line.strip()])
+                    if cleaned:
+                        parts.append(f"## {path.stem}\n\n{cleaned}\n")
+                except Exception as read_err:
+                    logger.warning(f"Failed to read transcript example {path}: {read_err}")
+
+            combined = "\n\n".join(parts).strip()
+            return combined
+        except Exception as e:
+            logger.warning(f"Failed loading transcript examples: {e}")
             return ""
 
     def _parse_ai_response(self, response: str) -> dict:
