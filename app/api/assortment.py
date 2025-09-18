@@ -5,7 +5,7 @@ Accessible to MANAGER, ADMIN, SYSTEM_ADMIN.
 
 from __future__ import annotations
 
-from typing import List
+from typing import Dict, List
 from decimal import Decimal
 from pathlib import Path
 
@@ -61,13 +61,13 @@ def _write_assortment_context_markdown(db_session: Session) -> None:
             .all()
         )
         lines = ["# Асортимент (Assortment)\n"]
-        lines.append("Назва | Опис | Ціна (UAH)")
-        lines.append("--- | --- | ---")
+        lines.append("Назва | Опис | Ціна (UAH) | Людей | Вага (кг)")
+        lines.append("--- | --- | --- | --- | ---")
         for r in rows:
             name = (r.name or "").replace("|", "/").strip()
-            desc = (r.description or "").replace("|", "/").strip()
+            desc = (r.description or "").replace("|", "/").replace("\n", " ").replace("\r", " ").strip()
             price = f"{Decimal(r.price_uah):.2f}"
-            lines.append(f"{name} | {desc} | {price}")
+            lines.append(f"{name} | {desc} | {price} | {r.guests} | {r.weight}")
         md_path.write_text("\n".join(lines), encoding="utf-8")
 
         # Invalidate chatbot context cache
@@ -291,5 +291,4 @@ async def upload_assortment_excel(
             await file.close()
         except Exception:
             pass
-
 
