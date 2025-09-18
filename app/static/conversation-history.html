@@ -1,863 +1,861 @@
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Box Catering Chatbot - Conversation History</title>
+        <style>
+            body {
+                min-height: 100vh;
+            }
+
+            .container {
+                max-width: 1400px;
+                margin: 40px auto;
+                padding: 0 20px;
+            }
+
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+
+            .stat-card {
+                background: white;
+                border-radius: 12px;
+                padding: 20px;
+                text-align: center;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+                border-left: 4px solid #667eea;
+            }
+
+            .stat-card h3 {
+                color: #667eea;
+                font-size: 24px;
+                margin-bottom: 5px;
+            }
+
+            .stat-card p {
+                color: #666;
+                font-size: 14px;
+                font-weight: 500;
+            }
+
+            .filters-section {
+                background: white;
+                border-radius: 15px;
+                padding: 25px;
+                margin-bottom: 30px;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            }
+
+            .filters-section h3 {
+                color: #333;
+                margin-bottom: 20px;
+                font-size: 18px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Box Catering Chatbot - Conversation History</title>
-    <style>
-        body {
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            border-left: 4px solid #667eea;
-        }
-
-        .stat-card h3 {
-            color: #667eea;
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-
-        .stat-card p {
-            color: #666;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .filters-section {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        }
-
-        .filters-section h3 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .filters-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .filter-group label {
-            font-weight: 600;
-            color: #555;
-            font-size: 14px;
-        }
-
-        .filter-group input,
-        .filter-group select {
-            padding: 10px 12px;
-            border: 2px solid #e1e5e9;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.3s ease;
-        }
-
-        .filter-group input:focus,
-        .filter-group select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .filter-actions {
-            display: flex;
-            gap: 15px;
-            align-items: flex-end;
-        }
-
-        .table-container {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            overflow-x: auto;
-        }
-
-        .table-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .table-header h3 {
-            color: #333;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .table-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .conversations-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-
-        .conversations-table th {
-            background: #f8f9fa;
-            padding: 15px 12px;
-            text-align: left;
-            font-weight: 600;
-            color: #555;
-            border-bottom: 2px solid #e9ecef;
-            white-space: nowrap;
-        }
-
-        .conversations-table td {
-            padding: 15px 12px;
-            border-bottom: 1px solid #e9ecef;
-            vertical-align: top;
-        }
-
-        .conversations-table tr:hover {
-            background: #f8f9fa;
-        }
-
-        .customer-info {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .customer-name {
-            font-weight: 600;
-            color: #333;
-        }
-
-        .customer-email {
-            color: #666;
-            font-size: 12px;
-        }
-
-        .conversation-preview {
-            max-width: 300px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .status-active {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-completed {
-            background: #cce5ff;
-            color: #004085;
-        }
-
-        .status-handover {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status-archived {
-            background: #e2e3e5;
-            color: #383d41;
-        }
-
-        .priority-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .priority-high {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .priority-medium {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .priority-low {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .btn-view {
-            background: #17a2b8;
-            color: white;
-        }
-
-        .btn-view:hover {
-            background: #138496;
-        }
-
-        .btn-edit {
-            background: #ffc107;
-            color: #212529;
-        }
-
-        .btn-edit:hover {
-            background: #e0a800;
-        }
-
-        .btn-delete {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-delete:hover {
-            background: #c82333;
-        }
-
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-top: 30px;
-        }
-
-        .pagination button {
-            padding: 8px 12px;
-            border: 1px solid #dee2e6;
-            background: white;
-            color: #667eea;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-        }
-
-        .pagination button:hover {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-        }
-
-        .pagination button.active {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-        }
-
-        .pagination button:disabled {
-            background: #f8f9fa;
-            color: #6c757d;
-            cursor: not-allowed;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 5% auto;
-            padding: 30px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 800px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .modal-header h3 {
-            color: #333;
-            font-size: 20px;
-        }
-
-        .close {
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close:hover {
-            color: #333;
-        }
-
-        .conversation-details {
-            margin-bottom: 20px;
-        }
-
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #f1f3f4;
-        }
-
-        .detail-label {
-            font-weight: 600;
-            color: #555;
-            min-width: 150px;
-        }
-
-        .detail-value {
-            color: #333;
-            text-align: right;
-        }
-
-        .messages-container {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 15px;
-            background: #f8f9fa;
-        }
-
-        .message-item {
-            margin-bottom: 15px;
-            padding: 12px;
-            background: white;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-
-        .message-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            font-size: 12px;
-            color: #666;
-        }
-
-        .message-sender {
-            font-weight: 600;
-            color: #667eea;
-        }
-
-        .message-content {
-            color: #333;
-            line-height: 1.5;
-        }
-
-        .message.user .message-content {
-            background: #e3f2fd;
-            padding: 8px;
-            border-radius: 6px;
-        }
-
-        .message.bot .message-content {
-            background: #f3e5f5;
-            padding: 8px;
-            border-radius: 6px;
-        }
-
-        @media (max-width: 768px) {
             .filters-grid {
-                grid-template-columns: 1fr;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-bottom: 20px;
+            }
+
+            .filter-group {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .filter-group label {
+                font-weight: 600;
+                color: #555;
+                font-size: 14px;
+            }
+
+            .filter-group input,
+            .filter-group select {
+                padding: 10px 12px;
+                border: 2px solid #e1e5e9;
+                border-radius: 6px;
+                font-size: 14px;
+                transition: border-color 0.3s ease;
+            }
+
+            .filter-group input:focus,
+            .filter-group select:focus {
+                outline: none;
+                border-color: #667eea;
             }
 
             .filter-actions {
-                align-items: center;
+                display: flex;
+                gap: 15px;
+                align-items: flex-end;
             }
 
             .table-container {
-                padding: 15px;
+                background: white;
+                border-radius: 15px;
+                padding: 25px;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+                overflow-x: auto;
+            }
+
+            .table-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+
+            .table-header h3 {
+                color: #333;
+                font-size: 18px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .table-actions {
+                display: flex;
+                gap: 10px;
             }
 
             .conversations-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 14px;
+            }
+
+            .conversations-table th {
+                background: #f8f9fa;
+                padding: 15px 12px;
+                text-align: left;
+                font-weight: 600;
+                color: #555;
+                border-bottom: 2px solid #e9ecef;
+                white-space: nowrap;
+            }
+
+            .conversations-table td {
+                padding: 15px 12px;
+                border-bottom: 1px solid #e9ecef;
+                vertical-align: top;
+            }
+
+            .conversations-table tr:hover {
+                background: #f8f9fa;
+            }
+
+            .customer-info {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .customer-name {
+                font-weight: 600;
+                color: #333;
+            }
+
+            .customer-email {
+                color: #666;
                 font-size: 12px;
             }
 
-            .conversations-table th,
-            .conversations-table td {
-                padding: 10px 8px;
+            .conversation-preview {
+                max-width: 300px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .status-badge {
+                display: inline-block;
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 600;
+                text-transform: uppercase;
+            }
+
+            .status-active {
+                background: #d4edda;
+                color: #155724;
+            }
+
+            .status-completed {
+                background: #cce5ff;
+                color: #004085;
+            }
+
+            .status-handover {
+                background: #fff3cd;
+                color: #856404;
+            }
+
+            .status-archived {
+                background: #e2e3e5;
+                color: #383d41;
+            }
+
+            .priority-badge {
+                display: inline-block;
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 600;
+            }
+
+            .priority-high {
+                background: #f8d7da;
+                color: #721c24;
+            }
+
+            .priority-medium {
+                background: #fff3cd;
+                color: #856404;
+            }
+
+            .priority-low {
+                background: #d1ecf1;
+                color: #0c5460;
             }
 
             .action-buttons {
-                flex-direction: column;
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            .btn-view {
+                background: #17a2b8;
+                color: white;
+            }
+
+            .btn-view:hover {
+                background: #138496;
+            }
+
+            .btn-edit {
+                background: #ffc107;
+                color: #212529;
+            }
+
+            .btn-edit:hover {
+                background: #e0a800;
+            }
+
+            .btn-delete {
+                background: #dc3545;
+                color: white;
+            }
+
+            .btn-delete:hover {
+                background: #c82333;
+            }
+
+            .pagination {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 10px;
+                margin-top: 30px;
+            }
+
+            .pagination button {
+                padding: 8px 12px;
+                border: 1px solid #dee2e6;
+                background: white;
+                color: #667eea;
+                cursor: pointer;
+                border-radius: 4px;
+                transition: all 0.2s ease;
+            }
+
+            .pagination button:hover {
+                background: #667eea;
+                color: white;
+                border-color: #667eea;
+            }
+
+            .pagination button.active {
+                background: #667eea;
+                color: white;
+                border-color: #667eea;
+            }
+
+            .pagination button:disabled {
+                background: #f8f9fa;
+                color: #6c757d;
+                cursor: not-allowed;
+            }
+
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
             }
 
             .modal-content {
-                width: 95%;
-                margin: 10% auto;
-                padding: 20px;
+                background-color: white;
+                margin: 5% auto;
+                padding: 30px;
+                border-radius: 15px;
+                width: 90%;
+                max-width: 800px;
+                max-height: 80vh;
+                overflow-y: auto;
             }
-        }
-    </style>
-    <link rel="stylesheet" href="/static/styles.css">
-</head>
 
-<body>
-    <div class="header">
-        <h1 data-i18n="app.title">Box Catering Chatbot</h1>
-        <div class="nav-links" id="nav"></div>
-        <div class="user-info">
-            <div class="user-avatar" id="user-avatar">U</div>
-            <span id="username">User</span>
-            <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
-        </div>
-    </div>
+            .modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+                border-bottom: 1px solid #e9ecef;
+            }
 
-    <div class="container">
-        <div class="page-header">
-            <h2 data-i18n="conversationHistory.title">💬 Conversation History</h2>
-            <p data-i18n="conversationHistory.subtitle">Track and manage all customer conversations with your AI-powered
-                chatbot</p>
-        </div>
+            .modal-header h3 {
+                color: #333;
+                font-size: 20px;
+            }
 
-        <!-- Statistics Cards -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3 id="total-conversations">0</h3>
-                <p data-i18n="conversationHistory.stats.total">Total Conversations</p>
-            </div>
-            <div class="stat-card">
-                <h3 id="active-conversations">0</h3>
-                <p data-i18n="conversationHistory.stats.active">Active Conversations</p>
-            </div>
-            <div class="stat-card">
-                <h3 id="handover-count">0</h3>
-                <p data-i18n="conversationHistory.stats.handovers">Manager Handovers</p>
-            </div>
-            <div class="stat-card">
-                <h3 id="avg-response-time">0s</h3>
-                <p data-i18n="conversationHistory.stats.avgResponse">Avg Response Time</p>
-            </div>
-        </div>
+            .close {
+                color: #aaa;
+                font-size: 28px;
+                font-weight: bold;
+                cursor: pointer;
+            }
 
-        <!-- Filters Section -->
-        <div class="filters-section">
-            <h3><span>🔍</span><span data-i18n="conversationHistory.filters.title">Filters & Search</span></h3>
-            <div class="filters-grid">
-                <div class="filter-group">
-                    <label for="status-filter" data-i18n="conversationHistory.filters.status">Status</label>
-                    <select id="status-filter">
-                        <option value="" data-i18n="conversationHistory.filters.allStatuses">All Statuses</option>
-                        <option value="active" data-i18n="conversationHistory.status.active">Active</option>
-                        <option value="completed" data-i18n="conversationHistory.status.completed">Completed</option>
-                        <option value="handover" data-i18n="conversationHistory.status.handover">Manager Handover
-                        </option>
-                        <option value="archived" data-i18n="conversationHistory.status.archived">Archived</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="priority-filter" data-i18n="conversationHistory.filters.priority">Priority</label>
-                    <select id="priority-filter">
-                        <option value="" data-i18n="conversationHistory.filters.allPriorities">All Priorities</option>
-                        <option value="high" data-i18n="conversationHistory.priority.high">High</option>
-                        <option value="medium" data-i18n="conversationHistory.priority.medium">Medium</option>
-                        <option value="low" data-i18n="conversationHistory.priority.low">Low</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="date-from" data-i18n="conversationHistory.filters.dateFrom">Date From</label>
-                    <input type="date" id="date-from">
-                </div>
-                <div class="filter-group">
-                    <label for="date-to" data-i18n="conversationHistory.filters.dateTo">Date To</label>
-                    <input type="date" id="date-to">
-                </div>
-            </div>
-            <div class="filters-grid">
-                <div class="filter-group">
-                    <label for="search-input" data-i18n="conversationHistory.filters.search">Search</label>
-                    <input type="text" id="search-input" placeholder="Search conversations..."
-                        data-i18n-placeholder="conversationHistory.filters.searchPh">
-                </div>
-                <div class="filter-actions">
-                    <button class="btn btn-primary" onclick="applyFilters()">
-                        <span aria-hidden="true">🔍</span>
-                        <span data-i18n="conversationHistory.filters.apply">Apply</span>
-                    </button>
-                    <button class="btn btn-secondary" onclick="clearFilters()">
-                        <span aria-hidden="true">🔄</span>
-                        <span data-i18n="conversationHistory.filters.clear">Clear</span>
-                    </button>
-                </div>
-            </div>
-        </div>
+            .close:hover {
+                color: #333;
+            }
 
-        <!-- Conversations Table -->
-        <div class="table-container">
-            <div class="table-header">
-                <h3><span>📋</span><span data-i18n="conversationHistory.table.title">Conversations</span></h3>
-                <div class="table-actions">
-                    <button class="btn btn-primary" onclick="exportConversations()">
-                        <span aria-hidden="true">📤</span>
-                        <span data-i18n="conversationHistory.table.export">Export</span>
-                    </button>
-                    <button class="btn btn-secondary" onclick="refreshData()">
-                        <span aria-hidden="true">🔄</span>
-                        <span data-i18n="conversationHistory.table.refresh">Refresh</span>
-                    </button>
-                </div>
-            </div>
+            .conversation-details {
+                margin-bottom: 20px;
+            }
 
-            <table class="conversations-table">
-                <thead>
-                    <tr>
-                        <th data-i18n="conversationHistory.table.customer">Customer</th>
-                        <th data-i18n="conversationHistory.table.preview">Conversation Preview</th>
-                        <th data-i18n="conversationHistory.table.status">Status</th>
-                        <th data-i18n="conversationHistory.table.priority">Priority</th>
-                        <th data-i18n="conversationHistory.table.started">Started</th>
-                        <th data-i18n="conversationHistory.table.lastActivity">Last Activity</th>
-                        <th data-i18n="conversationHistory.table.messages">Messages</th>
-                        <th data-i18n="conversationHistory.table.actions">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="conversations-tbody">
-                    <!-- Conversations will be populated here -->
-                </tbody>
-            </table>
+            .detail-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 10px 0;
+                border-bottom: 1px solid #f1f3f4;
+            }
 
-            <!-- Pagination -->
-            <div class="pagination" id="pagination">
-                <!-- Pagination controls will be populated here -->
-            </div>
-        </div>
-    </div>
+            .detail-label {
+                font-weight: 600;
+                color: #555;
+                min-width: 150px;
+            }
 
-    <!-- Conversation Detail Modal -->
-    <div id="conversation-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 data-i18n="conversationHistory.modal.title">Conversation Details</h3>
-                <span class="close" onclick="closeModal()">&times;</span>
-            </div>
-            <div id="modal-content">
-                <!-- Modal content will be populated here -->
+            .detail-value {
+                color: #333;
+                text-align: right;
+            }
+
+            .messages-container {
+                max-height: 400px;
+                overflow-y: auto;
+                border: 1px solid #e9ecef;
+                border-radius: 8px;
+                padding: 15px;
+                background: #f8f9fa;
+            }
+
+            .message-item {
+                margin-bottom: 15px;
+                padding: 12px;
+                background: white;
+                border-radius: 8px;
+                border-left: 4px solid #667eea;
+            }
+
+            .message-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+                font-size: 12px;
+                color: #666;
+            }
+
+            .message-sender {
+                font-weight: 600;
+                color: #667eea;
+            }
+
+            .message-content {
+                color: #333;
+                line-height: 1.5;
+            }
+
+            .message.user .message-content {
+                background: #e3f2fd;
+                padding: 8px;
+                border-radius: 6px;
+            }
+
+            .message.bot .message-content {
+                background: #f3e5f5;
+                padding: 8px;
+                border-radius: 6px;
+            }
+
+            @media (max-width: 768px) {
+                .filters-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .filter-actions {
+                    align-items: center;
+                }
+
+                .table-container {
+                    padding: 15px;
+                }
+
+                .conversations-table {
+                    font-size: 12px;
+                }
+
+                .conversations-table th,
+                .conversations-table td {
+                    padding: 10px 8px;
+                }
+
+                .action-buttons {
+                    flex-direction: column;
+                }
+
+                .modal-content {
+                    width: 95%;
+                    margin: 10% auto;
+                    padding: 20px;
+                }
+            }
+        </style>
+        <link rel="stylesheet" href="/static/styles.css" />
+    </head>
+
+    <body>
+        <div class="header">
+            <h1 data-i18n="app.title">Box Catering Chatbot</h1>
+            <div class="nav-links" id="nav"></div>
+            <div class="user-info">
+                <div class="user-avatar" id="user-avatar">U</div>
+                <span id="username">User</span>
+                <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
             </div>
         </div>
-    </div>
 
-    <script src="/static/auth.js"></script>
-    <script src="/static/i18n.js"></script>
-    <script>
-        (function () {
-            async function initI18N() {
-                try {
-                    const token = localStorage.getItem('access_token');
-                    const meRes = await fetch('/users/me', { headers: { 'Authorization': `Bearer ${token}` } });
-                    const storedLang = localStorage.getItem('ui_language');
-                    let lang = storedLang || 'uk';
-                    if (!storedLang && meRes.ok) {
-                        const me = await meRes.json();
-                        lang = me.preferred_language || lang;
-                    }
-                    if (window.I18N && I18N.setLanguage) {
-                        await I18N.setLanguage(lang);
-                    }
-                    document.querySelectorAll('[data-i18n]').forEach(function (el) {
-                        const k = el.getAttribute('data-i18n');
-                        if (window.I18N && I18N.t) {
-                            el.textContent = I18N.t(k);
+        <div class="container">
+            <div class="page-header">
+                <h2 data-i18n="conversationHistory.title">💬 Conversation History</h2>
+                <p data-i18n="conversationHistory.subtitle">Track and manage all customer conversations with your AI-powered chatbot</p>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3 id="total-conversations">0</h3>
+                    <p data-i18n="conversationHistory.stats.total">Total Conversations</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="active-conversations">0</h3>
+                    <p data-i18n="conversationHistory.stats.active">Active Conversations</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="handover-count">0</h3>
+                    <p data-i18n="conversationHistory.stats.handovers">Manager Handovers</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="avg-response-time">0s</h3>
+                    <p data-i18n="conversationHistory.stats.avgResponse">Avg Response Time</p>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="filters-section">
+                <h3><span>🔍</span><span data-i18n="conversationHistory.filters.title">Filters & Search</span></h3>
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label for="status-filter" data-i18n="conversationHistory.filters.status">Status</label>
+                        <select id="status-filter">
+                            <option value="" data-i18n="conversationHistory.filters.allStatuses">All Statuses</option>
+                            <option value="active" data-i18n="conversationHistory.status.active">Active</option>
+                            <option value="completed" data-i18n="conversationHistory.status.completed">Completed</option>
+                            <option value="handover" data-i18n="conversationHistory.status.handover">Manager Handover</option>
+                            <option value="archived" data-i18n="conversationHistory.status.archived">Archived</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="priority-filter" data-i18n="conversationHistory.filters.priority">Priority</label>
+                        <select id="priority-filter">
+                            <option value="" data-i18n="conversationHistory.filters.allPriorities">All Priorities</option>
+                            <option value="high" data-i18n="conversationHistory.priority.high">High</option>
+                            <option value="medium" data-i18n="conversationHistory.priority.medium">Medium</option>
+                            <option value="low" data-i18n="conversationHistory.priority.low">Low</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="date-from" data-i18n="conversationHistory.filters.dateFrom">Date From</label>
+                        <input type="date" id="date-from" />
+                    </div>
+                    <div class="filter-group">
+                        <label for="date-to" data-i18n="conversationHistory.filters.dateTo">Date To</label>
+                        <input type="date" id="date-to" />
+                    </div>
+                </div>
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label for="search-input" data-i18n="conversationHistory.filters.search">Search</label>
+                        <input type="text" id="search-input" placeholder="Search conversations..." data-i18n-placeholder="conversationHistory.filters.searchPh" />
+                    </div>
+                    <div class="filter-actions">
+                        <button class="btn btn-primary" onclick="applyFilters()">
+                            <span aria-hidden="true">🔍</span>
+                            <span data-i18n="conversationHistory.filters.apply">Apply</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearFilters()">
+                            <span aria-hidden="true">🔄</span>
+                            <span data-i18n="conversationHistory.filters.clear">Clear</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conversations Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h3><span>📋</span><span data-i18n="conversationHistory.table.title">Conversations</span></h3>
+                    <div class="table-actions">
+                        <button class="btn btn-primary" onclick="exportConversations()">
+                            <span aria-hidden="true">📤</span>
+                            <span data-i18n="conversationHistory.table.export">Export</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="refreshData()">
+                            <span aria-hidden="true">🔄</span>
+                            <span data-i18n="conversationHistory.table.refresh">Refresh</span>
+                        </button>
+                    </div>
+                </div>
+
+                <table class="conversations-table">
+                    <thead>
+                        <tr>
+                            <th data-i18n="conversationHistory.table.customer">Customer</th>
+                            <th data-i18n="conversationHistory.table.preview">Conversation Preview</th>
+                            <th data-i18n="conversationHistory.table.status">Status</th>
+                            <th data-i18n="conversationHistory.table.priority">Priority</th>
+                            <th data-i18n="conversationHistory.table.started">Started</th>
+                            <th data-i18n="conversationHistory.table.lastActivity">Last Activity</th>
+                            <th data-i18n="conversationHistory.table.messages">Messages</th>
+                            <th data-i18n="conversationHistory.table.actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="conversations-tbody">
+                        <!-- Conversations will be populated here -->
+                    </tbody>
+                </table>
+
+                <!-- Pagination -->
+                <div class="pagination" id="pagination">
+                    <!-- Pagination controls will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversation Detail Modal -->
+        <div id="conversation-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 data-i18n="conversationHistory.modal.title">Conversation Details</h3>
+                    <span class="close" onclick="closeModal()">&times;</span>
+                </div>
+                <div id="modal-content">
+                    <!-- Modal content will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <script src="/static/auth.js"></script>
+        <script src="/static/i18n.js"></script>
+        <script>
+            (function () {
+                async function initI18N() {
+                    try {
+                        const token = localStorage.getItem("access_token");
+                        const meRes = await fetch("/users/me", { headers: { Authorization: `Bearer ${token}` } });
+                        const storedLang = localStorage.getItem("ui_language");
+                        let lang = storedLang || "uk";
+                        if (!storedLang && meRes.ok) {
+                            const me = await meRes.json();
+                            lang = me.preferred_language || lang;
                         }
-                    });
-                    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
-                        const k = el.getAttribute('data-i18n-placeholder');
-                        if (window.I18N && I18N.t) {
-                            el.setAttribute('placeholder', I18N.t(k));
+                        if (window.I18N && I18N.setLanguage) {
+                            await I18N.setLanguage(lang);
                         }
-                    });
-                    // Re-render table to apply translated dynamic labels
-                    if (typeof renderConversations === 'function') {
-                        renderConversations();
-                    }
-                } catch { }
-            }
-            window.__i18nReady = initI18N();
-        })();
-    </script>
-    <script src="/static/nav.js"></script>
-    <script>
-        // Conversations will be loaded from the API
-        let conversations = [];
-        let __currentUserRole = null;
-        let convIdToOrderId = {};
-        let ordersCache = [];
-
-        let currentPage = 1;
-        const itemsPerPage = 10;
-        let filteredConversations = [];
-
-        // Check authentication
-        function checkAuth() {
-            const token = localStorage.getItem('access_token');
-            if (!token) {
-                window.location.href = '/login';
-                return;
-            }
-            fetchUserInfo();
-            loadConversations();
-        }
-
-        // Fetch user information
-        async function fetchUserInfo() {
-            try {
-                const token = localStorage.getItem('access_token');
-                const response = await fetch('/users/me', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    const user = await response.json();
-                    __currentUserRole = user.role || null;
-                    document.getElementById('username').textContent = user.full_name || user.username;
-                    document.getElementById('user-avatar').textContent = (user.full_name || user.username).charAt(0).toUpperCase();
+                        document.querySelectorAll("[data-i18n]").forEach(function (el) {
+                            const k = el.getAttribute("data-i18n");
+                            if (window.I18N && I18N.t) {
+                                el.textContent = I18N.t(k);
+                            }
+                        });
+                        document.querySelectorAll("[data-i18n-placeholder]").forEach(function (el) {
+                            const k = el.getAttribute("data-i18n-placeholder");
+                            if (window.I18N && I18N.t) {
+                                el.setAttribute("placeholder", I18N.t(k));
+                            }
+                        });
+                        // Re-render table to apply translated dynamic labels
+                        if (typeof renderConversations === "function") {
+                            renderConversations();
+                        }
+                    } catch {}
                 }
-            } catch (error) {
-                console.error('Error fetching user info:', error);
+                window.__i18nReady = initI18N();
+            })();
+        </script>
+        <script src="/static/nav.js"></script>
+        <script>
+            // Conversations will be loaded from the API
+            let conversations = [];
+            let __currentUserRole = null;
+            let convIdToOrderId = {};
+            let ordersCache = [];
+
+            let currentPage = 1;
+            const itemsPerPage = 10;
+            let filteredConversations = [];
+
+            // Check authentication
+            function checkAuth() {
+                const token = localStorage.getItem("access_token");
+                if (!token) {
+                    window.location.href = "/login";
+                    return;
+                }
+                fetchUserInfo();
+                loadConversations();
             }
-        }
 
-        // Auth helper
-        function authHeaders() {
-            const token = localStorage.getItem('access_token');
-            return token ? { 'Authorization': `Bearer ${token}` } : {};
-        }
-
-        async function fetchJSON(url, options = {}) {
-            const headers = { 'Content-Type': 'application/json', ...authHeaders(), ...(options.headers || {}) };
-            const res = await fetch(url, { ...options, headers });
-            if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-            return res.json();
-        }
-
-        // Load conversations from API
-        async function loadConversations() {
-            try {
-                const data = await fetchJSON('/conversations/?limit=200');
-                // Map backend data to UI format
-                conversations = (data || []).map((c) => ({
-                    id: c.id,
-                    sessionId: c.session_id,
-                    customer: { name: c.session_id, email: '' },
-                    preview: '',
-                    status: mapStatus(c.handover_state),
-                    priority: 'low',
-                    started: formatDateTime(c.created_at),
-                    lastActivity: formatDateTime(c.updated_at || c.created_at),
-                    messageCount: 0,
-                    handoverState: c.handover_state,
-                    customer_id: c.customer_id
-                }));
-                filteredConversations = [...conversations];
-                updateStatistics();
-                renderConversations();
-                renderPagination();
-                // Load message counts asynchronously after initial render
-                loadMessageCounts();
-                // Preload orders mapping to enable order links from conversations
-                preloadOrdersMapping();
-                // Deep-link: open conversation by id if provided
+            // Fetch user information
+            async function fetchUserInfo() {
                 try {
-                    const params = new URLSearchParams(window.location.search);
-                    const conversationId = parseInt(params.get('conversationId'));
-                    if (!isNaN(conversationId)) {
-                        viewConversationWhenReady(conversationId);
-                    }
-                } catch { }
-            } catch (e) {
-                console.error('Failed to load conversations', e);
-            }
-        }
+                    const token = localStorage.getItem("access_token");
+                    const response = await fetch("/users/me", {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    });
 
-        // Preload mapping conversation -> order id (first found)
-        async function preloadOrdersMapping() {
-            try {
-                const res = await fetchJSON('/orders/?limit=500');
-                ordersCache = Array.isArray(res) ? res : [];
-                convIdToOrderId = {};
-                for (const o of ordersCache) {
-                    if (o.conversation_id && !convIdToOrderId[o.conversation_id]) {
-                        convIdToOrderId[o.conversation_id] = o.id;
+                    if (response.ok) {
+                        const user = await response.json();
+                        __currentUserRole = user.role || null;
+                        document.getElementById("username").textContent = user.full_name || user.username;
+                        document.getElementById("user-avatar").textContent = (user.full_name || user.username).charAt(0).toUpperCase();
+                    }
+                } catch (error) {
+                    console.error("Error fetching user info:", error);
+                }
+            }
+
+            // Auth helper
+            function authHeaders() {
+                const token = localStorage.getItem("access_token");
+                return token ? { Authorization: `Bearer ${token}` } : {};
+            }
+
+            async function fetchJSON(url, options = {}) {
+                const headers = { "Content-Type": "application/json", ...authHeaders(), ...(options.headers || {}) };
+                const res = await fetch(url, { ...options, headers });
+                if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+                return res.json();
+            }
+
+            // Load conversations from API
+            async function loadConversations() {
+                try {
+                    const data = await fetchJSON("/conversations/?limit=200");
+                    // Map backend data to UI format
+                    conversations = (data || []).map((c) => ({
+                        id: c.id,
+                        sessionId: c.session_id,
+                        customer: { name: c.session_id, email: "" },
+                        preview: "",
+                        status: mapStatus(c.handover_state),
+                        priority: "low",
+                        started: formatDateTime(c.created_at),
+                        lastActivity: formatDateTime(c.updated_at || c.created_at),
+                        messageCount: 0,
+                        handoverState: c.handover_state,
+                        customer_id: c.customer_id,
+                    }));
+                    filteredConversations = [...conversations];
+                    updateStatistics();
+                    renderConversations();
+                    renderPagination();
+                    // Load message counts asynchronously after initial render
+                    loadMessageCounts();
+                    // Preload orders mapping to enable order links from conversations
+                    preloadOrdersMapping();
+                    // Deep-link: open conversation by id if provided
+                    try {
+                        const params = new URLSearchParams(window.location.search);
+                        const conversationId = parseInt(params.get("conversationId"));
+                        if (!isNaN(conversationId)) {
+                            viewConversationWhenReady(conversationId);
+                        }
+                    } catch {}
+                } catch (e) {
+                    console.error("Failed to load conversations", e);
+                }
+            }
+
+            // Preload mapping conversation -> order id (first found)
+            async function preloadOrdersMapping() {
+                try {
+                    const res = await fetchJSON("/orders/?limit=500");
+                    ordersCache = Array.isArray(res) ? res : [];
+                    convIdToOrderId = {};
+                    for (const o of ordersCache) {
+                        if (o.conversation_id && !convIdToOrderId[o.conversation_id]) {
+                            convIdToOrderId[o.conversation_id] = o.id;
+                        }
+                    }
+                    renderConversations();
+                } catch (e) {
+                    console.warn("Failed to load orders for mapping", e);
+                }
+            }
+
+            function viewConversationWhenReady(conversationId) {
+                const timer = setInterval(() => {
+                    if (Array.isArray(conversations) && conversations.find((c) => c.id === conversationId)) {
+                        clearInterval(timer);
+                        viewConversation(conversationId);
+                    }
+                }, 200);
+                setTimeout(() => clearInterval(timer), 8000);
+            }
+
+            // Fetch message count for a conversation (bounded limit)
+            async function fetchMessageCount(conversationId) {
+                try {
+                    const msgs = await fetchJSON(`/conversations/${conversationId}/messages?limit=1000`);
+                    return Array.isArray(msgs) ? msgs.length : 0;
+                } catch (err) {
+                    console.warn("Failed to fetch message count for", conversationId, err);
+                    return 0;
+                }
+            }
+
+            // Load message counts with limited concurrency to avoid flooding the API
+            async function loadMessageCounts() {
+                const ids = conversations.map((c) => c.id);
+                const concurrency = 6;
+                let nextIndex = 0;
+
+                async function worker() {
+                    while (nextIndex < ids.length) {
+                        const i = nextIndex++;
+                        const id = ids[i];
+                        const count = await fetchMessageCount(id);
+                        const conv = conversations.find((c) => c.id === id);
+                        if (conv) conv.messageCount = count;
                     }
                 }
+
+                await Promise.all(Array.from({ length: Math.min(concurrency, ids.length) }, () => worker()));
+                // Re-render once after all counts are loaded
                 renderConversations();
-            } catch (e) {
-                console.warn('Failed to load orders for mapping', e);
             }
-        }
 
-        function viewConversationWhenReady(conversationId) {
-            const timer = setInterval(() => {
-                if (Array.isArray(conversations) && conversations.find(c => c.id === conversationId)) {
-                    clearInterval(timer);
-                    viewConversation(conversationId);
-                }
-            }, 200);
-            setTimeout(() => clearInterval(timer), 8000);
-        }
-
-        // Fetch message count for a conversation (bounded limit)
-        async function fetchMessageCount(conversationId) {
-            try {
-                const msgs = await fetchJSON(`/conversations/${conversationId}/messages?limit=1000`);
-                return Array.isArray(msgs) ? msgs.length : 0;
-            } catch (err) {
-                console.warn('Failed to fetch message count for', conversationId, err);
-                return 0;
+            function mapStatus(handoverState) {
+                if (!handoverState || handoverState === "none") return "active";
+                if (handoverState === "handover_pending") return "handover";
+                if (handoverState === "handover_in_progress") return "handover";
+                if (handoverState === "resolved_by_manager") return "completed";
+                if (handoverState === "archived") return "archived";
+                return "active";
             }
-        }
 
-        // Load message counts with limited concurrency to avoid flooding the API
-        async function loadMessageCounts() {
-            const ids = conversations.map(c => c.id);
-            const concurrency = 6;
-            let nextIndex = 0;
-
-            async function worker() {
-                while (nextIndex < ids.length) {
-                    const i = nextIndex++;
-                    const id = ids[i];
-                    const count = await fetchMessageCount(id);
-                    const conv = conversations.find(c => c.id === id);
-                    if (conv) conv.messageCount = count;
+            // Helper to check if a conversation matches a given status filter value
+            function conversationMatchesStatus(conversation, statusFilter) {
+                if (!statusFilter) return true;
+                const state = (conversation.handoverState || "none").toLowerCase();
+                switch (statusFilter) {
+                    case "active":
+                        return state === "none";
+                    case "completed":
+                        return state === "resolved_by_manager";
+                    case "handover":
+                        return state === "handover_pending" || state === "handover_in_progress";
+                    case "archived":
+                        return state === "archived";
+                    default:
+                        return (conversation.status || "").toLowerCase() === statusFilter;
                 }
             }
 
-            await Promise.all(Array.from({ length: Math.min(concurrency, ids.length) }, () => worker()));
-            // Re-render once after all counts are loaded
-            renderConversations();
-        }
-
-        function mapStatus(handoverState) {
-            if (!handoverState || handoverState === 'none') return 'active';
-            if (handoverState === 'handover_pending') return 'handover';
-            if (handoverState === 'handover_in_progress') return 'handover';
-            if (handoverState === 'resolved_by_manager') return 'completed';
-            if (handoverState === 'archived') return 'archived';
-            return 'active';
-        }
-
-        // Helper to check if a conversation matches a given status filter value
-        function conversationMatchesStatus(conversation, statusFilter) {
-            if (!statusFilter) return true;
-            const state = (conversation.handoverState || 'none').toLowerCase();
-            switch (statusFilter) {
-                case 'active':
-                    return state === 'none';
-                case 'completed':
-                    return state === 'resolved_by_manager';
-                case 'handover':
-                    return state === 'handover_pending' || state === 'handover_in_progress';
-                case 'archived':
-                    return state === 'archived';
-                default:
-                    return (conversation.status || '').toLowerCase() === statusFilter;
+            function formatDateTime(value) {
+                if (!value) return "";
+                try {
+                    const d = new Date(value);
+                    const yyyy = d.getFullYear();
+                    const mm = String(d.getMonth() + 1).padStart(2, "0");
+                    const dd = String(d.getDate()).padStart(2, "0");
+                    const hh = String(d.getHours()).padStart(2, "0");
+                    const mi = String(d.getMinutes()).padStart(2, "0");
+                    return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+                } catch {
+                    return String(value);
+                }
             }
-        }
 
-        function formatDateTime(value) {
-            if (!value) return '';
-            try {
-                const d = new Date(value);
-                const yyyy = d.getFullYear();
-                const mm = String(d.getMonth() + 1).padStart(2, '0');
-                const dd = String(d.getDate()).padStart(2, '0');
-                const hh = String(d.getHours()).padStart(2, '0');
-                const mi = String(d.getMinutes()).padStart(2, '0');
-                return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
-            } catch {
-                return String(value);
+            // Update statistics
+            function updateStatistics() {
+                const total = conversations.length;
+                const active = conversations.filter((c) => conversationMatchesStatus(c, "active")).length;
+                const handover = conversations.filter((c) => conversationMatchesStatus(c, "handover")).length;
+                const avgResponseTime = calculateAverageResponseTime();
+
+                document.getElementById("total-conversations").textContent = total;
+                document.getElementById("active-conversations").textContent = active;
+                document.getElementById("handover-count").textContent = handover;
+                document.getElementById("avg-response-time").textContent = avgResponseTime + "s";
             }
-        }
 
-        // Update statistics
-        function updateStatistics() {
-            const total = conversations.length;
-            const active = conversations.filter(c => conversationMatchesStatus(c, 'active')).length;
-            const handover = conversations.filter(c => conversationMatchesStatus(c, 'handover')).length;
-            const avgResponseTime = calculateAverageResponseTime();
+            // Calculate average response time (simulated)
+            function calculateAverageResponseTime() {
+                return Math.floor(Math.random() * 30) + 15; // 15-45 seconds
+            }
 
-            document.getElementById('total-conversations').textContent = total;
-            document.getElementById('active-conversations').textContent = active;
-            document.getElementById('handover-count').textContent = handover;
-            document.getElementById('avg-response-time').textContent = avgResponseTime + 's';
-        }
+            // Render conversations table
+            function renderConversations() {
+                const tbody = document.getElementById("conversations-tbody");
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                const pageConversations = filteredConversations.slice(startIndex, endIndex);
 
-        // Calculate average response time (simulated)
-        function calculateAverageResponseTime() {
-            return Math.floor(Math.random() * 30) + 15; // 15-45 seconds
-        }
-
-        // Render conversations table
-        function renderConversations() {
-            const tbody = document.getElementById('conversations-tbody');
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const pageConversations = filteredConversations.slice(startIndex, endIndex);
-
-            const t = (k) => (window.I18N && I18N.t) ? I18N.t(k) : k;
-            tbody.innerHTML = pageConversations.map(conversation => `
+                const t = (k) => (window.I18N && I18N.t ? I18N.t(k) : k);
+                tbody.innerHTML = pageConversations
+                    .map(
+                        (conversation) => `
                 <tr>
                     <td>
                         <div class="customer-info">
@@ -872,214 +870,241 @@
                     </td>
                     <td>
                         <span class="status-badge status-${conversation.status}">
-                            ${t('conversationHistory.status.' + conversation.status)}
+                            ${t("conversationHistory.status." + conversation.status)}
                         </span>
                     </td>
                     <td>
                         <span class="priority-badge priority-${conversation.priority}">
-                            ${t('conversationHistory.priority.' + conversation.priority)}
+                            ${t("conversationHistory.priority." + conversation.priority)}
                         </span>
                     </td>
                     <td>${conversation.started}</td>
                     <td>${conversation.lastActivity}</td>
-                    <td>${conversation.messageCount ?? ''}</td>
+                    <td>${conversation.messageCount ?? ""}</td>
                     <td>
                         <div class="action-buttons">${renderActionButtons(conversation)}</div>
                     </td>
                 </tr>
-            `).join('');
-        }
-
-        // Build action buttons HTML per row
-        function renderActionButtons(conversation) {
-            const buttons = [];
-            const t = (k) => (window.I18N && I18N.t) ? I18N.t(k) : k;
-            buttons.push(`<button class="btn btn-sm btn-view" onclick="viewConversation(${conversation.id})">👁️ ${t('conversationHistory.actions.view')}</button>`);
-            const state = String(conversation.handoverState || '').toLowerCase();
-            if (state === 'handover_pending') {
-                buttons.push(`<button class="btn btn-sm btn-edit" onclick="takeConversation(${conversation.id})">🚀 ${t('conversationHistory.actions.inProgress')}</button>`);
-            }
-            if (state === 'handover_in_progress') {
-                buttons.push(`<button class="btn btn-sm btn-edit" onclick="resolveConversation(${conversation.id})">✅ ${t('conversationHistory.actions.resolve')}</button>`);
-            }
-            if (conversation.customer_id) {
-                buttons.push(`<button class="btn btn-sm btn-secondary" onclick="navigateToCustomer(${conversation.customer_id})">👤 ${t('conversationHistory.actions.viewCustomer') || 'Customer'}</button>`);
-            }
-            const orderId = convIdToOrderId[conversation.id];
-            if (orderId) {
-                buttons.push(`<button class="btn btn-sm" onclick="navigateToOrder(${orderId})">🧾 ${t('conversationHistory.actions.viewOrder') || 'Order'}</button>`);
-            }
-            if (__currentUserRole !== 'manager') {
-                buttons.push(`<button class="btn btn-sm btn-delete" onclick="deleteConversation(${conversation.id})">🗑️ ${t('conversationHistory.actions.delete')}</button>`);
-            }
-            return buttons.join('');
-        }
-
-        // Render pagination
-        function renderPagination() {
-            const totalPages = Math.ceil(filteredConversations.length / itemsPerPage);
-            const pagination = document.getElementById('pagination');
-
-            if (totalPages <= 1) {
-                pagination.innerHTML = '';
-                return;
+            `
+                    )
+                    .join("");
             }
 
-            const t = (k) => (window.I18N && I18N._dict && I18N._dict[k]) ? I18N._dict[k] : k;
-            let paginationHTML = `
-                <button onclick="changePage(1)" ${currentPage === 1 ? 'disabled' : ''}>« ${t('conversationHistory.pagination.first')}</button>
-                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹ ${t('conversationHistory.pagination.prev')}</button>
-            `;
-
-            for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
-                paginationHTML += `
-                    <button onclick="changePage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>
-                `;
+            // Build action buttons HTML per row
+            function renderActionButtons(conversation) {
+                const buttons = [];
+                const t = (k) => (window.I18N && I18N.t ? I18N.t(k) : k);
+                buttons.push(`<button class="btn btn-sm btn-view" onclick="viewConversation(${conversation.id})">👁️ ${t("conversationHistory.actions.view")}</button>`);
+                const state = String(conversation.handoverState || "").toLowerCase();
+                if (state === "handover_pending") {
+                    buttons.push(`<button class="btn btn-sm btn-edit" onclick="takeConversation(${conversation.id})">🚀 ${t("conversationHistory.actions.inProgress")}</button>`);
+                }
+                if (state === "handover_in_progress") {
+                    buttons.push(`<button class="btn btn-sm btn-edit" onclick="resolveConversation(${conversation.id})">✅ ${t("conversationHistory.actions.resolve")}</button>`);
+                }
+                if (conversation.customer_id) {
+                    buttons.push(
+                        `<button class="btn btn-sm btn-secondary" onclick="navigateToCustomer(${conversation.customer_id})">👤 ${t("conversationHistory.actions.viewCustomer") || "Customer"}</button>`
+                    );
+                }
+                const orderId = convIdToOrderId[conversation.id];
+                if (orderId) {
+                    buttons.push(`<button class="btn btn-sm" onclick="navigateToOrder(${orderId})">🧾 ${t("conversationHistory.actions.viewOrder") || "Order"}</button>`);
+                }
+                if (__currentUserRole !== "manager") {
+                    buttons.push(`<button class="btn btn-sm btn-delete" onclick="deleteConversation(${conversation.id})">🗑️ ${t("conversationHistory.actions.delete")}</button>`);
+                }
+                return buttons.join("");
             }
 
-            paginationHTML += `
-                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>${t('conversationHistory.pagination.next')} ›</button>
-                <button onclick="changePage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>${t('conversationHistory.pagination.last')} »</button>
-            `;
+            // Render pagination
+            function renderPagination() {
+                const totalPages = Math.ceil(filteredConversations.length / itemsPerPage);
+                const pagination = document.getElementById("pagination");
 
-            pagination.innerHTML = paginationHTML;
-        }
-
-        // Re-render dynamic content on language change
-        document.addEventListener('i18n:languageChanged', function () {
-            try {
-                renderConversations();
-                renderPagination();
-            } catch { }
-        });
-
-        // Change page
-        function changePage(page) {
-            currentPage = page;
-            renderConversations();
-            renderPagination();
-        }
-
-        // Apply filters
-        function applyFilters() {
-            const statusFilter = document.getElementById('status-filter').value;
-            const priorityFilter = document.getElementById('priority-filter').value;
-            const dateFrom = document.getElementById('date-from').value;
-            const dateTo = document.getElementById('date-to').value;
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-
-            filteredConversations = conversations.filter(conversation => {
-                // Status filter
-                if (!conversationMatchesStatus(conversation, statusFilter)) return false;
-
-                // Priority filter
-                if (priorityFilter && conversation.priority !== priorityFilter) return false;
-
-                // Date filter
-                if (dateFrom && conversation.started < dateFrom) return false;
-                if (dateTo && conversation.started > dateTo) return false;
-
-                // Search filter
-                if (searchTerm) {
-                    const searchableText = `${conversation.customer.name} ${conversation.customer.email} ${conversation.preview}`.toLowerCase();
-                    if (!searchableText.includes(searchTerm)) return false;
+                if (totalPages <= 1) {
+                    pagination.innerHTML = "";
+                    return;
                 }
 
-                return true;
+                const t = (k) => (window.I18N && I18N._dict && I18N._dict[k] ? I18N._dict[k] : k);
+                let paginationHTML = `
+                <button onclick="changePage(1)" ${currentPage === 1 ? "disabled" : ""}>« ${t("conversationHistory.pagination.first")}</button>
+                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? "disabled" : ""}>‹ ${t("conversationHistory.pagination.prev")}</button>
+            `;
+
+                for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+                    paginationHTML += `
+                    <button onclick="changePage(${i})" class="${i === currentPage ? "active" : ""}">${i}</button>
+                `;
+                }
+
+                paginationHTML += `
+                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? "disabled" : ""}>${t("conversationHistory.pagination.next")} ›</button>
+                <button onclick="changePage(${totalPages})" ${currentPage === totalPages ? "disabled" : ""}>${t("conversationHistory.pagination.last")} »</button>
+            `;
+
+                pagination.innerHTML = paginationHTML;
+            }
+
+            // Re-render dynamic content on language change
+            document.addEventListener("i18n:languageChanged", function () {
+                try {
+                    renderConversations();
+                    renderPagination();
+                } catch {}
             });
 
-            currentPage = 1;
-            renderConversations();
-            renderPagination();
-        }
+            // Change page
+            function changePage(page) {
+                currentPage = page;
+                renderConversations();
+                renderPagination();
+            }
 
-        // Clear filters
-        function clearFilters() {
-            document.getElementById('status-filter').value = '';
-            document.getElementById('priority-filter').value = '';
-            document.getElementById('date-from').value = '';
-            document.getElementById('date-to').value = '';
-            document.getElementById('search-input').value = '';
+            // Apply filters
+            function applyFilters() {
+                const statusFilter = document.getElementById("status-filter").value;
+                const priorityFilter = document.getElementById("priority-filter").value;
+                const dateFrom = document.getElementById("date-from").value;
+                const dateTo = document.getElementById("date-to").value;
+                const searchTerm = document.getElementById("search-input").value.toLowerCase();
 
-            filteredConversations = [...conversations];
-            currentPage = 1;
-            renderConversations();
-            renderPagination();
-        }
+                filteredConversations = conversations.filter((conversation) => {
+                    // Status filter
+                    if (!conversationMatchesStatus(conversation, statusFilter)) return false;
 
-        // View conversation details
-        async function viewConversation(id) {
-            const base = conversations.find(c => c.id === id);
-            if (!base) return;
-            const modal = document.getElementById('conversation-modal');
-            const modalContent = document.getElementById('modal-content');
+                    // Priority filter
+                    if (priorityFilter && conversation.priority !== priorityFilter) return false;
 
-            try {
-                const [details, messages] = await Promise.all([
-                    fetchJSON(`/conversations/${id}`),
-                    fetchJSON(`/conversations/${id}/messages?limit=500`)
-                ]);
+                    // Date filter
+                    if (dateFrom && conversation.started < dateFrom) return false;
+                    if (dateTo && conversation.started > dateTo) return false;
 
-                const mappedMessages = (messages || []).map(m => {
-                    const sender = m.sender === 'user' ? 'customer' : (m.sender === 'bot' ? 'bot' : 'manager');
-                    const senderKey = sender === 'customer' ? 'conversationHistory.sender.customer' : (sender === 'bot' ? 'conversationHistory.sender.bot' : 'conversationHistory.sender.manager');
-                    const senderLabel = (window.I18N && I18N.t) ? I18N.t(senderKey) : (sender === 'customer' ? '👤 Customer' : sender === 'bot' ? '🤖 Bot' : '👨 Manager');
-                    return {
-                        sender,
-                        senderLabel,
-                        content: m.text,
-                        timestamp: formatDateTime(m.timestamp)
-                    };
+                    // Search filter
+                    if (searchTerm) {
+                        const searchableText = `${conversation.customer.name} ${conversation.customer.email} ${conversation.preview}`.toLowerCase();
+                        if (!searchableText.includes(searchTerm)) return false;
+                    }
+
+                    return true;
                 });
 
-                const relatedOrderId = convIdToOrderId[id] || (Array.isArray(ordersCache) ? (ordersCache.find(o => o.conversation_id === id) || {}).id : undefined);
-                modalContent.innerHTML = `
+                currentPage = 1;
+                renderConversations();
+                renderPagination();
+            }
+
+            // Clear filters
+            function clearFilters() {
+                document.getElementById("status-filter").value = "";
+                document.getElementById("priority-filter").value = "";
+                document.getElementById("date-from").value = "";
+                document.getElementById("date-to").value = "";
+                document.getElementById("search-input").value = "";
+
+                filteredConversations = [...conversations];
+                currentPage = 1;
+                renderConversations();
+                renderPagination();
+            }
+
+            // View conversation details
+            async function viewConversation(id) {
+                const base = conversations.find((c) => c.id === id);
+                if (!base) return;
+                const modal = document.getElementById("conversation-modal");
+                const modalContent = document.getElementById("modal-content");
+
+                try {
+                    const [details, messages] = await Promise.all([fetchJSON(`/conversations/${id}`), fetchJSON(`/conversations/${id}/messages?limit=500`)]);
+
+                    const mappedMessages = (messages || []).map((m) => {
+                        const sender = m.sender === "user" ? "customer" : m.sender === "bot" ? "bot" : "manager";
+                        const senderKey = sender === "customer" ? "conversationHistory.sender.customer" : sender === "bot" ? "conversationHistory.sender.bot" : "conversationHistory.sender.manager";
+                        const senderLabel = window.I18N && I18N.t ? I18N.t(senderKey) : sender === "customer" ? "👤 Customer" : sender === "bot" ? "🤖 Bot" : "👨 Manager";
+                        return {
+                            sender,
+                            senderLabel,
+                            content: m.text,
+                            timestamp: formatDateTime(m.timestamp),
+                        };
+                    });
+
+                    const relatedOrderId = convIdToOrderId[id] || (Array.isArray(ordersCache) ? (ordersCache.find((o) => o.conversation_id === id) || {}).id : undefined);
+                    modalContent.innerHTML = `
                 <div class="conversation-details">
                     <div class="detail-row">
-                        <span class="detail-label">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.sessionId') : 'Session ID:'}</span>
+                        <span class="detail-label">${window.I18N && I18N.t ? I18N.t("conversationHistory.modal.sessionId") : "Session ID:"}</span>
                         <span class="detail-value">${details.session_id}</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.status') : 'Status:'}</span>
+                        <span class="detail-label">${window.I18N && I18N.t ? I18N.t("conversationHistory.modal.status") : "Status:"}</span>
                         <span class="detail-value">
                             <span class="status-badge status-${mapStatus(details.handover_state)}">
-                                ${(window.I18N && I18N.t) ? I18N.t('conversationHistory.status.' + mapStatus(details.handover_state)) : (mapStatus(details.handover_state).charAt(0).toUpperCase() + mapStatus(details.handover_state).slice(1))}
+                                ${
+                                    window.I18N && I18N.t
+                                        ? I18N.t("conversationHistory.status." + mapStatus(details.handover_state))
+                                        : mapStatus(details.handover_state).charAt(0).toUpperCase() + mapStatus(details.handover_state).slice(1)
+                                }
                             </span>
                         </span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.started') : 'Started:'}</span>
+                        <span class="detail-label">${window.I18N && I18N.t ? I18N.t("conversationHistory.modal.started") : "Started:"}</span>
                         <span class="detail-value">${formatDateTime(details.created_at)}</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.lastActivity') : 'Last Activity:'}</span>
+                        <span class="detail-label">${window.I18N && I18N.t ? I18N.t("conversationHistory.modal.lastActivity") : "Last Activity:"}</span>
                         <span class="detail-value">${formatDateTime(details.updated_at || details.created_at)}</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.customer') : 'Customer:'}</span>
-                        <span class="detail-value">${details.customer_id ? `#${details.customer_id} <button class=\"btn btn-sm btn-secondary\" onclick=\"navigateToCustomer(${details.customer_id})\">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.actions.viewCustomer') : 'View Customer'}</button>` : '-'}</span>
+                        <span class="detail-label">${window.I18N && I18N.t ? I18N.t("conversationHistory.modal.customer") : "Customer:"}</span>
+                        <span class="detail-value">${
+                            details.customer_id
+                                ? `#${details.customer_id} <button class=\"btn btn-sm btn-secondary\" onclick=\"navigateToCustomer(${details.customer_id})\">${
+                                      window.I18N && I18N.t ? I18N.t("conversationHistory.actions.viewCustomer") : "View Customer"
+                                  }</button>`
+                                : "-"
+                        }</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.order') : 'Order:'}</span>
-                        <span class="detail-value">${relatedOrderId ? `#${relatedOrderId} <button class=\"btn btn-sm\" onclick=\"navigateToOrder(${relatedOrderId})\">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.actions.viewOrder') : 'View Order'}</button>` : '-'}</span>
+                        <span class="detail-label">${window.I18N && I18N.t ? I18N.t("conversationHistory.modal.order") : "Order:"}</span>
+                        <span class="detail-value">${
+                            relatedOrderId
+                                ? `#${relatedOrderId} <button class=\"btn btn-sm\" onclick=\"navigateToOrder(${relatedOrderId})\">${
+                                      window.I18N && I18N.t ? I18N.t("conversationHistory.actions.viewOrder") : "View Order"
+                                  }</button>`
+                                : "-"
+                        }</span>
                     </div>
-                    ${details.handover_reason ? `
+                    ${
+                        details.handover_reason
+                            ? `
                         <div class="detail-row">
-                            <span class="detail-label">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.handoverReason') : 'Handover Reason:'}</span>
+                            <span class="detail-label">${window.I18N && I18N.t ? I18N.t("conversationHistory.modal.handoverReason") : "Handover Reason:"}</span>
                             <span class="detail-value">${details.handover_reason}</span>
                         </div>
-                    ` : ''}
-                    ${details.handover_reason_description ? `
+                    `
+                            : ""
+                    }
+                    ${
+                        details.handover_reason_description
+                            ? `
                         <div class="detail-row">
-                            <span class="detail-label">${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.handoverDescription') : 'Handover Description:'}</span>
+                            <span class="detail-label">${window.I18N && I18N.t ? I18N.t("conversationHistory.modal.handoverDescription") : "Handover Description:"}</span>
                             <span class="detail-value">${details.handover_reason_description}</span>
                         </div>
-                    ` : ''}
+                    `
+                            : ""
+                    }
                 </div>
 
-                <h4>${(window.I18N && I18N.t) ? I18N.t('conversationHistory.modal.messageHistory') : 'Message History'}</h4>
+                <h4>${window.I18N && I18N.t ? I18N.t("conversationHistory.modal.messageHistory") : "Message History"}</h4>
                 <div class="messages-container">
-                    ${mappedMessages.map(message => `
+                    ${mappedMessages
+                        .map(
+                            (message) => `
                         <div class="message-item message ${message.sender}">
                             <div class="message-header">
                                 <span class="message-sender">${message.senderLabel}</span>
@@ -1087,144 +1112,143 @@
                             </div>
                             <div class="message-content">${message.content}</div>
                         </div>
-                    `).join('')}
-                </div>`;
+                    `
+                        )
+                        .join("")}
+                </div>
 
-                modal.style.display = 'block';
+                <h4>${window.I18N && I18N.t ? I18N.t("conversationHistory.modal.messageSummary") : "Message Summary"}</h4>
+                <div class="conversation-details">${details.summary}</div>`;
 
-                // Update message count based on fetched messages for accuracy
-                const conv = conversations.find(c => c.id === id);
-                if (conv) {
-                    conv.messageCount = Array.isArray(messages) ? messages.length : conv.messageCount;
+                    modal.style.display = "block";
+
+                    // Update message count based on fetched messages for accuracy
+                    const conv = conversations.find((c) => c.id === id);
+                    if (conv) {
+                        conv.messageCount = Array.isArray(messages) ? messages.length : conv.messageCount;
+                        renderConversations();
+                    }
+                } catch (e) {
+                    console.error("Failed to load conversation details", e);
+                }
+            }
+
+            // Close modal
+            function closeModal() {
+                document.getElementById("conversation-modal").style.display = "none";
+            }
+
+            // Navigation helpers
+            function navigateToCustomer(customerId) {
+                if (!customerId) return;
+                window.location.href = `/static/customers.html?customerId=${encodeURIComponent(customerId)}`;
+            }
+
+            function navigateToOrder(orderId) {
+                if (!orderId) return;
+                window.location.href = `/static/order-history.html?orderId=${encodeURIComponent(orderId)}`;
+            }
+
+            // Take conversation into progress (handover_pending -> handover_in_progress)
+            async function takeConversation(id) {
+                try {
+                    const updated = await fetchJSON(`/conversations/${id}/take`, { method: "POST" });
+                    // Update local state
+                    const conv = conversations.find((c) => c.id === id);
+                    if (conv) {
+                        conv.handoverState = updated.handover_state;
+                        conv.status = mapStatus(updated.handover_state);
+                        conv.lastActivity = formatDateTime(updated.updated_at || updated.created_at);
+                    }
                     renderConversations();
+                } catch (e) {
+                    console.error("Failed to take conversation", e);
+                    alert("Failed to set conversation In progress.");
                 }
-            } catch (e) {
-                console.error('Failed to load conversation details', e);
             }
-        }
 
-        // Close modal
-        function closeModal() {
-            document.getElementById('conversation-modal').style.display = 'none';
-        }
-
-        // Navigation helpers
-        function navigateToCustomer(customerId) {
-            if (!customerId) return;
-            window.location.href = `/static/customers.html?customerId=${encodeURIComponent(customerId)}`;
-        }
-
-        function navigateToOrder(orderId) {
-            if (!orderId) return;
-            window.location.href = `/static/order-history.html?orderId=${encodeURIComponent(orderId)}`;
-        }
-
-        // Take conversation into progress (handover_pending -> handover_in_progress)
-        async function takeConversation(id) {
-            try {
-                const updated = await fetchJSON(`/conversations/${id}/take`, { method: 'POST' });
-                // Update local state
-                const conv = conversations.find(c => c.id === id);
-                if (conv) {
-                    conv.handoverState = updated.handover_state;
-                    conv.status = mapStatus(updated.handover_state);
-                    conv.lastActivity = formatDateTime(updated.updated_at || updated.created_at);
+            // Resolve conversation (handover_in_progress -> resolved_by_manager)
+            async function resolveConversation(id) {
+                try {
+                    const updated = await fetchJSON(`/conversations/${id}/resolve`, { method: "POST" });
+                    const conv = conversations.find((c) => c.id === id);
+                    if (conv) {
+                        conv.handoverState = updated.handover_state;
+                        conv.status = mapStatus(updated.handover_state);
+                        conv.lastActivity = formatDateTime(updated.updated_at || updated.created_at);
+                    }
+                    renderConversations();
+                } catch (e) {
+                    console.error("Failed to resolve conversation", e);
+                    alert("Failed to mark conversation as resolved.");
                 }
-                renderConversations();
-            } catch (e) {
-                console.error('Failed to take conversation', e);
-                alert('Failed to set conversation In progress.');
             }
-        }
 
-        // Resolve conversation (handover_in_progress -> resolved_by_manager)
-        async function resolveConversation(id) {
-            try {
-                const updated = await fetchJSON(`/conversations/${id}/resolve`, { method: 'POST' });
-                const conv = conversations.find(c => c.id === id);
-                if (conv) {
-                    conv.handoverState = updated.handover_state;
-                    conv.status = mapStatus(updated.handover_state);
-                    conv.lastActivity = formatDateTime(updated.updated_at || updated.created_at);
+            // Delete conversation (requires backend support)
+            async function deleteConversation(id) {
+                if (!confirm("Are you sure you want to delete this conversation?")) return;
+                try {
+                    // Attempt DELETE endpoint; if not implemented, this will fail and fall back
+                    await fetchJSON(`/conversations/${id}`, { method: "DELETE" });
+                    // Remove locally
+                    conversations = conversations.filter((c) => c.id !== id);
+                    filteredConversations = filteredConversations.filter((c) => c.id !== id);
+                    updateStatistics();
+                    renderConversations();
+                    renderPagination();
+                } catch (e) {
+                    console.warn("Delete API not available or failed", e);
+                    alert("Deleting conversations is not supported by the server yet.");
                 }
-                renderConversations();
-            } catch (e) {
-                console.error('Failed to resolve conversation', e);
-                alert('Failed to mark conversation as resolved.');
             }
-        }
 
-        // Delete conversation (requires backend support)
-        async function deleteConversation(id) {
-            if (!confirm('Are you sure you want to delete this conversation?')) return;
-            try {
-                // Attempt DELETE endpoint; if not implemented, this will fail and fall back
-                await fetchJSON(`/conversations/${id}`, { method: 'DELETE' });
-                // Remove locally
-                conversations = conversations.filter(c => c.id !== id);
-                filteredConversations = filteredConversations.filter(c => c.id !== id);
-                updateStatistics();
-                renderConversations();
-                renderPagination();
-            } catch (e) {
-                console.warn('Delete API not available or failed', e);
-                alert('Deleting conversations is not supported by the server yet.');
+            // Export conversations
+            function exportConversations() {
+                const csvContent = generateCSV(filteredConversations);
+                const blob = new Blob([csvContent], { type: "text/csv" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `conversations-${new Date().toISOString().split("T")[0]}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
             }
-        }
 
-        // Export conversations
-        function exportConversations() {
-            const csvContent = generateCSV(filteredConversations);
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `conversations-${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
+            // Generate CSV content
+            function generateCSV(data) {
+                const t = (k) => (window.I18N && I18N._dict && I18N._dict[k] ? I18N._dict[k] : k);
+                const headers = [t("conversationHistory.csv.sessionId"), t("conversationHistory.table.status"), t("conversationHistory.table.started"), t("conversationHistory.table.lastActivity")];
+                const csvRows = [headers.join(",")];
 
-        // Generate CSV content
-        function generateCSV(data) {
-            const t = (k) => (window.I18N && I18N._dict && I18N._dict[k]) ? I18N._dict[k] : k;
-            const headers = [t('conversationHistory.csv.sessionId'), t('conversationHistory.table.status'), t('conversationHistory.table.started'), t('conversationHistory.table.lastActivity')];
-            const csvRows = [headers.join(',')];
+                data.forEach((conversation) => {
+                    const row = [conversation.sessionId || conversation.customer.name, t("conversationHistory.status." + conversation.status), conversation.started, conversation.lastActivity];
+                    csvRows.push(row.join(","));
+                });
 
-            data.forEach(conversation => {
-                const row = [
-                    conversation.sessionId || conversation.customer.name,
-                    t('conversationHistory.status.' + conversation.status),
-                    conversation.started,
-                    conversation.lastActivity
-                ];
-                csvRows.push(row.join(','));
-            });
-
-            return csvRows.join('\n');
-        }
-
-        // Refresh data
-        function refreshData() {
-            loadConversations();
-        }
-
-        // Logout function
-        function logout() {
-            localStorage.removeItem('access_token');
-            window.location.href = '/login';
-        }
-
-        // Close modal when clicking outside
-        window.onclick = function (event) {
-            const modal = document.getElementById('conversation-modal');
-            if (event.target === modal) {
-                closeModal();
+                return csvRows.join("\n");
             }
-        }
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', checkAuth);
-    </script>
-</body>
+            // Refresh data
+            function refreshData() {
+                loadConversations();
+            }
 
+            // Logout function
+            function logout() {
+                localStorage.removeItem("access_token");
+                window.location.href = "/login";
+            }
+
+            // Close modal when clicking outside
+            window.onclick = function (event) {
+                const modal = document.getElementById("conversation-modal");
+                if (event.target === modal) {
+                    closeModal();
+                }
+            };
+
+            // Initialize on page load
+            document.addEventListener("DOMContentLoaded", checkAuth);
+        </script>
+    </body>
 </html>
