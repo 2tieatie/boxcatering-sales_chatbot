@@ -485,11 +485,8 @@ class WebScraperService:
         # Remove existing items
         db.query(AssortmentItem).delete()
         db.commit()
-        # logger.debug(f"products: {products}")
-
 
         for pr in products:
-            # logger.debug(f"{pr}")
             try:
                 item = AssortmentItem(name=pr["title"], description=pr["description"], price_uah=pr["price"], guests=pr["guests"], weight=pr["weight"])
                 logger.debug(f"Adding item: {pr["title"]}")
