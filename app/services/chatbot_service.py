@@ -73,11 +73,13 @@ class ChatbotService:
             messages.append({"role": "user", "content": chat_request.message})
 
             # Functions to search and make specific actions
-            function_schema = {
+            get_products_schema = {
                 "name": "get_products",
                 "description": (
                     "Повертає список товарів з асортименту, що відповідають запиту користувача. "
-                    "Використовується для пошуку страв, закусок, боксів, інгредієнтів, категорій тощо."
+                    "Використовується для пошуку страв, закусок, боксів, інгредієнтів, категорій."
+                    "Не використовуй для уточнення даних по вказаному товару, вартості, вазі, кількості людей."
+                    "Формуй промт тільки із категорій чи інгредієнтів, або слово 'набір, бокс'"
                 ),
                 "parameters": {
                     "type": "object",
@@ -85,8 +87,30 @@ class ChatbotService:
                         "query": {
                             "type": "string",
                             "description": (
-                                "Запит користувача, наприклад 'салати', 'круасани', 'вегетаріанське', "
-                                "'порадити бокси', 'чи є такі в наявності', 'гарячі закуски', 'порекомендуй', 'страви'"
+                                "Запит користувача на пошук, пораду, рекомендацію, наприклад 'салати', 'круасани', 'вегетаріанське', 'чи є такі в наявності', 'гарячі закуски', 'страви', 'порекомендуй', 'будь які страви', 'всі страви','порадити бокси'"
+                            )
+                        }
+                    },
+                    "required": ["query"]
+                }
+            }
+
+            get_products_data = {
+                "name": "get_products_data",
+                "description": (
+                    "Повертає вартість всіх вказаних користувачем товарів із розрахунком на їх кількість"
+                    "Формуй промт тільки по назвам товарів та сумуй вартість із опису, або мета поля 'вартість'"
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": (
+                                "Запит користувача на вартість, кількість товарів для осіб"
+                                "Формуй промт тільки по назвам товарів та сумуй вартість із опису, або мета поля 'вартість'"
+                                "Повертай конкретну інформацію по товару яку хоче дізнатися користувач"
+                                "Не повертай перелік товарів, або описи про товари що не вказав користувач"
                             )
                         }
                     },
@@ -99,7 +123,7 @@ class ChatbotService:
             request_kwargs = {
                 "model": chosen_model,
                 "messages": messages,
-                "functions": [function_schema],
+                "functions": [get_products_schema, get_products_data],
                 "function_call": "auto",
             }
 
@@ -161,21 +185,47 @@ class ChatbotService:
                 args = json.loads(message.function_call.arguments)
 
                 if func_name == "get_products":
+                    # logger.debug(f"Function call: {func_name} with args: {args}")
                     product_results = self.get_products(args["query"])
+                    # logger.debug(f"Found products: {product_results}")
                     product_text = "\n".join(f"- {name}" for name in product_results)
-                    messages.append({
-                        "role": "system",
-                        "content": (
-                            "Ось перелік товарів, які відповідають запиту користувача:\n"
-                            f"{product_text}\n"
-                            "Сформуй теплу, природну відповідь для клієнта, поясни, чому ці варіанти підходять, "
-                            "і запропонуй наступні кроки (наприклад, уточнити кількість, дату доставки тощо)."
-                        )
-                    })
+                    # logger.debug(f"Product text: {product_text}")
+                    if product_text: 
+                        messages = [{
+                            "role": "system",
+                            "content": (
+                                "Ось перелік товарів, які відповідають запиту користувача:\n"
+                                f"{product_text}\n"
+                                "Сформуй відповідь для клієнта, поясни, чому ці варіанти підходять, Запропонуй наступні кроки (наприклад, уточнити кількість, дату доставки тощо)."
+                            )
+                        }]
+                    else:
+                        messages = [{
+                            "role": "system",
+                            "content": (
+                                "Сформуй відповідь для клієнта, поясни що не знайдено варіантів по його запиту. Запропонуй уточнити якімь конкретні деталі, побажання, що подобається."
+                            )
+                        }]
 
                     request_kwargs["messages"] = messages
 
                     response = self.client.chat.completions.create(**request_kwargs)
+                elif func_name == "get_products_data":
+                    product_results = self.get_products(args["query"])
+                    product_text = "\n".join(f"- {name}" for name in product_results)
+                    messages = {
+                        "role": "system",
+                        "content": (
+                            "Ось інформація по товарам для користувача:\n"
+                            f"{product_text}\n"
+                            "Сформуй відповідь для клієнта, із вказанням даних які хоче дізнатися користувач (наприклад: ціна, скільки потрібно боксів на кількість осіб, тощо)."
+                        )
+                    }
+
+                    request_kwargs["messages"].append(messages)
+
+                    response = self.client.chat.completions.create(**request_kwargs)
+
 
             ai_response = (response.choices[0].message.content or "")
             logger.debug(f"AI response: {ai_response}")
@@ -387,18 +437,15 @@ class ChatbotService:
         system_inctruction = ""
         if language == "uk":
             system_inctruction = """
-        Завжди перевіряй інформацію, що надає користувач на предмет реалістичності та відповідності нашим задачам.
-        Приклад: Клієнт хоче замовлення на 13:00, а зараз 13:30 - тобто фізично неможливо виконати, оскільки доставка 2 години від часу замовлення (детальніше в документах). Клієнт хоче купити тостер - фізично не можливо оскільки ми кейтеринг компанія.
+        Завжди перевіряй інформацію, що надає користувач на предмет реалістичності та відповідності нашим задачам. Замовлення можливі тільки від двох годин від поточного часу, але не пізніше 18:00. Клієнт хоче купити тостер - фізично не можливо оскільки ми кейтеринг компанія.
         Не уточнюй додатково конфліктну інформацію.
         Приклад: Якщо вказана адреса доставки, значить клієнт хоче замовити доставку, не самовивіз.
-        Не пропонуй те чого немає в асортименті.
-        Завжди перевіряй чи додайється вартість доставки до загальної суми (детальніше в документах).
-        Перевіряй контактні дані що вказує користувач, формати телефона, емейла, тощо.
+        Не пропонуй те чого немає в асортименті, асортимент тільки із функції 'get_products', ніякого придумування.
+        Безкоштовна доставка по Києву та Одесі на суму замовлення від 3000 грн, доставка може виконуватися по області до 30км.
+        Перевіряй контактні дані, що вказує користувач, формати телефона, емейла, тощо.
             """
         else:
             system_inctruction = """
-        Always check the information provided by the user for realism and compliance with our tasks.
-        Example: The customer wants an order for 13:00, and now it is 13:30 - that is, it is physically impossible to fulfill it, since delivery is 2 hours from the time of the order. The customer wants to buy a toaster - it is physically impossible because we are a catering company.
             """
 
         company_name = (config or {}).get("company_name")
@@ -488,8 +535,10 @@ class ChatbotService:
         Do not request a handover to a human manager. Provide your best, most helpful answer directly to the customer.
             """
 
-        context_docs_block = self._get_context_block(config)
-        examples_block = self._get_examples_block(config)
+        # context_docs_block = self._get_context_block(config)
+        # examples_block = self._get_examples_block(config)
+        context_docs_block = ""
+        examples_block = ""
 
         order_flow_block_uk = f"""
         Послідовність оформлення замовлення (дуже важливо дотримуватися кроків):
@@ -497,10 +546,10 @@ class ChatbotService:
            Якщо клієнт каже "підходять такі бокси" / "беремо ці" / подібне — вважай, що позиції обрано.
            У полі menu_items зафіксуй вибрані позиції коротким переліком; якщо кількість не вказана,
            вважай 1 шт. на кожну вибрану позицію (не питай додатково про кількість, якщо це не критично).
-           Додатково внеси у поле guests_count кількість гостей, виходячи із позицій.
+           Додатково внеси у поле guests_count кількість гостей, виходячи із даних про позиції/асортимент.
         2) Коли клієнт визначився з позиціями, запитай дату доставки.
            Якщо дата надана без року (формат DD.MM або DD/MM), вважай поточний рік і перетвори у формат YYYY-MM-DD.
-        3) Зафіксуй у полі priority срочність замовлення ('low', 'medium', 'high') із розрахунку на години до доставки.
+        3) Зафіксуй у полі priority срочність замовлення ('low', 'medium', 'high') із розрахунку на години до доставки. Через 2 години - 'high', через 4 - 'medium', через 6 - 'low'.
         4) Потім попроси дані для доставки: ім'я, телефон, адреса доставки.
         5) Якщо чогось не вистачає — запитуй лише відсутні дані одним-двома питаннями. Не запитуй нічого зайвого.
         6) Лише коли є: menu_items, delivery_date, customer_name, customer_phone, customer_address —
@@ -542,11 +591,11 @@ class ChatbotService:
 
         {('\n'.join(context_lines)) if context_lines else ''}
 
-        Your goal is to make customers' ordering experience as convenient and pleasant as possible:
-        • Answer questions about menus, prices, and services
-        • Help customers place orders step by step
-        • Share information about discounts and special offers
-        • Handle any customer service inquiries
+        # Your goal is to make customers' ordering experience as convenient and pleasant as possible:
+        # • Answer questions about menus, prices, and services
+        # • Help customers place orders step by step
+        # • Share information about discounts and special offers
+        # • Handle any customer service inquiries
 
         {order_flow_block}
 
@@ -648,28 +697,6 @@ class ChatbotService:
                 combined = self._load_context_documents(docs_dir, max_chars)
                 # Cache even empty string so we don't keep hitting disk
                 self._context_docs_cache[cache_key] = combined
-
-            # Get all products  
-            db = next(get_db())
-            products = db.query(AssortmentItem).all()
-            documents = []
-            for product in products:
-                content = f"{product.name}. {product.description}"
-                meta = {
-                    "id": product.id,
-                    "guests": product.guests,
-                    "price": product.price_uah,
-                    "weight": product.weight
-                }
-                doc = Document(content=content, meta=meta)
-                documents.append(doc)
-
-            document_embedder = OpenAIDocumentEmbedder(api_key=Secret.from_token(self.openai_api_key))
-            documents_with_embeddings = document_embedder.run(documents)['documents']
-            self.document_store.write_documents(documents_with_embeddings, policy="skip")
-
-            # return ""
-
 
             if not combined:
                 return ""
@@ -1017,8 +1044,27 @@ class ChatbotService:
         
     def get_products(self, query: str):
         try:
+            # Get all products  
             db = next(get_db())
+            products = db.query(AssortmentItem).all()
+            # logger.info(f"Found {products}")
+            documents = []
+            for product in products:
+                content = f"[ID:{product.id}] {product.name}. {product.description}. {product.price_uah} гривень. {product.weight} грам. На {product.guests} гостей/осіб."
+                meta = {
+                    "id": product.id,
+                    "guests": product.guests,
+                    "price": product.price_uah,
+                    "weight": product.weight
+                }
+                doc = Document(content=content, meta=meta)
+                documents.append(doc)
 
+            document_embedder = OpenAIDocumentEmbedder(api_key=Secret.from_token(self.openai_api_key))
+            documents_with_embeddings = document_embedder.run(documents)['documents']
+            self.document_store.write_documents(documents_with_embeddings, policy="update")
+
+            # Search for similar products
             query_pipeline = Pipeline()
             query_pipeline.add_component("text_embedder", OpenAITextEmbedder(api_key=Secret.from_token(self.openai_api_key)))
             query_pipeline.add_component("retriever", QdrantEmbeddingRetriever(document_store=self.document_store))
@@ -1027,19 +1073,63 @@ class ChatbotService:
             results = query_pipeline.run({
                 "text_embedder":{"text": query},
                 "retriever": {
-                    "top_k": 5,
+                    "top_k": 10,
                     "score_threshold": 0.85 # 0 => 1
                 }
             })
 
+            # logger.debug(f"Resultі: {results}")
+
             result_documents = []
             for doc in results["retriever"]["documents"]:
-                id = doc.meta.get("id")
-                if id is not None:
-                    names = db.query(AssortmentItem.name).filter(AssortmentItem.id == id).all()
-                    result_documents.append(names[0].name)  # Get the first name from the tuple of names
+                result_documents.append(doc.content)
+                
             return result_documents
         except Exception as e:
             logger.warning(f"Failed to retrieve products: {e}")
             return []
         
+    def get_products_data(self, query: str):
+        try:
+            # Get all products  
+            db = next(get_db())
+            products = db.query(AssortmentItem).all()
+            # logger.info(f"Found {products}")
+            documents = []
+            for product in products:
+                content = f"[ID:{product.id}] {product.name}. {product.description}. {product.price_uah} гривень. {product.weight} грам. На {product.guests} гостей/осіб."
+                meta = {
+                    "id": product.id,
+                    "guests": product.guests,
+                    "price": product.price_uah,
+                    "weight": product.weight
+                }
+                doc = Document(content=content, meta=meta)
+                documents.append(doc)
+
+            document_embedder = OpenAIDocumentEmbedder(api_key=Secret.from_token(self.openai_api_key))
+            documents_with_embeddings = document_embedder.run(documents)['documents']
+            self.document_store.write_documents(documents_with_embeddings, policy="update")
+
+            # Search for similar products
+            query_pipeline = Pipeline()
+            query_pipeline.add_component("text_embedder", OpenAITextEmbedder(api_key=Secret.from_token(self.openai_api_key)))
+            query_pipeline.add_component("retriever", QdrantEmbeddingRetriever(document_store=self.document_store))
+            query_pipeline.connect("text_embedder.embedding", "retriever.query_embedding")
+
+            results = query_pipeline.run({
+                "text_embedder":{"text": query},
+                "retriever": {
+                    "top_k": len(query.split(",")),
+                    "score_threshold": 1 # 0 => 1
+                }
+            })
+
+            result_documents = []
+            for doc in results["retriever"]["documents"]:
+                result_documents.append(doc.content)
+                
+            return result_documents
+        except Exception as e:
+            logger.warning(f"Failed to retrieve products: {e}")
+            return []
