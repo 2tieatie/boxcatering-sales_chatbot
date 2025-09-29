@@ -34,3 +34,8 @@ class ChatResponse(BaseModel):
     action: Optional[str] = None
     # Optional payload for actions, free-form to allow incremental evolution
     data: Optional[Dict[str, Any]] = None
+
+class SummaryRequest(BaseModel):
+    """Summary request schema."""
+    conversation_id: int
+    mappedMessages: str
