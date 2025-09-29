@@ -11,7 +11,7 @@ from openai import OpenAI
 from app.database import get_db
 from app.services.chatbot_service import ChatbotService
 from app.services.telegram_service import TelegramService
-from app.schemas.chat import ChatRequest, ChatResponse
+from app.schemas.chat import ChatRequest, ChatResponse, SummaryRequest
 from app.schemas.order import OrderCreate
 from app.models import Order
 from app.models import Conversation
