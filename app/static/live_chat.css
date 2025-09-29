@@ -4,6 +4,7 @@
     display: flex;
     flex-direction: column;
     max-width: 500px;
+    max-height: 60dvh;
     right: 8rem;
     bottom: 1rem;
     margin: 0 auto;
@@ -125,9 +126,9 @@
     position: relative;
 }
 
-.message-content > div:first-child {
+/* .message-content > div:first-child {
     white-space: break-spaces;
-}
+} */
 
 .message.user .message-content {
     background: #d6cefe;
@@ -357,4 +358,12 @@
     .send-btn {
         align-self: flex-end;
     }
+}
+
+ol,
+ul {
+    padding: 0.5rem 1rem;
+}
+li {
+    padding: 0.25rem 0.5rem;
 }
