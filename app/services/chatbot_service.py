@@ -191,23 +191,23 @@ class ChatbotService:
                     product_text = "\n".join(f"- {name}" for name in product_results)
                     # logger.debug(f"Product text: {product_text}")
                     if product_text: 
-                        messages = [{
+                        messages = {
                             "role": "system",
                             "content": (
                                 "Ось перелік товарів, які відповідають запиту користувача:\n"
                                 f"{product_text}\n"
                                 "Сформуй відповідь для клієнта, поясни, чому ці варіанти підходять, Запропонуй наступні кроки (наприклад, уточнити кількість, дату доставки тощо)."
                             )
-                        }]
+                        }
                     else:
-                        messages = [{
+                        messages = {
                             "role": "system",
                             "content": (
                                 "Сформуй відповідь для клієнта, поясни що не знайдено варіантів по його запиту. Запропонуй уточнити якімь конкретні деталі, побажання, що подобається."
                             )
-                        }]
+                        }
 
-                    request_kwargs["messages"] = messages
+                    request_kwargs["messages"].append(messages)
 
                     response = self.client.chat.completions.create(**request_kwargs)
                 elif func_name == "get_products_data":
@@ -443,6 +443,7 @@ class ChatbotService:
         Не пропонуй те чого немає в асортименті, асортимент тільки із функції 'get_products', ніякого придумування.
         Безкоштовна доставка по Києву та Одесі на суму замовлення від 3000 грн, доставка може виконуватися по області до 30км.
         Перевіряй контактні дані, що вказує користувач, формати телефона, емейла, тощо.
+        Всі формули повертай тільки у вигляді тексту, не використовуй форматування MathJax, або KaTeX.
             """
         else:
             system_inctruction = """
