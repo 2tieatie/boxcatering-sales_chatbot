@@ -349,6 +349,15 @@
                 margin-bottom: 20px;
             }
 
+            .summary-button:disabled {
+                opacity: 0.5;
+                pointer-events: none;
+            }
+
+            .summary-details {
+                white-space: break-spaces;
+            }
+
             .detail-row {
                 display: flex;
                 justify-content: space-between;
@@ -1118,7 +1127,15 @@
                 </div>
 
                 <h4>${window.I18N && I18N.t ? I18N.t("conversationHistory.modal.messageSummary") : "Message Summary"}</h4>
-                <div class="conversation-details">${details.summary}</div>`;
+                <button class="btn btn-secondary summary-button" onclick="generateSummary(${id})">
+                    <span aria-hidden="true">🔄</span>
+                    <span data-i18n="conversationHistory.table.refresh">Refresh</span>
+                </button>
+                <div class="conversation-details summary-details"></div>`;
+
+                    console.log(details.summary);
+
+                    document.querySelector(".summary-details").innerHTML = details.summary;
 
                     modal.style.display = "block";
 
@@ -1130,6 +1147,41 @@
                     }
                 } catch (e) {
                     console.error("Failed to load conversation details", e);
+                }
+            }
+
+            async function generateSummary(id) {
+                const [details, messages] = await Promise.all([fetchJSON(`/conversations/${id}`), fetchJSON(`/conversations/${id}/messages?limit=500`)]);
+                const mappedMessages = messages.map((message) => {
+                    return `${message.sender} - ${message.text}`;
+                });
+
+                document.querySelector(".summary-button").disabled = true;
+
+                try {
+                    const token = localStorage.getItem("access_token");
+
+                    const response = await fetch("/chat/summary", {
+                        method: "POST",
+                        body: JSON.stringify({ conversation_id: id, mappedMessages: JSON.stringify(mappedMessages) }),
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                        },
+                    });
+
+                    if (response.ok) {
+                        const summary = await response.json();
+
+                        details.summary = summary;
+                        renderConversations();
+                    } else {
+                        details.summary = "Failed to generate summary";
+                    }
+                    document.querySelector(".summary-button").disabled = false;
+                    document.querySelector(".summary-details").innerHTML = details.summary;
+                } catch (error) {
+                    console.error("Error fetching user info:", error);
                 }
             }
 
