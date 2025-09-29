@@ -1,10 +1,12 @@
 """Chat WebSocket endpoint."""
 
+from http.client import HTTPException
 import json
 from datetime import datetime, date, timezone
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from sqlalchemy.orm import Session
 from loguru import logger
+from openai import OpenAI
 
 from app.database import get_db
 from app.services.chatbot_service import ChatbotService
@@ -386,3 +388,45 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
             except Exception:
                 pass
         await websocket.close()
+
+@router.post("/summary", response_model=str)
+async def update_summary(
+    payload: SummaryRequest,
+    db: Session = Depends(get_db),
+):
+    """Get conversation summary."""
+    logger.info(f"Generating summary for conversation {payload}")
+    conversation_id = payload.conversation_id
+    mappedMessages = payload.mappedMessages
+
+    api_key = settings.openai_api_key
+    model = settings.openai_model
+
+    client = OpenAI(api_key=api_key)
+
+    # Create the chat completion
+    request_kwargs = {
+        "model": model,
+        "messages": [{
+            "role": "system",
+            "content": (
+                "Згенеруй підсумок діалогу, вказавши, що замовив клієнт із деталями по його замовленню (дата, час, каталог, інформацію про доставку, контактні дані):\n"
+                f"{mappedMessages}"
+            )
+        }],
+    }
+
+    response = client.chat.completions.create(**request_kwargs)
+    ai_response = (response.choices[0].message.content or "")
+    logger.info(f"Generated summary: {ai_response}")
+
+    conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    conversation.summary = ai_response
+
+    db.commit()
+    db.refresh(conversation)
+
+    return ai_response or ""
