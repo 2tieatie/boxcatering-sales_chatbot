@@ -36,12 +36,22 @@ function loadWidget() {
                     document.head.appendChild(link);
                 });
 
+                // Load scripts
+                const scripts = [`https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js`];
+
+                scripts.forEach((scriptHref) => {
+                    const link = document.createElement("script");
+                    link.src = scriptHref;
+                    document.head.appendChild(link);
+                });
+
                 // Create widget
                 const widget = document.createElement("div");
                 widget.id = "callback-widget";
 
                 // Add widget to DOM
                 widget.innerHTML = `
+                
                 <div class="callback-widget-block">
                     <div style="display: none">
                         <a class="callback-widget-button-social-item" title="">
@@ -78,7 +88,7 @@ function loadWidget() {
                         <div class="chat-input-container">
                             <form class="chat-input-form" id="chat-form">
                                 <div class="input-group">
-                                    <textarea id="chat-input" class="chat-input"  data-i18n="chatTest.input.label" placeholder="Enter a message:" rows="1"></textarea>
+                                    <input id="chat-input" class="chat-input" data-i18n="chatTest.input.label" placeholder="Enter a message:"/>
                                 </div>
                                 <button type="submit" class="send-btn" id="send-btn" data-i18n="chatTest.send">Send</button>
                             </form>
@@ -223,6 +233,10 @@ function loadWidget() {
                             document.querySelector(".chat-container").classList.remove("hide-container");
                         }, 500);
                         initChat();
+                        initI18N();
+                        setTimeout(() => {
+                            fetchActiveChatbotConfig();
+                        }, 500);
                     })();
                 }, 250);
             }
@@ -232,7 +246,49 @@ function loadWidget() {
     })();
 }
 
+/**
+ * Initializes i18n
+ */
+async function initI18N() {
+    try {
+        const token = localStorage.getItem("access_token");
+        const meRes = await fetch("/users/me", { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        const storedLang = localStorage.getItem("ui_language");
+        let lang = storedLang || "uk";
+        if (!storedLang && meRes && meRes.ok) {
+            const me = await meRes.json();
+            lang = me.preferred_language || lang;
+        }
+        if (window.I18N && I18N.setLanguage) {
+            await I18N.setLanguage(lang);
+        }
+        try {
+            const input = document.getElementById("chat-input");
+            if (input && window.I18N && I18N.t) {
+                input.placeholder = I18N.t("chatTest.input.label");
+            }
+        } catch {}
+        document.querySelectorAll("[data-i18n]").forEach(function (el) {
+            const k = el.getAttribute("data-i18n");
+            if (window.I18N && I18N.t) {
+                el.textContent = I18N.t(k);
+            }
+        });
+    } catch {}
+}
+
 loadWidget();
+
+/**
+ * Updates the chat input placeholder when the language changes
+ */
+document.addEventListener("i18n:languageChanged", () => {
+    let placeholder = document.getElementById("chat-input");
+    if (placeholder) {
+        placeholder.placeholder = window.I18N && I18N.t ? I18N.t("chatTest.input.label") : "Enter a message:";
+    }
+    fetchActiveChatbotConfig();
+});
 
 /**
  * Shows the chat window and styles the chat button
@@ -308,20 +364,21 @@ function initChat() {
     });
 
     // Auto-resize textarea
-    document.getElementById("chat-input").addEventListener("input", function () {
-        this.style.height = "auto";
-        this.style.height = Math.min(this.scrollHeight, 120) + "px";
-    });
+    // document.getElementById("chat-input").addEventListener("input", function () {
+    //     this.style.height = "auto";
+    //     this.style.height = Math.min(this.scrollHeight, 120) + "px";
+    // });
 }
 
 // Session management
 function getOrCreateSessionId() {
-    const key = "chat_session_id";
-    let id = localStorage.getItem(key);
-    if (!id) {
-        id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-        localStorage.setItem(key, id);
-    }
+    // const key = "chat_session_id";
+    // let id = localStorage.getItem(key);
+    // if (!id) {
+    // id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    // localStorage.setItem(key, id);
+    // }
+    id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     return id;
 }
 let sessionId = getOrCreateSessionId();
@@ -329,21 +386,22 @@ let sessionId = getOrCreateSessionId();
 // Fetch active chatbot configuration and show welcome message
 async function fetchActiveChatbotConfig() {
     try {
-        const token = localStorage.getItem("access_token");
-        const resp = await fetch("/chatbot-config/active", {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const cfg = await resp.json();
-        const welcome = cfg.welcome_message || cfg.handover_message || (window.I18N && I18N.t ? I18N.t("chatTest.welcome.default") : "Welcome! How can I help?");
+        // const token = localStorage.getItem("access_token");
+        // const resp = await fetch("/chatbot-config/active", {
+        //     headers: { Authorization: `Bearer ${token}` },
+        // });
+        // if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        // const cfg = await resp.json();
+        // const welcome = cfg.welcome_message || cfg.handover_message || (window.I18N && I18N.t ? I18N.t("chatTest.welcome.default") : "Welcome! How can I help?");
+        const welcome = window.I18N && I18N.t ? I18N.t("chatTest.welcome.default") : "Welcome! How can I help?";
         const node = document.getElementById("bot-welcome-content");
         if (node) node.textContent = welcome;
-        document.getElementById("bot-welcome-time").textContent = new Date().toLocaleTimeString();
+        // document.getElementById("bot-welcome-time").textContent = new Date().toLocaleTimeString();
     } catch (e) {
         console.warn("Failed to load active chatbot config:", e);
         const node = document.getElementById("bot-welcome-content");
         if (node) node.textContent = window.I18N && I18N.t ? I18N.t("chatTest.welcome.default") : "Welcome! How can I help?";
-        document.getElementById("bot-welcome-time").textContent = new Date().toLocaleTimeString();
+        // document.getElementById("bot-welcome-time").textContent = new Date().toLocaleTimeString();
     }
 }
 
@@ -357,7 +415,7 @@ function addMessage(content, isUser = false, timestamp = null) {
 
     messageDiv.innerHTML = `
                 <div class="message-content">
-                    <div>${content}</div>
+                    <div>${marked.parse(content)}</div>
                     <div class="message-time">${time}</div>
                 </div>
             `;
