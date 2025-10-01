@@ -17,6 +17,7 @@ from haystack import Pipeline
 from haystack.utils import Secret
 from haystack_integrations.document_stores.qdrant import QdrantDocumentStore
 from haystack_integrations.components.retrievers.qdrant import QdrantEmbeddingRetriever
+from haystack.document_stores.types import DuplicatePolicy
 
 class ChatbotService:
     """Service for handling chatbot interactions."""
@@ -1045,6 +1046,7 @@ class ChatbotService:
         
     def get_products(self, query: str):
         try:
+            # logger.info(f"query {query}")
             # Get all products  
             db = next(get_db())
             products = db.query(AssortmentItem).all()
@@ -1063,7 +1065,7 @@ class ChatbotService:
 
             document_embedder = OpenAIDocumentEmbedder(api_key=Secret.from_token(self.openai_api_key))
             documents_with_embeddings = document_embedder.run(documents)['documents']
-            self.document_store.write_documents(documents_with_embeddings, policy="update")
+            self.document_store.write_documents(documents_with_embeddings, policy=DuplicatePolicy.OVERWRITE)
 
             # Search for similar products
             query_pipeline = Pipeline()
@@ -1075,7 +1077,7 @@ class ChatbotService:
                 "text_embedder":{"text": query},
                 "retriever": {
                     "top_k": 10,
-                    "score_threshold": 0.85 # 0 => 1
+                    "score_threshold": 0.7 # 0 => 1
                 }
             })
 
@@ -1084,6 +1086,18 @@ class ChatbotService:
             result_documents = []
             for doc in results["retriever"]["documents"]:
                 result_documents.append(doc.content)
+
+            # logger.debug(f"Result documents: {result_documents}")
+            if len(result_documents) == 0:
+                results = query_pipeline.run({
+                    "text_embedder":{"text": "смак, бокс, подія, набір"},
+                    "retriever": {
+                        "top_k": 10,
+                        "score_threshold": 0 # 0 => 1
+                    }
+                })
+                for doc_alt in results["retriever"]["documents"]:
+                    result_documents.append(doc_alt.content)
                 
             return result_documents
         except Exception as e:
@@ -1092,6 +1106,7 @@ class ChatbotService:
         
     def get_products_data(self, query: str):
         try:
+            # logger.info(f"query {query}")
             # Get all products  
             db = next(get_db())
             products = db.query(AssortmentItem).all()
@@ -1110,7 +1125,7 @@ class ChatbotService:
 
             document_embedder = OpenAIDocumentEmbedder(api_key=Secret.from_token(self.openai_api_key))
             documents_with_embeddings = document_embedder.run(documents)['documents']
-            self.document_store.write_documents(documents_with_embeddings, policy="update")
+            self.document_store.write_documents(documents_with_embeddings, policy=DuplicatePolicy.OVERWRITE)
 
             # Search for similar products
             query_pipeline = Pipeline()
@@ -1126,9 +1141,21 @@ class ChatbotService:
                 }
             })
 
+            # logger.debug(f"Resultі: {results}")
+
             result_documents = []
             for doc in results["retriever"]["documents"]:
                 result_documents.append(doc.content)
+
+            if len(result_documents) == 0:
+                results = query_pipeline.run({
+                "text_embedder":{"text": query},
+                    "retriever": {
+                        "score_threshold": 0 # 0 => 1
+                    }
+                })
+                for doc_alt in results["retriever"]["documents"]:
+                    result_documents.append(doc_alt.content)
                 
             return result_documents
         except Exception as e:
