@@ -343,7 +343,12 @@
 
 @media (max-width: 768px) {
     .chat-container {
-        margin: 10px;
+        right: auto;
+        left: 50%;
+        width: 90%;
+        transform: translateX(-50%);
+        bottom: 8rem;
+        margin: 0;
     }
 
     .message-content {
