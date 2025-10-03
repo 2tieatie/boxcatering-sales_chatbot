@@ -421,8 +421,39 @@ I understand this requires special attention. Let me connect you with one of our
                 </div>
 
                 <div class="special-row">
-                    <!-- Context Documents -->
+                    <!-- Promt Templates -->
                     <div class="settings-card large-card">
+                        <h3><span class="icon">📝</span><span data-i18n="chatbotSettings.section.promts">Promt Templates</span></h3>
+
+                        <div class="form-group">
+                            <label for="language-instruction" data-i18n="chatbotSettings.labels.language_instruction">Language Instruction</label>
+                            <textarea id="language-instruction" placeholder=""></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="persona-instruction" data-i18n="chatbotSettings.labels.persona_instruction">Persona Instruction</label>
+                            <textarea id="persona-instruction" placeholder=""></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="system-instruction" data-i18n="chatbotSettings.labels.system_instruction">System Instruction</label>
+                            <textarea id="system-instruction" placeholder=""></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="order-flow-block" data-i18n="chatbotSettings.labels.order_flow_block">Order Flow Block</label>
+                            <textarea id="order-flow-block" placeholder=""></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="other-instruction" data-i18n="chatbotSettings.labels.other_instruction">Other Instruction</label>
+                            <textarea id="other-instruction" placeholder=""></textarea>
+                        </div>
+                    </div>
+
+                    <!-- <div class="special-row"> -->
+                    <!-- Context Documents -->
+                    <div class="settings-card large-card" style="display: none">
                         <h3><span class="icon">📚</span><span data-i18n="chatbotSettings.section.contextDocs">Context Documents</span></h3>
 
                         <div class="toggle-group">
@@ -713,6 +744,11 @@ I understand this requires special attention. Let me connect you with one of our
                 scrapeEnabled: true,
                 scrapeWebsiteUrl: "",
                 scrapeIntervalMinutes: 1440,
+                languageInstruction: "",
+                personaInstruction: "",
+                systemInstruction: "",
+                orderFlowBlock: "",
+                otherInstruction: "",
             };
 
             // Check authentication
@@ -776,6 +812,8 @@ I understand this requires special attention. Let me connect you with one of our
 
                     if (response.ok) {
                         const dbSettings = await response.json();
+                        // console.log("Current settings:", dbSettings);
+
                         // Map database fields to form fields
                         currentSettings = {
                             ...defaultSettings,
@@ -796,6 +834,12 @@ I understand this requires special attention. Let me connect you with one of our
                             conversationLogging: dbSettings.conversation_logging !== undefined ? dbSettings.conversation_logging : defaultSettings.conversationLogging,
                             performanceAnalytics: dbSettings.performance_analytics !== undefined ? dbSettings.performance_analytics : defaultSettings.performanceAnalytics,
                             errorReporting: dbSettings.error_reporting !== undefined ? dbSettings.error_reporting : defaultSettings.errorReporting,
+                            // Promt fields
+                            language_instruction: dbSettings.language_instruction || defaultSettings.languageInstruction,
+                            persona_instruction: dbSettings.persona_instruction || defaultSettings.personaInstruction,
+                            system_instruction: dbSettings.system_instruction || defaultSettings.systemInstruction,
+                            order_flow_block: dbSettings.order_flow_block || defaultSettings.orderFlowBlock,
+                            other_instruction: dbSettings.other_instruction || defaultSettings.otherInstruction,
                         };
                     } else {
                         // No configuration found in database, use defaults
@@ -819,7 +863,7 @@ I understand this requires special attention. Let me connect you with one of our
                         });
                         if (sysResp.ok) {
                             const sysSettings = await sysResp.json();
-                            console.log("System settings:", sysSettings);
+                            // console.log("System settings:", sysSettings);
 
                             const system = sysSettings.system || {};
                             if (system.scrape_enabled !== undefined) {
@@ -897,6 +941,13 @@ I understand this requires special attention. Let me connect you with one of our
                 document.getElementById("performance-analytics").checked = currentSettings.performanceAnalytics;
                 document.getElementById("error-reporting").checked = currentSettings.errorReporting;
 
+                // Promt fields
+                document.getElementById("language-instruction").value = currentSettings.language_instruction;
+                document.getElementById("persona-instruction").value = currentSettings.persona_instruction;
+                document.getElementById("system-instruction").value = currentSettings.system_instruction;
+                document.getElementById("order-flow-block").value = currentSettings.order_flow_block;
+                document.getElementById("other-instruction").value = currentSettings.other_instruction;
+
                 // Context Documents
                 const ctxEnabledEl = document.getElementById("context-docs-enabled");
                 const ctxDirEl = document.getElementById("context-docs-dir");
@@ -922,6 +973,11 @@ I understand this requires special attention. Let me connect you with one of our
                     const businessDescription = document.getElementById("business-description").value.trim();
                     const language = document.getElementById("chatbot-language").value;
                     const forceLanguage = document.getElementById("force-language").checked;
+                    const language_instruction = document.getElementById("language-instruction").value.trim();
+                    const persona_instruction = document.getElementById("persona-instruction").value.trim();
+                    const system_instruction = document.getElementById("system-instruction").value.trim();
+                    const order_flow_block = document.getElementById("order-flow-block").value.trim();
+                    const other_instruction = document.getElementById("other-instruction").value.trim();
 
                     // Validate required fields
                     if (!greetingMessage) {
@@ -954,6 +1010,12 @@ I understand this requires special attention. Let me connect you with one of our
                         conversation_logging: document.getElementById("conversation-logging").checked,
                         performance_analytics: document.getElementById("performance-analytics").checked,
                         error_reporting: document.getElementById("error-reporting").checked,
+                        // Promt fields
+                        language_instruction: document.getElementById("language-instruction").value.trim(),
+                        persona_instruction: document.getElementById("persona-instruction").value.trim(),
+                        system_instruction: document.getElementById("system-instruction").value.trim(),
+                        order_flow_block: document.getElementById("order-flow-block").value.trim(),
+                        other_instruction: document.getElementById("other-instruction").value.trim(),
                     };
 
                     console.log("Saving settings:", settings); // Debug log
@@ -962,6 +1024,11 @@ I understand this requires special attention. Let me connect you with one of our
                         businessDescription,
                         language,
                         forceLanguage,
+                        language_instruction,
+                        persona_instruction,
+                        system_instruction,
+                        order_flow_block,
+                        other_instruction,
                     });
 
                     // Save to database via API
@@ -1005,6 +1072,12 @@ I understand this requires special attention. Let me connect you with one of our
                             // Website Scraping
                             scrapeWebsiteUrl: (document.getElementById("scrape-website-url").value || "").trim(),
                             scrapeIntervalMinutes: parseInt(document.getElementById("scrape-interval-minutes").value) || 1440,
+                            // Promt fields
+                            language_instruction: document.getElementById("language-instruction").value,
+                            persona_instruction: document.getElementById("persona-instruction").value,
+                            system_instruction: document.getElementById("system-instruction").value,
+                            order_flow_block: document.getElementById("order-flow-block").value,
+                            other_instruction: document.getElementById("other-instruction").value,
                         };
 
                         showAlert("Settings saved successfully to database!", "success");
@@ -1092,6 +1165,7 @@ I understand this requires special attention. Let me connect you with one of our
 
             function renderContextFiles(files) {
                 const container = document.getElementById("context-files-list");
+                if (!container) return;
                 container.innerHTML = "";
                 if (!files.length) {
                     const div = document.createElement("div");

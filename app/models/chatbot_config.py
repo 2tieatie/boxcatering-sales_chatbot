@@ -32,6 +32,12 @@ class ChatbotConfig(Base):
     conversation_logging = Column(Boolean, default=True, nullable=True)
     performance_analytics = Column(Boolean, default=True, nullable=True)
     error_reporting = Column(Boolean, default=True, nullable=True)
+
+    language_instruction = Column(Text, nullable=True)
+    persona_instruction = Column(Text, nullable=True)
+    system_instruction = Column(Text, nullable=True)
+    order_flow_block = Column(Text, nullable=True)
+    other_instruction = Column(Text, nullable=True)
     
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
