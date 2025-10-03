@@ -19,6 +19,7 @@ from haystack_integrations.document_stores.qdrant import QdrantDocumentStore
 from haystack_integrations.components.retrievers.qdrant import QdrantEmbeddingRetriever
 from haystack.document_stores.types import DuplicatePolicy
 
+
 class ChatbotService:
     """Service for handling chatbot interactions."""
     
@@ -209,6 +210,7 @@ class ChatbotService:
                         }
 
                     request_kwargs["messages"].append(messages)
+                    # request_kwargs["messages"] = messages
 
                     response = self.client.chat.completions.create(**request_kwargs)
                 elif func_name == "get_products_data":
@@ -401,57 +403,57 @@ class ChatbotService:
     ) -> str:
         """Build the system prompt for the AI using chatbot settings."""
 
-        # More natural language instruction
-        language_instruction = ""
-        if language == "uk":
-            language_instruction = """
-        ВАЖЛИВО: Ви ОБОВ'ЯЗКОВО повинні відповідати ТІЛЬКИ українською мовою. 
-        Ніколи не використовуйте інші мови, навіть якщо клієнт пише англійською або іншою мовою.
-        Всі ваші відповіді мають бути українською мовою.
-        """
-        elif force_language:
-            language_instruction = f"""
-        IMPORTANT: You MUST respond ONLY in {language} language.
-        Never use other languages, even if the customer writes in a different language.
-        All your responses must be in {language}.
-        """
+        # # More natural language instruction
+        # language_instruction = ""
+        # if language == "uk":
+        #     language_instruction = """
+        # ВАЖЛИВО: Ви ОБОВ'ЯЗКОВО повинні відповідати ТІЛЬКИ українською мовою. 
+        # Ніколи не використовуйте інші мови, навіть якщо клієнт пише англійською або іншою мовою.
+        # Всі ваші відповіді мають бути українською мовою.
+        # """
+        # elif force_language:
+        #     language_instruction = f"""
+        # IMPORTANT: You MUST respond ONLY in {language} language.
+        # Never use other languages, even if the customer writes in a different language.
+        # All your responses must be in {language}.
+        # """
 
-        # Enhanced persona with more personality
-        persona_instruction = ""
-        if language == "uk":
-            persona_instruction = """
-        Ваша особистість: Ви — Марічка, дружня та професійна асистентка з кейтерингу. 
-        Ви ентузіастка свого діла, завжди готова допомогти клієнтам знайти ідеальне рішення для їх заходів.
-        Спілкуйтеся тепло та природно, як справжня людина. Використовуйте емоції, емодзі (але не надто багато), 
-        та робіть розмову живою та цікавою. Пам'ятайте деталі з попередніх повідомлень та не повторюйте питання.
-        Пишіть завжди від першої особи в жіночому роді. Уникайте чоловічих висловлювань.
-        """
-        else:
-            persona_instruction = """
-        Your personality: You are Marichka, a friendly and professional catering assistant. 
-        You're passionate about your work and always ready to help customers find the perfect solution for their events.
-        Communicate warmly and naturally, like a real person. Use emotions, emojis (but not too many), 
-        and make conversations lively and engaging. Remember details from previous messages and don't repeat questions.
-        Write in first person using feminine wording when applicable. Avoid masculine phrasing.
-        """
+        # # Enhanced persona with more personality
+        # persona_instruction = ""
+        # if language == "uk":
+        #     persona_instruction = """
+        # Ваша особистість: Ви — Марічка, дружня та професійна асистентка з кейтерингу. 
+        # Ви ентузіастка свого діла, завжди готова допомогти клієнтам знайти ідеальне рішення для їх заходів.
+        # Спілкуйтеся тепло та природно, як справжня людина. Використовуйте емоції, емодзі (але не надто багато), 
+        # та робіть розмову живою та цікавою. Пам'ятайте деталі з попередніх повідомлень та не повторюйте питання.
+        # Пишіть завжди від першої особи в жіночому роді. Уникайте чоловічих висловлювань.
+        # """
+        # else:
+        #     persona_instruction = """
+        # Your personality: You are Marichka, a friendly and professional catering assistant. 
+        # You're passionate about your work and always ready to help customers find the perfect solution for their events.
+        # Communicate warmly and naturally, like a real person. Use emotions, emojis (but not too many), 
+        # and make conversations lively and engaging. Remember details from previous messages and don't repeat questions.
+        # Write in first person using feminine wording when applicable. Avoid masculine phrasing.
+        # """
         
-        system_inctruction = ""
-        if language == "uk":
-            system_inctruction = """
-            Замовлення можливі тільки від поточного часу + дві години, але не пізніше 18:00.
-            Завжди перевіряй інформацію, що надає користувач на предмет реалістичності та відповідності нашим задачам. Клієнт хоче купити тостер - фізично не можливо оскільки ми кейтеринг компанія.
-            Не уточнюй додатково конфліктну інформацію.
-            Якщо вказана адреса доставки, значить клієнт хоче замовити доставку, не самовивіз.
-            Не пропонуй те чого немає в асортименті, асортимент тільки із функції 'get_products', ніякого придумування. Ніколи не пропонуй загальні товари чи послуги, тільки ті бокси, що знаходиться в асортименті і нічого більше, максимально конкретні бокси із асортименту, щоб продати клієнту.
-            Безкоштовна доставка по Києву та Одесі на суму замовлення від 3000 грн, доставка може виконуватися по області до 30км.
-            Перевіряй контактні дані, що вказує користувач, формати телефона, емейла, тощо.
-            Всі формули повертай тільки у вигляді тексту, не використовуй форматування MathJax, або KaTeX.
-            Тримай у пам'яті перелік товарів, що хоче клієнт, уникай виключень товарів без згоди клієнта.
-            Перевіряй час та локацію доставки на можливість доставки.
-            """
-        else:
-            system_inctruction = """
-            """
+        # system_inctruction = ""
+        # if language == "uk":
+        #     system_inctruction = """
+        #     Замовлення можливі тільки від поточного часу + дві години, але не пізніше 18:00.
+        #     Завжди перевіряй інформацію, що надає користувач на предмет реалістичності та відповідності нашим задачам. Клієнт хоче купити тостер - фізично не можливо оскільки ми кейтеринг компанія.
+        #     Не уточнюй додатково конфліктну інформацію.
+        #     Якщо вказана адреса доставки, значить клієнт хоче замовити доставку, не самовивіз.
+        #     Не пропонуй те чого немає в асортименті, асортимент тільки із функції 'get_products', ніякого придумування. Ніколи не пропонуй загальні товари чи послуги, тільки ті бокси, що знаходиться в асортименті і нічого більше, максимально конкретні бокси із асортименту, щоб продати клієнту.
+        #     Безкоштовна доставка по Києву та Одесі на суму замовлення від 3000 грн, доставка може виконуватися по області до 30км.
+        #     Перевіряй контактні дані, що вказує користувач, формати телефона, емейла, тощо.
+        #     Всі формули повертай тільки у вигляді тексту, не використовуй форматування MathJax, або KaTeX.
+        #     Тримай у пам'яті перелік товарів, що хоче клієнт, уникай виключень товарів без згоди клієнта.
+        #     Перевіряй час та локацію доставки на можливість доставки.
+        #     """
+        # else:
+        #     system_inctruction = """
+        #     """
 
         company_name = (config or {}).get("company_name")
         business_context = (config or {}).get("business_context")
@@ -460,6 +462,11 @@ class ChatbotService:
         professional_style = bool((config or {}).get("professional_style", True))
         suggestive_responses = bool((config or {}).get("suggestive_responses", True))
         manager_handover = bool((config or {}).get("manager_handover", True))
+        language_instruction = (config or {}).get("language_instruction")
+        persona_instruction = (config or {}).get("persona_instruction")
+        system_instruction = (config or {}).get("system_instruction")
+        order_flow_block = (config or {}).get("order_flow_block")
+        other_instruction = (config or {}).get("other_instruction")
 
         context_lines = []
         if company_name:
@@ -545,62 +552,62 @@ class ChatbotService:
         context_docs_block = ""
         examples_block = ""
 
-        order_flow_block_uk = f"""
-        Послідовність оформлення замовлення (дуже важливо дотримуватися кроків):
-        1) З'ясуй, що саме хоче замовити клієнт (страви/бокси) та допоможи вибрати.
-           Якщо клієнт каже "підходять такі бокси" / "беремо ці" / подібне — вважай, що позиції обрано.
-           У полі menu_items зафіксуй вибрані позиції коротким переліком; якщо кількість не вказана,
-           вважай 1 шт. на кожну вибрану позицію (не питай додатково про кількість, якщо це не критично).
-           Додатково внеси у поле guests_count кількість гостей, виходячи із даних про позиції/асортимент.
-        2) Коли клієнт визначився з позиціями, запитай дату доставки.
-           Якщо дата надана без року (формат DD.MM або DD/MM), вважай поточний рік і перетвори у формат YYYY-MM-DD.
-        3) Зафіксуй у полі priority срочність замовлення ('low', 'medium', 'high') із розрахунку на години до доставки. Через 2 години - 'high', через 4 - 'medium', через 6 - 'low'.
-        4) Потім попроси дані для доставки: ім'я, телефон, адреса доставки.
-        5) Якщо чогось не вистачає — запитуй лише відсутні дані одним-двома питаннями. Не запитуй нічого зайвого.
-        6) Лише коли є: menu_items, delivery_date, customer_name, customer_phone, customer_address —
-           сформуй дію create_order без додаткового підтвердження.
-           Якщо потрібне якесь уточнення із виводом всіх даних, виведи дані у форматі:
+        # order_flow_block_uk = f"""
+        # Послідовність оформлення замовлення (дуже важливо дотримуватися кроків):
+        # 1) З'ясуй, що саме хоче замовити клієнт (страви/бокси) та допоможи вибрати.
+        #    Якщо клієнт каже "підходять такі бокси" / "беремо ці" / подібне — вважай, що позиції обрано.
+        #    У полі menu_items зафіксуй вибрані позиції коротким переліком; якщо кількість не вказана,
+        #    вважай 1 шт. на кожну вибрану позицію (не питай додатково про кількість, якщо це не критично).
+        #    Додатково внеси у поле guests_count кількість гостей, виходячи із даних про позиції/асортимент.
+        # 2) Коли клієнт визначився з позиціями, запитай дату доставки.
+        #    Якщо дата надана без року (формат DD.MM або DD/MM), вважай поточний рік і перетвори у формат YYYY-MM-DD.
+        # 3) Зафіксуй у полі priority срочність замовлення ('low', 'medium', 'high') із розрахунку на години до доставки. Через 2 години - 'high', через 4 - 'medium', через 6 - 'low'.
+        # 4) Потім попроси дані для доставки: ім'я, телефон, адреса доставки.
+        # 5) Якщо чогось не вистачає — запитуй лише відсутні дані одним-двома питаннями. Не запитуй нічого зайвого.
+        # 6) Лише коли є: menu_items, delivery_date, customer_name, customer_phone, customer_address —
+        #    сформуй дію create_order без додаткового підтвердження.
+        #    Якщо потрібне якесь уточнення із виводом всіх даних, виведи дані у форматі:
 
-            "Ім'я": "<customer_name>",
-            "Телефон": "<customer_phone>",
-            "Email": "<customer_email>",
-            "Адреса": "<customer_address>",
-            "Перелік позицій": "<menu items>",
-                - "<item name>, <item quantity>, <item price>, <item_weight>",
-                - "<item name>, <item quantity>, <item price>, <item_weight>",
-            "Дата доставки": "<date in ISO format YYYY-MM-DD> <optional time>",
-            "Загальна сума": "UAH"
-        """
+        #     "Ім'я": "<customer_name>",
+        #     "Телефон": "<customer_phone>",
+        #     "Email": "<customer_email>",
+        #     "Адреса": "<customer_address>",
+        #     "Перелік позицій": "<menu items>",
+        #         - "<item name>, <item quantity>, <item price>, <item_weight>",
+        #         - "<item name>, <item quantity>, <item price>, <item_weight>",
+        #     "Дата доставки": "<date in ISO format YYYY-MM-DD> <optional time>",
+        #     "Загальна сума": "UAH"
+        # """
 
-        order_flow_block_en = """
-        Order intake sequence (follow the steps strictly):
-        1) Clarify what the customer wants to order and help choose items.
-           If the customer says "these boxes work" / "we'll take these" / similar — treat items as chosen.
-           In menu_items, record a concise list of the chosen items; if quantity is not specified,
-           assume 1 per selected item (do not ask for quantity unless critical).
-        2) Once items are chosen, ask for the delivery date.
-           If the date is provided without a year (DD.MM or DD/MM), assume the current year and convert to YYYY-MM-DD.
-        3) Then ask for delivery details: name, phone number, delivery address.
-        4) If something is missing, ask only for the missing details concisely. Do not ask anything extra.
-        5) Only when you have: menu_items, delivery_date, customer_name, customer_phone,
-           customer_address — emit the create_order action without extra confirmation.
-        """
+        # order_flow_block_en = """
+        # Order intake sequence (follow the steps strictly):
+        # 1) Clarify what the customer wants to order and help choose items.
+        #    If the customer says "these boxes work" / "we'll take these" / similar — treat items as chosen.
+        #    In menu_items, record a concise list of the chosen items; if quantity is not specified,
+        #    assume 1 per selected item (do not ask for quantity unless critical).
+        # 2) Once items are chosen, ask for the delivery date.
+        #    If the date is provided without a year (DD.MM or DD/MM), assume the current year and convert to YYYY-MM-DD.
+        # 3) Then ask for delivery details: name, phone number, delivery address.
+        # 4) If something is missing, ask only for the missing details concisely. Do not ask anything extra.
+        # 5) Only when you have: menu_items, delivery_date, customer_name, customer_phone,
+        #    customer_address — emit the create_order action without extra confirmation.
+        # """
 
-        order_flow_block = order_flow_block_uk if language == "uk" else order_flow_block_en
+        # order_flow_block = order_flow_block_uk if language == "uk" else order_flow_block_en
 
         return f"""
         You are a helpful AI assistant for a catering business.
         {language_instruction}
         {persona_instruction}
-        {system_inctruction}
+        {system_instruction}
 
         {('\n'.join(context_lines)) if context_lines else ''}
 
-        # Your goal is to make customers' ordering experience as convenient and pleasant as possible:
-        # • Answer questions about menus, prices, and services
-        # • Help customers place orders step by step
-        # • Share information about discounts and special offers
-        # • Handle any customer service inquiries
+        Your goal is to make customers' ordering experience as convenient and pleasant as possible:
+        • Answer questions about menus, prices, and services
+        • Help customers place orders step by step
+        • Share information about discounts and special offers
+        • Handle any customer service inquiries
 
         {order_flow_block}
 
@@ -660,6 +667,8 @@ class ChatbotService:
         {context_docs_block}
 
         {examples_block}
+
+        {other_instruction}
 
         Otherwise, respond normally with just your message to the customer.
         """
