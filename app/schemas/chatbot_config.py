@@ -28,6 +28,13 @@ class ChatbotConfigBase(BaseModel):
     performance_analytics: Optional[bool] = Field(True, description="Enable performance analytics")
     error_reporting: Optional[bool] = Field(True, description="Enable error reporting")
 
+    # Promt fields
+    language_instruction: Optional[str] = Field(None, description="Language instruction")
+    persona_instruction: Optional[str] = Field(None, description="Persona instruction")
+    system_instruction: Optional[str] = Field(None, description="System instruction")
+    order_flow_block: Optional[str] = Field(None, description="Order flow block")
+    other_instruction: Optional[str] = Field(None, description="Other instruction")
+
 
 class ChatbotConfigCreate(BaseModel):
     """Chatbot configuration creation schema."""
@@ -52,6 +59,13 @@ class ChatbotConfigCreate(BaseModel):
     performance_analytics: Optional[bool] = Field(True, description="Enable performance analytics")
     error_reporting: Optional[bool] = Field(True, description="Enable error reporting")
 
+    # Promt fields
+    language_instruction: Optional[str] = Field(None, description="Language instruction")
+    persona_instruction: Optional[str] = Field(None, description="Persona instruction")
+    system_instruction: Optional[str] = Field(None, description="System instruction")
+    order_flow_block: Optional[str] = Field(None, description="Order flow block")
+    other_instruction: Optional[str] = Field(None, description="Other instruction")
+
 
 class ChatbotConfigUpdate(BaseModel):
     """Chatbot configuration update schema."""
@@ -75,6 +89,13 @@ class ChatbotConfigUpdate(BaseModel):
     conversation_logging: Optional[bool] = Field(None, description="Enable conversation logging")
     performance_analytics: Optional[bool] = Field(None, description="Enable performance analytics")
     error_reporting: Optional[bool] = Field(None, description="Enable error reporting")
+
+    # Promt fields
+    language_instruction: Optional[str] = Field(None, description="Language instruction")
+    persona_instruction: Optional[str] = Field(None, description="Persona instruction")
+    system_instruction: Optional[str] = Field(None, description="System instruction")
+    order_flow_block: Optional[str] = Field(None, description="Order flow block")
+    other_instruction: Optional[str] = Field(None, description="Other instruction")
 
 
 class ChatbotConfigResponse(ChatbotConfigBase):
