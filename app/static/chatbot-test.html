@@ -866,6 +866,18 @@
                     } else if (act === 'activate') {
                         await fetch(`/chatbot-config/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ is_active: true }) });
                         await loadConfigsSidebar();
+                        // Clear any test override so default active is used
+                        try {
+                            const url = new URL(window.location.href);
+                            url.searchParams.delete('config_id');
+                            url.searchParams.delete('token');
+                            window.history.replaceState({}, '', url.toString());
+                        } catch { }
+                        // Refresh header title and welcome from active config
+                        try { await fetchActiveChatbotConfig(); } catch { }
+                        // Reconnect WS to ensure status reflects new active (optional; backend also picks active per message)
+                        try { if (ws) ws.close(); } catch { }
+                        connectWebSocket();
                     } else if (act === 'clone') {
                         await fetch(`/chatbot-config/${id}/clone`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
                         await loadConfigsSidebar();
