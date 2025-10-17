@@ -214,4 +214,6 @@ __marimo__/
 # Auxiliary files
 screenshots/
 TODO.md
-CHANGES.md
+CHANGELOG.md
+boxcatering_*.md
+boxcatering_*.png

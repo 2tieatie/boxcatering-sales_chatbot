@@ -5,11 +5,14 @@ import csv
 import re
 from openai import OpenAI
 from loguru import logger
+import hashlib
+import time
 
 from app.config import settings
 from app.models.assortment_item import AssortmentItem
 from app.schemas.chat import ChatRequest, ChatResponse, HandoverReason
 from app.database import get_db
+from app.models.prompt_log import PromptLog
 
 from haystack.components.embedders import OpenAITextEmbedder, OpenAIDocumentEmbedder
 from haystack import Document
@@ -56,8 +59,11 @@ class ChatbotService:
     ) -> ChatResponse:
         """Process a chat message and return response."""
         try:
+            start_time = time.perf_counter()
             # Build the system prompt with language settings and context docs
             system_prompt = self._build_system_prompt(language, force_language, config)
+            # Compute a short hash to identify system prompts without logging full content
+            system_prompt_hash = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()[:16]
             
             # Build conversation messages with history
             messages = [{"role": "system", "content": system_prompt}]
@@ -363,7 +369,7 @@ class ChatbotService:
                     action = None
                     data = None
 
-            return ChatResponse(
+            chat_result = ChatResponse(
                 response=user_text,
                 handover_to_manager=needs_handover,
                 handover_reason=handover_reason,
@@ -382,6 +388,56 @@ class ChatbotService:
                     else None
                 ),
             )
+            # Write DB prompt log if enabled in config or settings
+            try:
+                duration_ms = int((time.perf_counter() - start_time) * 1000)
+                # Best-effort; do not fail user flow if logging fails
+                db = next(get_db())
+                convo_id = None
+                try:
+                    # A bit hacky: last message history entry may include conversation context
+                    # We rely on caller to augment via WS layer when needed
+                    pass
+                except Exception:
+                    pass
+                # Truncate request/response bodies to keep DB lean
+                def trunc(text: str, limit: int = 4000) -> str:
+                    try:
+                        if text is None:
+                            return None
+                        return text if len(text) <= limit else text[:limit]
+                    except Exception:
+                        return None
+
+                req_json = trunc(json.dumps({k: v for k, v in request_kwargs.items() if k != "messages"}, ensure_ascii=False))
+                resp_json = trunc(json.dumps({
+                    "content": ai_response,
+                    "function_call": getattr(response.choices[0].message, "function_call", None)
+                }, ensure_ascii=False))
+
+                # Attempt to extract config_id if passed in config
+                config_id = None
+                if isinstance(config, dict):
+                    config_id = config.get("id")
+
+                db_log = PromptLog(
+                    user_id=None,
+                    conversation_id=convo_id,
+                    config_id=config_id,
+                    model=request_kwargs.get("model"),
+                    system_prompt_hash=system_prompt_hash,
+                    user_message=chat_request.message,
+                    request_json=req_json,
+                    response_json=resp_json,
+                    duration_ms=duration_ms,
+                    error=None,
+                )
+                db.add(db_log)
+                db.commit()
+            except Exception as log_err:
+                logger.warning(f"Failed to write prompt log: {log_err}")
+
+            return chat_result
             
         except Exception as e:
             logger.error(f"Error processing message: {e}")

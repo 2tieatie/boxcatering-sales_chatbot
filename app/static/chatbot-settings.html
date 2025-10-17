@@ -1,1179 +1,1437 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Box Catering Chatbot - Configuration</title>
-        <style>
-            body {
-                min-height: 100vh;
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Box Catering Chatbot - Configuration</title>
+    <style>
+        body {
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+        }
+
+        /* Special layout only for one row */
+        .special-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 30px;
+            grid-template-areas:
+                "large small1"
+                "large small2";
+
+            /* Make sure this row spans the whole parent grid width */
+            grid-column: 1 / -1;
+        }
+
+        .large-card {
+            grid-area: large;
+        }
+
+        .small-card-1 {
+            grid-area: small1;
+        }
+
+        .small-card-2 {
+            grid-area: small2;
+        }
+
+        .settings-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .settings-card h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .settings-card h3 .icon {
+            font-size: 24px;
+        }
+
+        /* Compact variant to reduce vertical space (approx half height) */
+        .settings-card.compact {
+            padding: 16px;
+        }
+
+        .settings-card.compact h3 {
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+
+        .settings-card.compact .form-group {
+            margin-bottom: 14px;
+        }
+
+        .settings-card.compact .toggle-group {
+            padding: 8px 0;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .toggle-group:last-child {
+            border-bottom: none;
+        }
+
+        .toggle-label {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .toggle-label .title {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .toggle-label .description {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #667eea;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
+
+        .range-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .range-slider {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #e1e5e9;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .range-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .range-value {
+            min-width: 50px;
+            text-align: center;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28a745;
+        }
+
+        .status-dot.offline {
+            background: #dc3545;
+        }
+
+        .status-dot.connecting {
+            background: #ffc107;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
             }
 
-            .container {
-                max-width: 1200px;
-                margin: 40px auto;
-                padding: 0 20px;
+            50% {
+                opacity: 0.5;
             }
+        }
 
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        @media (max-width: 768px) {
             .settings-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-                gap: 30px;
+                grid-template-columns: 1fr;
             }
 
-            /* Special layout only for one row */
             .special-row {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                grid-template-rows: 1fr 1fr;
-                gap: 30px;
+                /* one column only */
+                grid-template-columns: 1fr;
+                /* rows auto-expand */
+                grid-template-rows: auto;
                 grid-template-areas:
-                    "large small1"
-                    "large small2";
-
-                /* Make sure this row spans the whole parent grid width */
-                grid-column: 1 / -1;
-            }
-
-            .large-card {
-                grid-area: large;
-            }
-
-            .small-card-1 {
-                grid-area: small1;
-            }
-
-            .small-card-2 {
-                grid-area: small2;
-            }
-
-            .settings-card {
-                background: white;
-                border-radius: 15px;
-                padding: 30px;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            }
-
-            .settings-card h3 {
-                color: #333;
-                margin-bottom: 20px;
-                font-size: 20px;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-
-            .settings-card h3 .icon {
-                font-size: 24px;
-            }
-
-            /* Compact variant to reduce vertical space (approx half height) */
-            .settings-card.compact {
-                padding: 16px;
-            }
-
-            .settings-card.compact h3 {
-                margin-bottom: 12px;
-                font-size: 18px;
-            }
-
-            .settings-card.compact .form-group {
-                margin-bottom: 14px;
-            }
-
-            .settings-card.compact .toggle-group {
-                padding: 8px 0;
-            }
-
-            .form-group {
-                margin-bottom: 25px;
-            }
-
-            .form-group label {
-                display: block;
-                margin-bottom: 8px;
-                color: #555;
-                font-weight: 600;
-                font-size: 14px;
-            }
-
-            .form-group input,
-            .form-group textarea,
-            .form-group select {
-                width: 100%;
-                padding: 12px 15px;
-                border: 2px solid #e1e5e9;
-                border-radius: 8px;
-                font-size: 14px;
-                font-family: inherit;
-                transition: border-color 0.3s ease;
-                background: #f8f9fa;
-            }
-
-            .form-group input:focus,
-            .form-group textarea:focus,
-            .form-group select:focus {
-                outline: none;
-                border-color: #667eea;
-                background: white;
-            }
-
-            .form-group textarea {
-                resize: vertical;
-                min-height: 100px;
-            }
-
-            .form-group .help-text {
-                font-size: 12px;
-                color: #666;
-                margin-top: 5px;
-                font-style: italic;
-            }
-
-            .toggle-group {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 15px 0;
-                border-bottom: 1px solid #e9ecef;
-            }
-
-            .toggle-group:last-child {
-                border-bottom: none;
-            }
-
-            .toggle-label {
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
-            }
-
-            .toggle-label .title {
-                font-weight: 600;
-                color: #333;
-            }
-
-            .toggle-label .description {
-                font-size: 13px;
-                color: #666;
-            }
-
-            .toggle-switch {
-                position: relative;
-                display: inline-block;
-                width: 50px;
-                height: 24px;
-            }
-
-            .toggle-switch input {
-                opacity: 0;
-                width: 0;
-                height: 0;
-            }
-
-            .slider {
-                position: absolute;
-                cursor: pointer;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background-color: #ccc;
-                transition: 0.4s;
-                border-radius: 24px;
-            }
-
-            .slider:before {
-                position: absolute;
-                content: "";
-                height: 18px;
-                width: 18px;
-                left: 3px;
-                bottom: 3px;
-                background-color: white;
-                transition: 0.4s;
-                border-radius: 50%;
-            }
-
-            input:checked + .slider {
-                background-color: #667eea;
-            }
-
-            input:checked + .slider:before {
-                transform: translateX(26px);
-            }
-
-            .range-group {
-                display: flex;
-                align-items: center;
-                gap: 15px;
-            }
-
-            .range-slider {
-                flex: 1;
-                height: 6px;
-                border-radius: 3px;
-                background: #e1e5e9;
-                outline: none;
-                appearance: none;
-                -webkit-appearance: none;
-            }
-
-            .range-slider::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                background: #667eea;
-                cursor: pointer;
-            }
-
-            .range-slider::-moz-range-thumb {
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                background: #667eea;
-                cursor: pointer;
-                border: none;
-            }
-
-            .range-value {
-                min-width: 50px;
-                text-align: center;
-                font-weight: 600;
-                color: #667eea;
+                    "large"
+                    "small1"
+                    "small2";
             }
 
             .action-buttons {
-                display: flex;
-                gap: 15px;
-                justify-content: center;
-                margin-top: 40px;
+                flex-direction: column;
+                align-items: stretch;
             }
 
-            .status-indicator {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                font-size: 14px;
-                color: #666;
-                margin-top: 20px;
-                justify-content: center;
+            .range-group {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
             }
+        }
+    </style>
+    <link rel="stylesheet" href="/static/styles.css" />
+</head>
 
-            .status-dot {
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background: #28a745;
-            }
+<body>
+    <div class="header">
+        <h1 data-i18n="app.title">Box Catering Chatbot</h1>
+        <div class="nav-links" id="nav"></div>
+        <div class="user-info">
+            <div class="user-avatar" id="user-avatar">U</div>
+            <span id="username">User</span>
+            <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
+        </div>
+    </div>
 
-            .status-dot.offline {
-                background: #dc3545;
-            }
-
-            .status-dot.connecting {
-                background: #ffc107;
-                animation: pulse 1.5s infinite;
-            }
-
-            @keyframes pulse {
-                0%,
-                100% {
-                    opacity: 1;
-                }
-
-                50% {
-                    opacity: 0.5;
-                }
-            }
-
-            .alert {
-                padding: 15px;
-                border-radius: 8px;
-                margin-bottom: 20px;
-                display: none;
-            }
-
-            .alert-success {
-                background: #d4edda;
-                color: #155724;
-                border: 1px solid #c3e6cb;
-            }
-
-            .alert-error {
-                background: #f8d7da;
-                color: #721c24;
-                border: 1px solid #f5c6cb;
-            }
-
-            .alert-warning {
-                background: #fff3cd;
-                color: #856404;
-                border: 1px solid #ffeaa7;
-            }
-
-            @media (max-width: 768px) {
-                .settings-grid {
-                    grid-template-columns: 1fr;
-                }
-
-                .special-row {
-                    /* one column only */
-                    grid-template-columns: 1fr;
-                    /* rows auto-expand */
-                    grid-template-rows: auto;
-                    grid-template-areas:
-                        "large"
-                        "small1"
-                        "small2";
-                }
-
-                .action-buttons {
-                    flex-direction: column;
-                    align-items: stretch;
-                }
-
-                .range-group {
-                    flex-direction: column;
-                    align-items: stretch;
-                    gap: 10px;
-                }
-            }
-        </style>
-        <link rel="stylesheet" href="/static/styles.css" />
-    </head>
-
-    <body>
-        <div class="header">
-            <h1 data-i18n="app.title">Box Catering Chatbot</h1>
-            <div class="nav-links" id="nav"></div>
-            <div class="user-info">
-                <div class="user-avatar" id="user-avatar">U</div>
-                <span id="username">User</span>
-                <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
-            </div>
+    <div class="container">
+        <div id="configs-sidebar" style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;"></div>
+        <div class="page-header">
+            <h2 data-i18n="chatbotSettings.headerTitle">⚙️ Chatbot Configuration</h2>
+            <p data-i18n="chatbotSettings.headerSubtitle">Customize your AI-powered chatbot settings, behavior, and
+                responses to match your business needs</p>
         </div>
 
-        <div class="container">
-            <div class="page-header">
-                <h2 data-i18n="chatbotSettings.headerTitle">⚙️ Chatbot Configuration</h2>
-                <p data-i18n="chatbotSettings.headerSubtitle">Customize your AI-powered chatbot settings, behavior, and responses to match your business needs</p>
-            </div>
+        <div id="alert-container"></div>
 
-            <div id="alert-container"></div>
+        <div class="settings-grid">
+            <!-- Business Context -->
+            <div class="settings-card">
+                <h3><span class="icon">🏢</span><span data-i18n="chatbotSettings.section.business">Business
+                        Context</span></h3>
 
-            <div class="settings-grid">
-                <!-- Business Context -->
-                <div class="settings-card">
-                    <h3><span class="icon">🏢</span><span data-i18n="chatbotSettings.section.business">Business Context</span></h3>
+                <div class="form-group">
+                    <label for="company-name" data-i18n="chatbotSettings.companyName">Company Name</label>
+                    <input type="text" id="company-name" placeholder="Your Company Name" value="Box Catering"
+                        data-i18n-placeholder="chatbotSettings.companyNamePh" />
+                </div>
 
-                    <div class="form-group">
-                        <label for="company-name" data-i18n="chatbotSettings.companyName">Company Name</label>
-                        <input type="text" id="company-name" placeholder="Your Company Name" value="Box Catering" data-i18n-placeholder="chatbotSettings.companyNamePh" />
-                    </div>
+                <div class="form-group">
+                    <label for="business-description" data-i18n="chatbotSettings.businessDescription">Business
+                        Description</label>
+                    <textarea id="business-description"
+                        placeholder="Describe your business, services, and unique selling points..."
+                        data-i18n-placeholder="chatbotSettings.businessDescriptionPh">
+We are a premium box catering service specializing in corporate events, weddings, and private parties. We offer gourmet food, exceptional service, and customizable menus to meet all dietary requirements.</textarea>
+                </div>
 
-                    <div class="form-group">
-                        <label for="business-description" data-i18n="chatbotSettings.businessDescription">Business Description</label>
-                        <textarea id="business-description" placeholder="Describe your business, services, and unique selling points..." data-i18n-placeholder="chatbotSettings.businessDescriptionPh">
-We are a premium box catering service specializing in corporate events, weddings, and private parties. We offer gourmet food, exceptional service, and customizable menus to meet all dietary requirements.</textarea
-                        >
-                    </div>
-
-                    <div class="form-group">
-                        <label for="specializations" data-i18n="chatbotSettings.specializations">Specializations</label>
-                        <textarea id="specializations" placeholder="List your key specializations and unique offerings..." data-i18n-placeholder="chatbotSettings.specializationsPh">
+                <div class="form-group">
+                    <label for="specializations" data-i18n="chatbotSettings.specializations">Specializations</label>
+                    <textarea id="specializations" placeholder="List your key specializations and unique offerings..."
+                        data-i18n-placeholder="chatbotSettings.specializationsPh">
 • Corporate catering and team events
 • Wedding and celebration catering
 • Dietary restrictions (vegan, gluten-free, halal)
 • Local and sustainable ingredients
 • Custom menu design
-• Delivery and setup services</textarea
-                        >
+• Delivery and setup services</textarea>
+                </div>
+            </div>
+
+            <!-- Response Templates -->
+            <div class="settings-card">
+                <h3><span class="icon">📝</span><span data-i18n="chatbotSettings.section.responses">Response
+                        Templates</span></h3>
+
+                <div class="form-group">
+                    <label for="greeting-message" data-i18n="chatbotSettings.labels.welcome">Welcome Message</label>
+                    <textarea id="greeting-message" placeholder="Custom greeting message..."
+                        data-i18n-placeholder="chatbotSettings.placeholders.welcome">
+Hello! I'm your AI-powered box catering assistant. I can help you with menu selection, pricing, dietary requirements, and event planning. How can I assist you today?</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="fallback-message" data-i18n="chatbotSettings.labels.fallback">Fallback Message</label>
+                    <textarea id="fallback-message" placeholder="Message when AI can't understand..."
+                        data-i18n-placeholder="chatbotSettings.placeholders.fallback">
+I apologize, but I didn't quite understand that. Could you please rephrase your question? I'm here to help with catering inquiries, menu options, pricing, and event planning.</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="handover-message" data-i18n="chatbotSettings.labels.handover">Manager Handover
+                        Message</label>
+                    <textarea id="handover-message" placeholder="Message when transferring to manager..."
+                        data-i18n-placeholder="chatbotSettings.placeholders.handover">
+I understand this requires special attention. Let me connect you with one of our catering specialists who can provide personalized assistance for your specific needs.</textarea>
+                </div>
+            </div>
+
+            <div class="special-row">
+                <!-- Promt Templates -->
+                <div class="settings-card large-card">
+                    <h3><span class="icon">📝</span><span data-i18n="chatbotSettings.section.promts">Promt
+                            Templates</span></h3>
+
+                    <div class="form-group">
+                        <label for="language-instruction"
+                            data-i18n="chatbotSettings.labels.language_instruction">Language Instruction</label>
+                        <textarea id="language-instruction" placeholder=""></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="persona-instruction" data-i18n="chatbotSettings.labels.persona_instruction">Persona
+                            Instruction</label>
+                        <textarea id="persona-instruction" placeholder=""></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="system-instruction" data-i18n="chatbotSettings.labels.system_instruction">System
+                            Instruction</label>
+                        <textarea id="system-instruction" placeholder=""></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="order-flow-block" data-i18n="chatbotSettings.labels.order_flow_block">Order Flow
+                            Block</label>
+                        <textarea id="order-flow-block" placeholder=""></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="other-instruction" data-i18n="chatbotSettings.labels.other_instruction">Other
+                            Instruction</label>
+                        <textarea id="other-instruction" placeholder=""></textarea>
                     </div>
                 </div>
 
-                <!-- Response Templates -->
-                <div class="settings-card">
-                    <h3><span class="icon">📝</span><span data-i18n="chatbotSettings.section.responses">Response Templates</span></h3>
+                <!-- <div class="special-row"> -->
+                <!-- Context Documents -->
+                <div class="settings-card large-card" style="display: none">
+                    <h3><span class="icon">📚</span><span data-i18n="chatbotSettings.section.contextDocs">Context
+                            Documents</span></h3>
 
-                    <div class="form-group">
-                        <label for="greeting-message" data-i18n="chatbotSettings.labels.welcome">Welcome Message</label>
-                        <textarea id="greeting-message" placeholder="Custom greeting message..." data-i18n-placeholder="chatbotSettings.placeholders.welcome">
-Hello! I'm your AI-powered box catering assistant. I can help you with menu selection, pricing, dietary requirements, and event planning. How can I assist you today?</textarea
-                        >
+                    <div class="toggle-group">
+                        <div class="toggle-label">
+                            <span class="title" data-i18n="chatbotSettings.ctx.enableTitle">Enable Context
+                                Documents</span>
+                            <span class="description" data-i18n="chatbotSettings.ctx.enableDesc">Include knowledge from
+                                /agent_context_documents in AI prompt</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="context-docs-enabled" checked />
+                            <span class="slider"></span>
+                        </label>
                     </div>
 
                     <div class="form-group">
-                        <label for="fallback-message" data-i18n="chatbotSettings.labels.fallback">Fallback Message</label>
-                        <textarea id="fallback-message" placeholder="Message when AI can't understand..." data-i18n-placeholder="chatbotSettings.placeholders.fallback">
-I apologize, but I didn't quite understand that. Could you please rephrase your question? I'm here to help with catering inquiries, menu options, pricing, and event planning.</textarea
-                        >
+                        <label for="context-docs-dir" data-i18n="chatbotSettings.ctx.dir">Context Docs Directory</label>
+                        <input type="text" id="context-docs-dir" placeholder="agent_context_documents"
+                            value="agent_context_documents" />
+                        <div class="help-text" data-i18n="chatbotSettings.ctx.dirHelp">Relative to project root.
+                            Supports .md, .txt, .pdf, .docx, .csv</div>
                     </div>
 
                     <div class="form-group">
-                        <label for="handover-message" data-i18n="chatbotSettings.labels.handover">Manager Handover Message</label>
-                        <textarea id="handover-message" placeholder="Message when transferring to manager..." data-i18n-placeholder="chatbotSettings.placeholders.handover">
-I understand this requires special attention. Let me connect you with one of our catering specialists who can provide personalized assistance for your specific needs.</textarea
-                        >
+                        <label for="context-docs-max-chars" data-i18n="chatbotSettings.ctx.maxChars">Max Characters in
+                            Prompt</label>
+                        <input type="number" id="context-docs-max-chars" min="5000" step="1000" value="20000" />
+                        <div class="help-text" data-i18n="chatbotSettings.ctx.maxCharsHelp">Upper limit of concatenated
+                            context injected into the model prompt.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label data-i18n="chatbotSettings.ctx.manage">Manage Context Documents</label>
+                        <div id="context-upload-area"
+                            style="border: 2px dashed #e1e5e9; border-radius: 10px; padding: 20px; background: #fafbfc; text-align: center; cursor: pointer">
+                            <div style="font-size: 28px">📤</div>
+                            <div style="font-weight: 600; margin-top: 8px" data-i18n="chatbotSettings.ctx.drop">Drag &
+                                drop files here, or click to select</div>
+                            <div style="font-size: 12px; color: #666; margin-top: 6px"
+                                data-i18n="chatbotSettings.ctx.allowed">Allowed: .md, .txt, .pdf, .docx, .csv</div>
+                            <input id="context-file-input" type="file" multiple style="display: none"
+                                accept=".md,.txt,.pdf,.docx,.csv" />
+                        </div>
+                        <div id="context-selected-files"
+                            style="margin-top: 10px; border: 1px solid #eef0f3; border-radius: 8px; background: white; max-height: 150px; overflow: auto">
+                            <div style="padding: 8px; font-size: 13px; color: #666"
+                                data-i18n="chatbotSettings.ctx.noSelected">No files selected</div>
+                        </div>
+                        <div style="margin-top: 12px; display: flex; gap: 8px; justify-content: flex-end">
+                            <button class="btn-sm btn-secondary" id="refresh-context-files"
+                                data-i18n="chatbotSettings.ctx.refresh">Refresh List</button>
+                            <button class="btn-sm btn-primary" id="upload-context-files"
+                                data-i18n="chatbotSettings.ctx.upload">Upload Selected</button>
+                        </div>
+                        <div id="context-files-list"
+                            style="margin-top: 15px; max-height: 220px; overflow: auto; border: 1px solid #eef0f3; border-radius: 8px; background: white">
+                            <div style="padding: 10px; font-size: 14px; color: #666"
+                                data-i18n="chatbotSettings.ctx.noFiles">No files loaded</div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="special-row">
-                    <!-- Promt Templates -->
-                    <div class="settings-card large-card">
-                        <h3><span class="icon">📝</span><span data-i18n="chatbotSettings.section.promts">Promt Templates</span></h3>
+                <!-- Chatbot Language Configuration -->
+                <div class="settings-card small-card-1">
+                    <h3><span class="icon">🌍</span><span data-i18n="chatbotSettings.section.language">Language
+                            Settings</span></h3>
 
-                        <div class="form-group">
-                            <label for="language-instruction" data-i18n="chatbotSettings.labels.language_instruction">Language Instruction</label>
-                            <textarea id="language-instruction" placeholder=""></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="persona-instruction" data-i18n="chatbotSettings.labels.persona_instruction">Persona Instruction</label>
-                            <textarea id="persona-instruction" placeholder=""></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="system-instruction" data-i18n="chatbotSettings.labels.system_instruction">System Instruction</label>
-                            <textarea id="system-instruction" placeholder=""></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="order-flow-block" data-i18n="chatbotSettings.labels.order_flow_block">Order Flow Block</label>
-                            <textarea id="order-flow-block" placeholder=""></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="other-instruction" data-i18n="chatbotSettings.labels.other_instruction">Other Instruction</label>
-                            <textarea id="other-instruction" placeholder=""></textarea>
-                        </div>
+                    <div class="form-group">
+                        <label for="chatbot-language" data-i18n="chatbotSettings.lang.label">Chatbot Language</label>
+                        <select id="chatbot-language">
+                            <option value="uk">🇺🇦 Ukrainian (Українська)</option>
+                            <option value="en">🇺🇸 English</option>
+                            <option value="de">🇩🇪 German (Deutsch)</option>
+                            <option value="fr">🇫🇷 French (Français)</option>
+                            <option value="es">🇪🇸 Spanish (Español)</option>
+                        </select>
+                        <div class="help-text" data-i18n="chatbotSettings.lang.help">Language the AI agent will use to
+                            communicate with customers</div>
                     </div>
 
-                    <!-- <div class="special-row"> -->
-                    <!-- Context Documents -->
-                    <div class="settings-card large-card" style="display: none">
-                        <h3><span class="icon">📚</span><span data-i18n="chatbotSettings.section.contextDocs">Context Documents</span></h3>
-
+                    <div class="form-group">
+                        <label for="force-language" data-i18n="chatbotSettings.lang.forceLabel">Force Language
+                            Compliance</label>
                         <div class="toggle-group">
                             <div class="toggle-label">
-                                <span class="title" data-i18n="chatbotSettings.ctx.enableTitle">Enable Context Documents</span>
-                                <span class="description" data-i18n="chatbotSettings.ctx.enableDesc">Include knowledge from /agent_context_documents in AI prompt</span>
+                                <span class="title" data-i18n="chatbotSettings.lang.forceTitle">Strict Language
+                                    Enforcement</span>
+                                <span class="description" data-i18n="chatbotSettings.lang.forceDesc">AI will only
+                                    respond in the selected language</span>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="context-docs-enabled" checked />
+                                <input type="checkbox" id="force-language" checked />
                                 <span class="slider"></span>
                             </label>
                         </div>
-
-                        <div class="form-group">
-                            <label for="context-docs-dir" data-i18n="chatbotSettings.ctx.dir">Context Docs Directory</label>
-                            <input type="text" id="context-docs-dir" placeholder="agent_context_documents" value="agent_context_documents" />
-                            <div class="help-text" data-i18n="chatbotSettings.ctx.dirHelp">Relative to project root. Supports .md, .txt, .pdf, .docx, .csv</div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="context-docs-max-chars" data-i18n="chatbotSettings.ctx.maxChars">Max Characters in Prompt</label>
-                            <input type="number" id="context-docs-max-chars" min="5000" step="1000" value="20000" />
-                            <div class="help-text" data-i18n="chatbotSettings.ctx.maxCharsHelp">Upper limit of concatenated context injected into the model prompt.</div>
-                        </div>
-
-                        <div class="form-group">
-                            <label data-i18n="chatbotSettings.ctx.manage">Manage Context Documents</label>
-                            <div id="context-upload-area" style="border: 2px dashed #e1e5e9; border-radius: 10px; padding: 20px; background: #fafbfc; text-align: center; cursor: pointer">
-                                <div style="font-size: 28px">📤</div>
-                                <div style="font-weight: 600; margin-top: 8px" data-i18n="chatbotSettings.ctx.drop">Drag & drop files here, or click to select</div>
-                                <div style="font-size: 12px; color: #666; margin-top: 6px" data-i18n="chatbotSettings.ctx.allowed">Allowed: .md, .txt, .pdf, .docx, .csv</div>
-                                <input id="context-file-input" type="file" multiple style="display: none" accept=".md,.txt,.pdf,.docx,.csv" />
-                            </div>
-                            <div id="context-selected-files" style="margin-top: 10px; border: 1px solid #eef0f3; border-radius: 8px; background: white; max-height: 150px; overflow: auto">
-                                <div style="padding: 8px; font-size: 13px; color: #666" data-i18n="chatbotSettings.ctx.noSelected">No files selected</div>
-                            </div>
-                            <div style="margin-top: 12px; display: flex; gap: 8px; justify-content: flex-end">
-                                <button class="btn-sm btn-secondary" id="refresh-context-files" data-i18n="chatbotSettings.ctx.refresh">Refresh List</button>
-                                <button class="btn-sm btn-primary" id="upload-context-files" data-i18n="chatbotSettings.ctx.upload">Upload Selected</button>
-                            </div>
-                            <div id="context-files-list" style="margin-top: 15px; max-height: 220px; overflow: auto; border: 1px solid #eef0f3; border-radius: 8px; background: white">
-                                <div style="padding: 10px; font-size: 14px; color: #666" data-i18n="chatbotSettings.ctx.noFiles">No files loaded</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Chatbot Language Configuration -->
-                    <div class="settings-card small-card-1">
-                        <h3><span class="icon">🌍</span><span data-i18n="chatbotSettings.section.language">Language Settings</span></h3>
-
-                        <div class="form-group">
-                            <label for="chatbot-language" data-i18n="chatbotSettings.lang.label">Chatbot Language</label>
-                            <select id="chatbot-language">
-                                <option value="uk">🇺🇦 Ukrainian (Українська)</option>
-                                <option value="en">🇺🇸 English</option>
-                                <option value="de">🇩🇪 German (Deutsch)</option>
-                                <option value="fr">🇫🇷 French (Français)</option>
-                                <option value="es">🇪🇸 Spanish (Español)</option>
-                            </select>
-                            <div class="help-text" data-i18n="chatbotSettings.lang.help">Language the AI agent will use to communicate with customers</div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="force-language" data-i18n="chatbotSettings.lang.forceLabel">Force Language Compliance</label>
-                            <div class="toggle-group">
-                                <div class="toggle-label">
-                                    <span class="title" data-i18n="chatbotSettings.lang.forceTitle">Strict Language Enforcement</span>
-                                    <span class="description" data-i18n="chatbotSettings.lang.forceDesc">AI will only respond in the selected language</span>
-                                </div>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="force-language" checked />
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
-                            <div class="help-text" data-i18n="chatbotSettings.lang.forceHelp">When enabled, the AI will strictly respond only in the selected language</div>
-                        </div>
-                    </div>
-
-                    <!-- Website Scraping Configuration -->
-                    <div class="settings-card small-card-2">
-                        <h3><span class="icon">🌐</span><span data-i18n="chatbotSettings.section.scraping">Website Scraping</span></h3>
-
-                        <div class="form-group">
-                            <!-- <label data-i18n="chatbotSettings.scrape.enabledTitle">Enable Scraping</label> -->
-                            <div class="toggle-group">
-                                <div class="toggle-label">
-                                    <span class="title" data-i18n="chatbotSettings.scrape.enabledTitle">Enable Scraping</span>
-                                    <span class="description" data-i18n="chatbotSettings.scrape.enabledDesc">Periodically fetch and cache website content</span>
-                                </div>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="scrape-enabled" checked />
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="scrape-website-url" data-i18n="chatbotSettings.scrape.urlLabel">Website URL to scrape</label>
-                            <input type="url" id="scrape-website-url" placeholder="https://example.com" data-i18n-placeholder="chatbotSettings.scrape.urlPh" />
-                        </div>
-
-                        <div class="form-group">
-                            <label for="scrape-interval-minutes" data-i18n="chatbotSettings.scrape.intervalLabel">Scrape interval (minutes)</label>
-                            <input type="number" id="scrape-interval-minutes" min="5" step="5" value="1440" />
-                            <div class="help-text" data-i18n="chatbotSettings.scrape.intervalHelp">How often to fetch and update context from the site</div>
-                        </div>
+                        <div class="help-text" data-i18n="chatbotSettings.lang.forceHelp">When enabled, the AI will
+                            strictly respond only in the selected language</div>
                     </div>
                 </div>
 
-                <!-- Chatbot Behavior -->
-                <div class="settings-card">
-                    <h3><span class="icon">🎭</span><span data-i18n="chatbotSettings.section.behavior">Chatbot Behavior</span></h3>
-
-                    <div class="toggle-group">
-                        <div class="toggle-label">
-                            <span class="title" data-i18n="chatbotSettings.behavior.friendlyTitle">Friendly Tone</span>
-                            <span class="description" data-i18n="chatbotSettings.behavior.friendlyDesc">Use warm, welcoming language</span>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="friendly-tone" checked />
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-
-                    <div class="toggle-group">
-                        <div class="toggle-label">
-                            <span class="title" data-i18n="chatbotSettings.behavior.professionalTitle">Professional Style</span>
-                            <span class="description" data-i18n="chatbotSettings.behavior.professionalDesc">Maintain business-appropriate language</span>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="professional-style" checked />
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-
-                    <div class="toggle-group">
-                        <div class="toggle-label">
-                            <span class="title" data-i18n="chatbotSettings.behavior.suggestiveTitle">Suggestive Responses</span>
-                            <span class="description" data-i18n="chatbotSettings.behavior.suggestiveDesc">Offer follow-up suggestions</span>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="suggestive-responses" checked />
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-
-                    <div class="toggle-group">
-                        <div class="toggle-label">
-                            <span class="title" data-i18n="chatbotSettings.behavior.handoverTitle">Manager Handover</span>
-                            <span class="description" data-i18n="chatbotSettings.behavior.handoverDesc">Enable automatic manager escalation</span>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="manager-handover" checked />
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Performance & Monitoring -->
-                <div class="settings-card">
-                    <h3><span class="icon">📊</span><span data-i18n="chatbotSettings.section.performance">Performance & Monitoring</span></h3>
+                <!-- Website Scraping Configuration -->
+                <div class="settings-card small-card-2">
+                    <h3><span class="icon">🌐</span><span data-i18n="chatbotSettings.section.scraping">Website
+                            Scraping</span></h3>
 
                     <div class="form-group">
-                        <label for="response-timeout" data-i18n="chatbotSettings.performance.timeout">Response Timeout (seconds)</label>
-                        <div class="range-group">
-                            <input type="range" id="response-timeout" class="range-slider" min="5" max="60" step="5" value="30" />
-                            <span class="range-value" id="response-timeout-value">30</span>
+                        <!-- <label data-i18n="chatbotSettings.scrape.enabledTitle">Enable Scraping</label> -->
+                        <div class="toggle-group">
+                            <div class="toggle-label">
+                                <span class="title" data-i18n="chatbotSettings.scrape.enabledTitle">Enable
+                                    Scraping</span>
+                                <span class="description" data-i18n="chatbotSettings.scrape.enabledDesc">Periodically
+                                    fetch and cache website content</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="scrape-enabled" checked />
+                                <span class="slider"></span>
+                            </label>
                         </div>
-                        <div class="help-text" data-i18n="chatbotSettings.performance.timeoutHelp">Maximum time to wait for AI response</div>
                     </div>
 
-                    <div class="toggle-group">
-                        <div class="toggle-label">
-                            <span class="title" data-i18n="chatbotSettings.performance.loggingTitle">Conversation Logging</span>
-                            <span class="description" data-i18n="chatbotSettings.performance.loggingDesc">Store chat history for analysis</span>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="conversation-logging" checked />
-                            <span class="slider"></span>
-                        </label>
+                    <div class="form-group">
+                        <label for="scrape-website-url" data-i18n="chatbotSettings.scrape.urlLabel">Website URL to
+                            scrape</label>
+                        <input type="url" id="scrape-website-url" placeholder="https://example.com"
+                            data-i18n-placeholder="chatbotSettings.scrape.urlPh" />
                     </div>
 
-                    <div class="toggle-group">
-                        <div class="toggle-label">
-                            <span class="title" data-i18n="chatbotSettings.performance.analyticsTitle">Performance Analytics</span>
-                            <span class="description" data-i18n="chatbotSettings.performance.analyticsDesc">Track response quality and speed</span>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="performance-analytics" checked />
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-
-                    <div class="toggle-group">
-                        <div class="toggle-label">
-                            <span class="title" data-i18n="chatbotSettings.performance.errorsTitle">Error Reporting</span>
-                            <span class="description" data-i18n="chatbotSettings.performance.errorsDesc">Log and report system errors</span>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="error-reporting" checked />
-                            <span class="slider"></span>
-                        </label>
+                    <div class="form-group">
+                        <label for="scrape-interval-minutes" data-i18n="chatbotSettings.scrape.intervalLabel">Scrape
+                            interval (minutes)</label>
+                        <input type="number" id="scrape-interval-minutes" min="5" step="5" value="1440" />
+                        <div class="help-text" data-i18n="chatbotSettings.scrape.intervalHelp">How often to fetch and
+                            update context from the site</div>
                     </div>
                 </div>
             </div>
 
-            <div class="action-buttons">
-                <button class="btn btn-primary" onclick="saveSettings()" data-i18n="chatbotSettings.btn.save">💾 Save Settings</button>
-                <button class="btn btn-secondary" onclick="resetToDefaults()" data-i18n="chatbotSettings.btn.reset">🔄 Reset to Defaults</button>
-                <button class="btn btn-success" onclick="testConfiguration()" data-i18n="chatbotSettings.btn.test">🧪 Test Configuration</button>
-                <button class="btn btn-danger" onclick="exportSettings()" data-i18n="chatbotSettings.btn.export">📤 Export Settings</button>
+            <!-- Chatbot Behavior -->
+            <div class="settings-card">
+                <h3><span class="icon">🎭</span><span data-i18n="chatbotSettings.section.behavior">Chatbot
+                        Behavior</span></h3>
+
+                <div class="toggle-group">
+                    <div class="toggle-label">
+                        <span class="title" data-i18n="chatbotSettings.behavior.friendlyTitle">Friendly Tone</span>
+                        <span class="description" data-i18n="chatbotSettings.behavior.friendlyDesc">Use warm, welcoming
+                            language</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="friendly-tone" checked />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-group">
+                    <div class="toggle-label">
+                        <span class="title" data-i18n="chatbotSettings.behavior.professionalTitle">Professional
+                            Style</span>
+                        <span class="description" data-i18n="chatbotSettings.behavior.professionalDesc">Maintain
+                            business-appropriate language</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="professional-style" checked />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-group">
+                    <div class="toggle-label">
+                        <span class="title" data-i18n="chatbotSettings.behavior.suggestiveTitle">Suggestive
+                            Responses</span>
+                        <span class="description" data-i18n="chatbotSettings.behavior.suggestiveDesc">Offer follow-up
+                            suggestions</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="suggestive-responses" checked />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-group">
+                    <div class="toggle-label">
+                        <span class="title" data-i18n="chatbotSettings.behavior.handoverTitle">Manager Handover</span>
+                        <span class="description" data-i18n="chatbotSettings.behavior.handoverDesc">Enable automatic
+                            manager escalation</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="manager-handover" checked />
+                        <span class="slider"></span>
+                    </label>
+                </div>
             </div>
 
-            <div class="status-indicator" style="margin-top: 30px">
-                <div class="status-dot" id="status-dot"></div>
-                <span id="status-text" data-i18n="chatbotSettings.status.saved">Configuration saved successfully</span>
+            <!-- Performance & Monitoring -->
+            <div class="settings-card">
+                <h3><span class="icon">📊</span><span data-i18n="chatbotSettings.section.performance">Performance &
+                        Monitoring</span></h3>
+
+                <div class="form-group">
+                    <label for="response-timeout" data-i18n="chatbotSettings.performance.timeout">Response Timeout
+                        (seconds)</label>
+                    <div class="range-group">
+                        <input type="range" id="response-timeout" class="range-slider" min="5" max="60" step="5"
+                            value="30" />
+                        <span class="range-value" id="response-timeout-value">30</span>
+                    </div>
+                    <div class="help-text" data-i18n="chatbotSettings.performance.timeoutHelp">Maximum time to wait for
+                        AI response</div>
+                </div>
+
+                <div class="toggle-group">
+                    <div class="toggle-label">
+                        <span class="title" data-i18n="chatbotSettings.performance.loggingTitle">Conversation
+                            Logging</span>
+                        <span class="description" data-i18n="chatbotSettings.performance.loggingDesc">Store chat history
+                            for analysis</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="conversation-logging" checked />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-group">
+                    <div class="toggle-label">
+                        <span class="title" data-i18n="chatbotSettings.performance.analyticsTitle">Performance
+                            Analytics</span>
+                        <span class="description" data-i18n="chatbotSettings.performance.analyticsDesc">Track response
+                            quality and speed</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="performance-analytics" checked />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-group">
+                    <div class="toggle-label">
+                        <span class="title" data-i18n="chatbotSettings.performance.errorsTitle">Error Reporting</span>
+                        <span class="description" data-i18n="chatbotSettings.performance.errorsDesc">Log and report
+                            system errors</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="error-reporting" checked />
+                        <span class="slider"></span>
+                    </label>
+                </div>
             </div>
         </div>
 
-        <script src="/static/auth.js"></script>
-        <script src="/static/i18n.js"></script>
-        <script>
-            (function () {
-                async function initI18N() {
-                    try {
-                        const token = localStorage.getItem("access_token");
-                        const meRes = await fetch("/users/me", { headers: { Authorization: `Bearer ${token}` } });
-                        const storedLang = localStorage.getItem("ui_language");
-                        let lang = storedLang || "uk";
-                        if (!storedLang && meRes.ok) {
-                            const me = await meRes.json();
-                            lang = me.preferred_language || lang;
-                        }
-                        if (window.I18N && I18N.setLanguage) {
-                            await I18N.setLanguage(lang);
-                        }
-                        document.querySelectorAll("[data-i18n]").forEach(function (el) {
-                            const k = el.getAttribute("data-i18n");
-                            const txt = window.I18N && I18N._dict && I18N._dict[k] ? I18N._dict[k] : null;
-                            if (txt) el.textContent = txt;
-                        });
-                        // Translate placeholders for inputs/textareas
-                        document.querySelectorAll("[data-i18n-placeholder]").forEach(function (el) {
-                            const k = el.getAttribute("data-i18n-placeholder");
-                            const txt = window.I18N && I18N._dict && I18N._dict[k] ? I18N._dict[k] : null;
-                            if (txt) el.setAttribute("placeholder", txt);
-                        });
-                    } catch {}
-                }
-                window.__i18nReady = initI18N();
-            })();
-        </script>
-        <script src="/static/nav.js"></script>
-        <script>
-            // Initialize settings
-            let currentSettings = {};
-            let pendingContextFiles = [];
-            let __currentUserRole = null;
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="saveSettings()" data-i18n="chatbotSettings.btn.save">💾 Save
+                Settings</button>
+            <button class="btn btn-secondary" onclick="resetToDefaults()" data-i18n="chatbotSettings.btn.reset">🔄 Reset
+                to Defaults</button>
+            <button class="btn btn-success" onclick="testConfiguration()" data-i18n="chatbotSettings.btn.test">🧪 Test
+                Configuration</button>
+            <button class="btn btn-danger" onclick="exportSettings()" data-i18n="chatbotSettings.btn.export">📤 Export
+                Settings</button>
+        </div>
 
-            // Default settings
-            const defaultSettings = {
-                chatbotLanguage: "uk",
-                forceLanguage: true,
-                companyName: "Box Catering",
-                businessDescription:
-                    "We are a premium catering service specializing in corporate events, weddings, and private parties. We offer gourmet food, exceptional service, and customizable menus to meet all dietary requirements.",
-                specializations:
-                    "• Corporate catering and team events\n• Wedding and celebration catering\n• Dietary restrictions (vegan, gluten-free, halal)\n• Local and sustainable ingredients\n• Custom menu design\n• Delivery and setup services",
-                friendlyTone: true,
-                professionalStyle: true,
-                suggestiveResponses: true,
-                managerHandover: true,
-                greetingMessage:
-                    "Hello! I'm your AI-powered box catering assistant. I can help you with menu selection, pricing, dietary requirements, and event planning. How can I assist you today?",
-                fallbackMessage:
-                    "I apologize, but I didn't quite understand that. Could you please rephrase your question? I'm here to help with catering inquiries, menu options, pricing, and event planning.",
-                handoverMessage:
-                    "I understand this requires special attention. Let me connect you with one of our catering specialists who can provide personalized assistance for your specific needs.",
-                responseTimeout: 30,
-                conversationLogging: true,
-                performanceAnalytics: true,
-                errorReporting: true,
-                // Context Documents defaults
-                contextDocsEnabled: true,
-                contextDocsDir: "agent_context_documents",
-                contextDocsMaxChars: 4000,
-                // Website Scraping defaults
-                scrapeEnabled: true,
-                scrapeWebsiteUrl: "",
-                scrapeIntervalMinutes: 1440,
-                languageInstruction: "",
-                personaInstruction: "",
-                systemInstruction: "",
-                orderFlowBlock: "",
-                otherInstruction: "",
-            };
+        <div class="status-indicator" style="margin-top: 30px">
+            <div class="status-dot" id="status-dot"></div>
+            <span id="status-text" data-i18n="chatbotSettings.status.saved">Configuration saved successfully</span>
+        </div>
+    </div>
 
-            // Check authentication
-            function checkAuth() {
-                const token = localStorage.getItem("access_token");
-                if (!token) {
-                    window.location.href = "/login";
-                    return;
-                }
-                fetchUserInfo();
-            }
-
-            // Fetch user information
-            async function fetchUserInfo() {
+    <script src="/static/auth.js"></script>
+    <script src="/static/i18n.js"></script>
+    <script>
+        (function () {
+            async function initI18N() {
                 try {
                     const token = localStorage.getItem("access_token");
-                    const response = await fetch("/users/me", {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    });
-
-                    if (response.ok) {
-                        const user = await response.json();
-                        __currentUserRole = user.role || null;
-                        document.getElementById("username").textContent = user.full_name || user.username;
-                        document.getElementById("user-avatar").textContent = (user.full_name || user.username).charAt(0).toUpperCase();
-
-                        // Check if user has access to this page
-                        if (__currentUserRole === "manager") {
-                            // MANAGER role cannot access General Settings pages
-                            showAccessDeniedMessage();
-                            return;
-                        }
-                        // Initialize context uploader and list files once role is known
-                        try {
-                            setupContextUploader();
-                        } catch {}
-                        if (__currentUserRole === "system_admin") {
-                            try {
-                                listContextFiles();
-                            } catch {}
-                        }
-                        // Load settings only if user has access
-                        loadSettings();
+                    const meRes = await fetch("/users/me", { headers: { Authorization: `Bearer ${token}` } });
+                    const storedLang = localStorage.getItem("ui_language");
+                    let lang = storedLang || "uk";
+                    if (!storedLang && meRes.ok) {
+                        const me = await meRes.json();
+                        lang = me.preferred_language || lang;
                     }
-                } catch (error) {
-                    console.error("Error fetching user info:", error);
-                }
-            }
-
-            // Load current settings
-            async function loadSettings() {
-                try {
-                    const token = localStorage.getItem("access_token");
-                    const response = await fetch("/chatbot-config/active", {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
+                    if (window.I18N && I18N.setLanguage) {
+                        await I18N.setLanguage(lang);
+                    }
+                    document.querySelectorAll("[data-i18n]").forEach(function (el) {
+                        const k = el.getAttribute("data-i18n");
+                        const txt = window.I18N && I18N._dict && I18N._dict[k] ? I18N._dict[k] : null;
+                        if (txt) el.textContent = txt;
                     });
+                    // Translate placeholders for inputs/textareas
+                    document.querySelectorAll("[data-i18n-placeholder]").forEach(function (el) {
+                        const k = el.getAttribute("data-i18n-placeholder");
+                        const txt = window.I18N && I18N._dict && I18N._dict[k] ? I18N._dict[k] : null;
+                        if (txt) el.setAttribute("placeholder", txt);
+                    });
+                } catch { }
+            }
+            window.__i18nReady = initI18N();
+        })();
+    </script>
+    <script src="/static/nav.js"></script>
+    <script>
+        // Initialize settings
+        let currentSettings = {};
+        let pendingContextFiles = [];
+        let __currentUserRole = null;
 
-                    if (response.ok) {
-                        const dbSettings = await response.json();
-                        // console.log("Current settings:", dbSettings);
+        // Default settings
+        const defaultSettings = {
+            chatbotLanguage: "uk",
+            forceLanguage: true,
+            companyName: "Box Catering",
+            businessDescription:
+                "We are a premium catering service specializing in corporate events, weddings, and private parties. We offer gourmet food, exceptional service, and customizable menus to meet all dietary requirements.",
+            specializations:
+                "• Corporate catering and team events\n• Wedding and celebration catering\n• Dietary restrictions (vegan, gluten-free, halal)\n• Local and sustainable ingredients\n• Custom menu design\n• Delivery and setup services",
+            friendlyTone: true,
+            professionalStyle: true,
+            suggestiveResponses: true,
+            managerHandover: true,
+            greetingMessage:
+                "Hello! I'm your AI-powered box catering assistant. I can help you with menu selection, pricing, dietary requirements, and event planning. How can I assist you today?",
+            fallbackMessage:
+                "I apologize, but I didn't quite understand that. Could you please rephrase your question? I'm here to help with catering inquiries, menu options, pricing, and event planning.",
+            handoverMessage:
+                "I understand this requires special attention. Let me connect you with one of our catering specialists who can provide personalized assistance for your specific needs.",
+            responseTimeout: 30,
+            conversationLogging: true,
+            performanceAnalytics: true,
+            errorReporting: true,
+            // Context Documents defaults
+            contextDocsEnabled: true,
+            contextDocsDir: "agent_context_documents",
+            contextDocsMaxChars: 4000,
+            // Website Scraping defaults
+            scrapeEnabled: true,
+            scrapeWebsiteUrl: "",
+            scrapeIntervalMinutes: 1440,
+            languageInstruction: "",
+            personaInstruction: "",
+            systemInstruction: "",
+            orderFlowBlock: "",
+            otherInstruction: "",
+        };
 
-                        // Map database fields to form fields
-                        currentSettings = {
-                            ...defaultSettings,
-                            chatbotLanguage: dbSettings.language || "uk",
-                            forceLanguage: dbSettings.force_language !== undefined ? dbSettings.force_language : true,
-                            greetingMessage: dbSettings.welcome_message || defaultSettings.greetingMessage,
-                            businessDescription: dbSettings.business_context || defaultSettings.businessDescription,
-                            // Additional fields
-                            companyName: dbSettings.company_name || defaultSettings.companyName,
-                            specializations: dbSettings.specializations || defaultSettings.specializations,
-                            friendlyTone: dbSettings.friendly_tone !== undefined ? dbSettings.friendly_tone : defaultSettings.friendlyTone,
-                            professionalStyle: dbSettings.professional_style !== undefined ? dbSettings.professional_style : defaultSettings.professionalStyle,
-                            suggestiveResponses: dbSettings.suggestive_responses !== undefined ? dbSettings.suggestive_responses : defaultSettings.suggestiveResponses,
-                            managerHandover: dbSettings.manager_handover !== undefined ? dbSettings.manager_handover : defaultSettings.managerHandover,
-                            fallbackMessage: dbSettings.fallback_message || defaultSettings.fallbackMessage,
-                            handoverMessage: dbSettings.handover_message || defaultSettings.handoverMessage,
-                            responseTimeout: dbSettings.response_timeout || defaultSettings.responseTimeout,
-                            conversationLogging: dbSettings.conversation_logging !== undefined ? dbSettings.conversation_logging : defaultSettings.conversationLogging,
-                            performanceAnalytics: dbSettings.performance_analytics !== undefined ? dbSettings.performance_analytics : defaultSettings.performanceAnalytics,
-                            errorReporting: dbSettings.error_reporting !== undefined ? dbSettings.error_reporting : defaultSettings.errorReporting,
-                            // Promt fields
-                            language_instruction: dbSettings.language_instruction || defaultSettings.languageInstruction,
-                            persona_instruction: dbSettings.persona_instruction || defaultSettings.personaInstruction,
-                            system_instruction: dbSettings.system_instruction || defaultSettings.systemInstruction,
-                            order_flow_block: dbSettings.order_flow_block || defaultSettings.orderFlowBlock,
-                            other_instruction: dbSettings.other_instruction || defaultSettings.otherInstruction,
-                        };
-                    } else {
-                        // No configuration found in database, use defaults
-                        setDefaults();
+        // Check authentication
+        function checkAuth() {
+            const token = localStorage.getItem("access_token");
+            if (!token) {
+                window.location.href = "/login";
+                return;
+            }
+            fetchUserInfo();
+        }
+
+        // Fetch user information
+        async function fetchUserInfo() {
+            try {
+                const token = localStorage.getItem("access_token");
+                const response = await fetch("/users/me", {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    __currentUserRole = user.role || null;
+                    document.getElementById("username").textContent = user.full_name || user.username;
+                    document.getElementById("user-avatar").textContent = (user.full_name || user.username).charAt(0).toUpperCase();
+
+                    // Check if user has access to this page
+                    if (__currentUserRole === "manager") {
+                        // MANAGER role cannot access General Settings pages
+                        showAccessDeniedMessage();
                         return;
                     }
-                } catch (error) {
-                    console.error("Error loading settings from database:", error);
-                    // Use default values if database is unavailable
+                    // Initialize context uploader and list files once role is known
+                    try {
+                        setupContextUploader();
+                    } catch { }
+                    if (__currentUserRole === "system_admin") {
+                        try {
+                            listContextFiles();
+                        } catch { }
+                    }
+                    // Load settings only if user has access
+                    loadSettings();
+                }
+            } catch (error) {
+                console.error("Error fetching user info:", error);
+            }
+        }
+
+        // Load current settings
+        async function loadSettings() {
+            try {
+                const token = localStorage.getItem("access_token");
+                const response = await fetch("/chatbot-config/active", {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (response.ok) {
+                    const dbSettings = await response.json();
+                    // console.log("Current settings:", dbSettings);
+
+                    // Map database fields to form fields
+                    currentSettings = {
+                        ...defaultSettings,
+                        chatbotLanguage: dbSettings.language || "uk",
+                        forceLanguage: dbSettings.force_language !== undefined ? dbSettings.force_language : true,
+                        greetingMessage: dbSettings.welcome_message || defaultSettings.greetingMessage,
+                        businessDescription: dbSettings.business_context || defaultSettings.businessDescription,
+                        // Additional fields
+                        companyName: dbSettings.company_name || defaultSettings.companyName,
+                        specializations: dbSettings.specializations || defaultSettings.specializations,
+                        friendlyTone: dbSettings.friendly_tone !== undefined ? dbSettings.friendly_tone : defaultSettings.friendlyTone,
+                        professionalStyle: dbSettings.professional_style !== undefined ? dbSettings.professional_style : defaultSettings.professionalStyle,
+                        suggestiveResponses: dbSettings.suggestive_responses !== undefined ? dbSettings.suggestive_responses : defaultSettings.suggestiveResponses,
+                        managerHandover: dbSettings.manager_handover !== undefined ? dbSettings.manager_handover : defaultSettings.managerHandover,
+                        fallbackMessage: dbSettings.fallback_message || defaultSettings.fallbackMessage,
+                        handoverMessage: dbSettings.handover_message || defaultSettings.handoverMessage,
+                        responseTimeout: dbSettings.response_timeout || defaultSettings.responseTimeout,
+                        conversationLogging: dbSettings.conversation_logging !== undefined ? dbSettings.conversation_logging : defaultSettings.conversationLogging,
+                        performanceAnalytics: dbSettings.performance_analytics !== undefined ? dbSettings.performance_analytics : defaultSettings.performanceAnalytics,
+                        errorReporting: dbSettings.error_reporting !== undefined ? dbSettings.error_reporting : defaultSettings.errorReporting,
+                        // Promt fields
+                        language_instruction: dbSettings.language_instruction || defaultSettings.languageInstruction,
+                        persona_instruction: dbSettings.persona_instruction || defaultSettings.personaInstruction,
+                        system_instruction: dbSettings.system_instruction || defaultSettings.systemInstruction,
+                        order_flow_block: dbSettings.order_flow_block || defaultSettings.orderFlowBlock,
+                        other_instruction: dbSettings.other_instruction || defaultSettings.otherInstruction,
+                    };
+                } else {
+                    // No configuration found in database, use defaults
                     setDefaults();
                     return;
                 }
-                // Load system settings for context documents and scraping (system admin only)
-                if (__currentUserRole === "system_admin") {
-                    try {
-                        const token = localStorage.getItem("access_token");
-                        const sysResp = await fetch("/system-config/settings/all", {
-                            headers: {
-                                Authorization: `Bearer ${token}`,
-                            },
-                        });
-                        if (sysResp.ok) {
-                            const sysSettings = await sysResp.json();
-                            // console.log("System settings:", sysSettings);
-
-                            const system = sysSettings.system || {};
-                            if (system.scrape_enabled !== undefined) {
-                                currentSettings.scrapeEnabled = system.scrape_enabled === true || system.scrape_enabled === "True";
-                            }
-                            if (system.context_docs_enabled !== undefined) {
-                                currentSettings.contextDocsEnabled = system.context_docs_enabled === true || system.context_docs_enabled === "True";
-                            }
-                            if (system.context_docs_dir) {
-                                currentSettings.contextDocsDir = system.context_docs_dir;
-                            }
-                            if (system.context_docs_max_chars) {
-                                const n = parseInt(system.context_docs_max_chars);
-                                if (!isNaN(n)) currentSettings.contextDocsMaxChars = n;
-                            }
-                            if (system.scrape_website_url) {
-                                currentSettings.scrapeWebsiteUrl = system.scrape_website_url;
-                            }
-                            if (system.scrape_interval_minutes) {
-                                const m = parseInt(system.scrape_interval_minutes);
-                                if (!isNaN(m)) currentSettings.scrapeIntervalMinutes = m;
-                            }
-                        }
-                        // Local override for context docs toggle (persist UI interactions)
-                        try {
-                            const override = localStorage.getItem("context_docs_enabled");
-                            if (override !== null) {
-                                currentSettings.contextDocsEnabled = override === "true";
-                            }
-                        } catch {}
-                    } catch (e) {
-                        console.warn("Could not load system settings:", e);
-                    }
-                } else {
-                    // Make system-admin-only sections read-only and show notice
-                    try {
-                        setReadOnlyForSystemCards();
-                    } catch {}
-                }
-                applySettings();
+            } catch (error) {
+                console.error("Error loading settings from database:", error);
+                // Use default values if database is unavailable
+                setDefaults();
+                return;
             }
-
-            // Set default settings
-            function setDefaults() {
-                currentSettings = { ...defaultSettings };
-                applySettings();
-            }
-
-            // Apply settings to form
-            function applySettings() {
-                // Language Settings
-                document.getElementById("chatbot-language").value = currentSettings.chatbotLanguage;
-                document.getElementById("force-language").checked = currentSettings.forceLanguage;
-
-                // Business Context
-                document.getElementById("company-name").value = currentSettings.companyName;
-                document.getElementById("business-description").value = currentSettings.businessDescription;
-                document.getElementById("specializations").value = currentSettings.specializations;
-
-                // Chatbot Behavior
-                document.getElementById("friendly-tone").checked = currentSettings.friendlyTone;
-                document.getElementById("professional-style").checked = currentSettings.professionalStyle;
-                document.getElementById("suggestive-responses").checked = currentSettings.suggestiveResponses;
-                document.getElementById("manager-handover").checked = currentSettings.managerHandover;
-
-                // Response Templates
-                document.getElementById("greeting-message").value = currentSettings.greetingMessage;
-                document.getElementById("fallback-message").value = currentSettings.fallbackMessage;
-                document.getElementById("handover-message").value = currentSettings.handoverMessage;
-
-                // Performance & Monitoring
-                document.getElementById("response-timeout").value = currentSettings.responseTimeout;
-                document.getElementById("response-timeout-value").textContent = currentSettings.responseTimeout;
-                document.getElementById("conversation-logging").checked = currentSettings.conversationLogging;
-                document.getElementById("performance-analytics").checked = currentSettings.performanceAnalytics;
-                document.getElementById("error-reporting").checked = currentSettings.errorReporting;
-
-                // Promt fields
-                document.getElementById("language-instruction").value = currentSettings.language_instruction;
-                document.getElementById("persona-instruction").value = currentSettings.persona_instruction;
-                document.getElementById("system-instruction").value = currentSettings.system_instruction;
-                document.getElementById("order-flow-block").value = currentSettings.order_flow_block;
-                document.getElementById("other-instruction").value = currentSettings.other_instruction;
-
-                // Context Documents
-                const ctxEnabledEl = document.getElementById("context-docs-enabled");
-                const ctxDirEl = document.getElementById("context-docs-dir");
-                const ctxMaxEl = document.getElementById("context-docs-max-chars");
-                if (ctxEnabledEl) ctxEnabledEl.checked = currentSettings.contextDocsEnabled;
-                if (ctxDirEl) ctxDirEl.value = currentSettings.contextDocsDir;
-                if (ctxMaxEl) ctxMaxEl.value = currentSettings.contextDocsMaxChars;
-
-                // Website Scraping
-                const scrapeUrlEl = document.getElementById("scrape-website-url");
-                const scrapeIntEl = document.getElementById("scrape-interval-minutes");
-                const scrapeEnabledEl = document.getElementById("scrape-enabled");
-                if (scrapeEnabledEl) scrapeEnabledEl.checked = !!currentSettings.scrapeEnabled;
-                if (scrapeUrlEl) scrapeUrlEl.value = currentSettings.scrapeWebsiteUrl || "";
-                if (scrapeIntEl) scrapeIntEl.value = currentSettings.scrapeIntervalMinutes || 1440;
-            }
-
-            // Save settings
-            async function saveSettings() {
+            // Load system settings for context documents and scraping (system admin only)
+            if (__currentUserRole === "system_admin") {
                 try {
-                    // Collect all form values
-                    const greetingMessage = document.getElementById("greeting-message").value.trim();
-                    const businessDescription = document.getElementById("business-description").value.trim();
-                    const language = document.getElementById("chatbot-language").value;
-                    const forceLanguage = document.getElementById("force-language").checked;
-                    const language_instruction = document.getElementById("language-instruction").value.trim();
-                    const persona_instruction = document.getElementById("persona-instruction").value.trim();
-                    const system_instruction = document.getElementById("system-instruction").value.trim();
-                    const order_flow_block = document.getElementById("order-flow-block").value.trim();
-                    const other_instruction = document.getElementById("other-instruction").value.trim();
-
-                    // Validate required fields
-                    if (!greetingMessage) {
-                        showAlert("Welcome Message is required!", "error");
-                        return;
-                    }
-
-                    if (!businessDescription) {
-                        showAlert("Business Description is required!", "error");
-                        return;
-                    }
-
-                    const settings = {
-                        name: "Box Catering Chatbot Configuration",
-                        welcome_message: greetingMessage,
-                        business_context: businessDescription,
-                        language: language,
-                        force_language: forceLanguage,
-                        is_active: true,
-                        // Additional fields
-                        company_name: document.getElementById("company-name").value.trim(),
-                        specializations: document.getElementById("specializations").value.trim(),
-                        friendly_tone: document.getElementById("friendly-tone").checked,
-                        professional_style: document.getElementById("professional-style").checked,
-                        suggestive_responses: document.getElementById("suggestive-responses").checked,
-                        manager_handover: document.getElementById("manager-handover").checked,
-                        fallback_message: document.getElementById("fallback-message").value.trim(),
-                        handover_message: document.getElementById("handover-message").value.trim(),
-                        response_timeout: parseInt(document.getElementById("response-timeout").value) || 30,
-                        conversation_logging: document.getElementById("conversation-logging").checked,
-                        performance_analytics: document.getElementById("performance-analytics").checked,
-                        error_reporting: document.getElementById("error-reporting").checked,
-                        // Promt fields
-                        language_instruction: document.getElementById("language-instruction").value.trim(),
-                        persona_instruction: document.getElementById("persona-instruction").value.trim(),
-                        system_instruction: document.getElementById("system-instruction").value.trim(),
-                        order_flow_block: document.getElementById("order-flow-block").value.trim(),
-                        other_instruction: document.getElementById("other-instruction").value.trim(),
-                    };
-
-                    console.log("Saving settings:", settings); // Debug log
-                    console.log("Field values:", {
-                        greetingMessage,
-                        businessDescription,
-                        language,
-                        forceLanguage,
-                        language_instruction,
-                        persona_instruction,
-                        system_instruction,
-                        order_flow_block,
-                        other_instruction,
-                    });
-
-                    // Save to database via API
                     const token = localStorage.getItem("access_token");
-                    console.log("Using token:", token ? "Token exists" : "No token"); // Debug log
-
-                    const response = await fetch("/chatbot-config/", {
-                        method: "POST",
+                    const sysResp = await fetch("/system-config/settings/all", {
                         headers: {
-                            "Content-Type": "application/json",
                             Authorization: `Bearer ${token}`,
                         },
-                        body: JSON.stringify(settings),
                     });
+                    if (sysResp.ok) {
+                        const sysSettings = await sysResp.json();
+                        // console.log("System settings:", sysSettings);
 
-                    console.log("Response status:", response.status); // Debug log
-
-                    if (response.ok) {
-                        // Update current settings in memory
-                        currentSettings = {
-                            chatbotLanguage: document.getElementById("chatbot-language").value,
-                            forceLanguage: document.getElementById("force-language").checked,
-                            companyName: document.getElementById("company-name").value,
-                            businessDescription: document.getElementById("business-description").value,
-                            specializations: document.getElementById("specializations").value,
-                            friendlyTone: document.getElementById("friendly-tone").checked,
-                            professionalStyle: document.getElementById("professional-style").checked,
-                            suggestiveResponses: document.getElementById("suggestive-responses").checked,
-                            managerHandover: document.getElementById("manager-handover").checked,
-                            greetingMessage: document.getElementById("greeting-message").value,
-                            fallbackMessage: document.getElementById("fallback-message").value,
-                            handoverMessage: document.getElementById("handover-message").value,
-                            responseTimeout: parseInt(document.getElementById("response-timeout").value),
-                            conversationLogging: document.getElementById("conversation-logging").checked,
-                            performanceAnalytics: document.getElementById("performance-analytics").checked,
-                            errorReporting: document.getElementById("error-reporting").checked,
-                            // Context Documents
-                            contextDocsEnabled: document.getElementById("context-docs-enabled").checked,
-                            contextDocsDir: document.getElementById("context-docs-dir").value.trim() || "agent_context_documents",
-                            contextDocsMaxChars: parseInt(document.getElementById("context-docs-max-chars").value) || 4000,
-                            // Website Scraping
-                            scrapeWebsiteUrl: (document.getElementById("scrape-website-url").value || "").trim(),
-                            scrapeIntervalMinutes: parseInt(document.getElementById("scrape-interval-minutes").value) || 1440,
-                            // Promt fields
-                            language_instruction: document.getElementById("language-instruction").value,
-                            persona_instruction: document.getElementById("persona-instruction").value,
-                            system_instruction: document.getElementById("system-instruction").value,
-                            order_flow_block: document.getElementById("order-flow-block").value,
-                            other_instruction: document.getElementById("other-instruction").value,
-                        };
-
-                        showAlert("Settings saved successfully to database!", "success");
-                        updateStatus("Configuration saved successfully", "success");
-                        // Save system settings for context documents and scraping (system admin only)
-                        if (__currentUserRole === "system_admin") {
-                            try {
-                                const systemSettings = {
-                                    scrape_enabled: document.getElementById("scrape-enabled").checked,
-                                    context_docs_enabled: document.getElementById("context-docs-enabled").checked,
-                                    context_docs_dir: document.getElementById("context-docs-dir").value.trim() || "agent_context_documents",
-                                    context_docs_max_chars: parseInt(document.getElementById("context-docs-max-chars").value) || 4000,
-                                    scrape_website_url: (document.getElementById("scrape-website-url").value || "").trim(),
-                                    scrape_interval_minutes: parseInt(document.getElementById("scrape-interval-minutes").value) || 1440,
-                                };
-                                const sysToken = localStorage.getItem("access_token");
-                                await fetch("/system-config/settings/system", {
-                                    method: "POST",
-                                    headers: {
-                                        "Content-Type": "application/json",
-                                        Authorization: `Bearer ${sysToken}`,
-                                    },
-                                    body: JSON.stringify(systemSettings),
-                                });
-                            } catch (e) {
-                                console.warn("Failed to save system settings:", e);
-                            }
+                        const system = sysSettings.system || {};
+                        if (system.scrape_enabled !== undefined) {
+                            currentSettings.scrapeEnabled = system.scrape_enabled === true || system.scrape_enabled === "True";
                         }
-                    } else {
-                        const errorData = await response.json();
-                        console.error("Error response:", errorData); // Debug log
-                        console.error("Full error details:", {
-                            status: response.status,
-                            statusText: response.statusText,
-                            headers: Object.fromEntries(response.headers.entries()),
-                            errorData,
-                        });
-
-                        // Show detailed error information
-                        let errorMessage = "Failed to save settings";
-                        if (errorData.detail) {
-                            if (Array.isArray(errorData.detail)) {
-                                errorMessage += ": " + errorData.detail.map((e) => e.msg || e.message || "Unknown error").join(", ");
-                            } else {
-                                errorMessage += ": " + errorData.detail;
-                            }
+                        if (system.context_docs_enabled !== undefined) {
+                            currentSettings.contextDocsEnabled = system.context_docs_enabled === true || system.context_docs_enabled === "True";
                         }
-
-                        showAlert(errorMessage, "error");
-                        updateStatus("Failed to save configuration", "error");
-                    }
-                } catch (error) {
-                    console.error("Error saving settings:", error);
-                    let errorMessage = "Unknown error occurred";
-
-                    if (error.detail) {
-                        if (Array.isArray(error.detail)) {
-                            errorMessage = error.detail.map((err) => err.msg || err).join(", ");
-                        } else if (typeof error.detail === "string") {
-                            errorMessage = error.detail;
-                        } else {
-                            errorMessage = JSON.stringify(error.detail);
+                        if (system.context_docs_dir) {
+                            currentSettings.contextDocsDir = system.context_docs_dir;
+                        }
+                        if (system.context_docs_max_chars) {
+                            const n = parseInt(system.context_docs_max_chars);
+                            if (!isNaN(n)) currentSettings.contextDocsMaxChars = n;
+                        }
+                        if (system.scrape_website_url) {
+                            currentSettings.scrapeWebsiteUrl = system.scrape_website_url;
+                        }
+                        if (system.scrape_interval_minutes) {
+                            const m = parseInt(system.scrape_interval_minutes);
+                            if (!isNaN(m)) currentSettings.scrapeIntervalMinutes = m;
                         }
                     }
-
-                    showAlert(`Failed to save settings: ${errorMessage}`, "error");
-                    updateStatus("Error saving configuration", "error");
-                }
-            }
-
-            async function listContextFiles() {
-                try {
-                    const token = localStorage.getItem("access_token");
-                    const resp = await fetch("/context-docs/list", {
-                        headers: { Authorization: `Bearer ${token}` },
-                    });
-                    if (!resp.ok) throw new Error("Failed to list context files");
-                    const data = await resp.json();
-                    renderContextFiles(data.files || []);
+                    // Local override for context docs toggle (persist UI interactions)
+                    try {
+                        const override = localStorage.getItem("context_docs_enabled");
+                        if (override !== null) {
+                            currentSettings.contextDocsEnabled = override === "true";
+                        }
+                    } catch { }
                 } catch (e) {
-                    renderContextFiles([]);
-                    console.warn("List files failed", e);
+                    console.warn("Could not load system settings:", e);
                 }
+            } else {
+                // Make system-admin-only sections read-only and show notice
+                try {
+                    setReadOnlyForSystemCards();
+                } catch { }
             }
+            applySettings();
+        }
 
-            function renderContextFiles(files) {
-                const container = document.getElementById("context-files-list");
-                if (!container) return;
-                container.innerHTML = "";
+        // Set default settings
+        function setDefaults() {
+            currentSettings = { ...defaultSettings };
+            applySettings();
+        }
+
+        // Apply settings to form
+        function applySettings() {
+            // Language Settings
+            document.getElementById("chatbot-language").value = currentSettings.chatbotLanguage;
+            document.getElementById("force-language").checked = currentSettings.forceLanguage;
+
+            // Business Context
+            document.getElementById("company-name").value = currentSettings.companyName;
+            document.getElementById("business-description").value = currentSettings.businessDescription;
+            document.getElementById("specializations").value = currentSettings.specializations;
+
+            // Chatbot Behavior
+            document.getElementById("friendly-tone").checked = currentSettings.friendlyTone;
+            document.getElementById("professional-style").checked = currentSettings.professionalStyle;
+            document.getElementById("suggestive-responses").checked = currentSettings.suggestiveResponses;
+            document.getElementById("manager-handover").checked = currentSettings.managerHandover;
+
+            // Response Templates
+            document.getElementById("greeting-message").value = currentSettings.greetingMessage;
+            document.getElementById("fallback-message").value = currentSettings.fallbackMessage;
+            document.getElementById("handover-message").value = currentSettings.handoverMessage;
+
+            // Performance & Monitoring
+            document.getElementById("response-timeout").value = currentSettings.responseTimeout;
+            document.getElementById("response-timeout-value").textContent = currentSettings.responseTimeout;
+            document.getElementById("conversation-logging").checked = currentSettings.conversationLogging;
+            document.getElementById("performance-analytics").checked = currentSettings.performanceAnalytics;
+            document.getElementById("error-reporting").checked = currentSettings.errorReporting;
+
+            // Promt fields
+            document.getElementById("language-instruction").value = currentSettings.language_instruction;
+            document.getElementById("persona-instruction").value = currentSettings.persona_instruction;
+            document.getElementById("system-instruction").value = currentSettings.system_instruction;
+            document.getElementById("order-flow-block").value = currentSettings.order_flow_block;
+            document.getElementById("other-instruction").value = currentSettings.other_instruction;
+
+            // Context Documents
+            const ctxEnabledEl = document.getElementById("context-docs-enabled");
+            const ctxDirEl = document.getElementById("context-docs-dir");
+            const ctxMaxEl = document.getElementById("context-docs-max-chars");
+            if (ctxEnabledEl) ctxEnabledEl.checked = currentSettings.contextDocsEnabled;
+            if (ctxDirEl) ctxDirEl.value = currentSettings.contextDocsDir;
+            if (ctxMaxEl) ctxMaxEl.value = currentSettings.contextDocsMaxChars;
+
+            // Website Scraping
+            const scrapeUrlEl = document.getElementById("scrape-website-url");
+            const scrapeIntEl = document.getElementById("scrape-interval-minutes");
+            const scrapeEnabledEl = document.getElementById("scrape-enabled");
+            if (scrapeEnabledEl) scrapeEnabledEl.checked = !!currentSettings.scrapeEnabled;
+            if (scrapeUrlEl) scrapeUrlEl.value = currentSettings.scrapeWebsiteUrl || "";
+            if (scrapeIntEl) scrapeIntEl.value = currentSettings.scrapeIntervalMinutes || 1440;
+        }
+
+        // Save settings
+        async function saveSettings() {
+            try {
+                // Collect all form values
+                const greetingMessage = document.getElementById("greeting-message").value.trim();
+                const businessDescription = document.getElementById("business-description").value.trim();
+                const language = document.getElementById("chatbot-language").value;
+                const forceLanguage = document.getElementById("force-language").checked;
+                const language_instruction = document.getElementById("language-instruction").value.trim();
+                const persona_instruction = document.getElementById("persona-instruction").value.trim();
+                const system_instruction = document.getElementById("system-instruction").value.trim();
+                const order_flow_block = document.getElementById("order-flow-block").value.trim();
+                const other_instruction = document.getElementById("other-instruction").value.trim();
+
+                // Validate required fields
+                if (!greetingMessage) {
+                    showAlert("Welcome Message is required!", "error");
+                    return;
+                }
+
+                if (!businessDescription) {
+                    showAlert("Business Description is required!", "error");
+                    return;
+                }
+
+                const settings = {
+                    name: "Box Catering Chatbot Configuration",
+                    welcome_message: greetingMessage,
+                    business_context: businessDescription,
+                    language: language,
+                    force_language: forceLanguage,
+                    is_active: true,
+                    // Additional fields
+                    company_name: document.getElementById("company-name").value.trim(),
+                    specializations: document.getElementById("specializations").value.trim(),
+                    friendly_tone: document.getElementById("friendly-tone").checked,
+                    professional_style: document.getElementById("professional-style").checked,
+                    suggestive_responses: document.getElementById("suggestive-responses").checked,
+                    manager_handover: document.getElementById("manager-handover").checked,
+                    fallback_message: document.getElementById("fallback-message").value.trim(),
+                    handover_message: document.getElementById("handover-message").value.trim(),
+                    response_timeout: parseInt(document.getElementById("response-timeout").value) || 30,
+                    conversation_logging: document.getElementById("conversation-logging").checked,
+                    performance_analytics: document.getElementById("performance-analytics").checked,
+                    error_reporting: document.getElementById("error-reporting").checked,
+                    // Promt fields
+                    language_instruction: document.getElementById("language-instruction").value.trim(),
+                    persona_instruction: document.getElementById("persona-instruction").value.trim(),
+                    system_instruction: document.getElementById("system-instruction").value.trim(),
+                    order_flow_block: document.getElementById("order-flow-block").value.trim(),
+                    other_instruction: document.getElementById("other-instruction").value.trim(),
+                };
+
+                console.log("Saving settings:", settings); // Debug log
+                console.log("Field values:", {
+                    greetingMessage,
+                    businessDescription,
+                    language,
+                    forceLanguage,
+                    language_instruction,
+                    persona_instruction,
+                    system_instruction,
+                    order_flow_block,
+                    other_instruction,
+                });
+
+                // Save to database via API
+                const token = localStorage.getItem("access_token");
+                console.log("Using token:", token ? "Token exists" : "No token"); // Debug log
+
+                const response = await fetch("/chatbot-config/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(settings),
+                });
+
+                console.log("Response status:", response.status); // Debug log
+
+                if (response.ok) {
+                    // Update current settings in memory
+                    currentSettings = {
+                        chatbotLanguage: document.getElementById("chatbot-language").value,
+                        forceLanguage: document.getElementById("force-language").checked,
+                        companyName: document.getElementById("company-name").value,
+                        businessDescription: document.getElementById("business-description").value,
+                        specializations: document.getElementById("specializations").value,
+                        friendlyTone: document.getElementById("friendly-tone").checked,
+                        professionalStyle: document.getElementById("professional-style").checked,
+                        suggestiveResponses: document.getElementById("suggestive-responses").checked,
+                        managerHandover: document.getElementById("manager-handover").checked,
+                        greetingMessage: document.getElementById("greeting-message").value,
+                        fallbackMessage: document.getElementById("fallback-message").value,
+                        handoverMessage: document.getElementById("handover-message").value,
+                        responseTimeout: parseInt(document.getElementById("response-timeout").value),
+                        conversationLogging: document.getElementById("conversation-logging").checked,
+                        performanceAnalytics: document.getElementById("performance-analytics").checked,
+                        errorReporting: document.getElementById("error-reporting").checked,
+                        // Context Documents
+                        contextDocsEnabled: document.getElementById("context-docs-enabled").checked,
+                        contextDocsDir: document.getElementById("context-docs-dir").value.trim() || "agent_context_documents",
+                        contextDocsMaxChars: parseInt(document.getElementById("context-docs-max-chars").value) || 4000,
+                        // Website Scraping
+                        scrapeWebsiteUrl: (document.getElementById("scrape-website-url").value || "").trim(),
+                        scrapeIntervalMinutes: parseInt(document.getElementById("scrape-interval-minutes").value) || 1440,
+                        // Promt fields
+                        language_instruction: document.getElementById("language-instruction").value,
+                        persona_instruction: document.getElementById("persona-instruction").value,
+                        system_instruction: document.getElementById("system-instruction").value,
+                        order_flow_block: document.getElementById("order-flow-block").value,
+                        other_instruction: document.getElementById("other-instruction").value,
+                    };
+
+                    showAlert("Settings saved successfully to database!", "success");
+                    updateStatus("Configuration saved successfully", "success");
+                    // Save system settings for context documents and scraping (system admin only)
+                    if (__currentUserRole === "system_admin") {
+                        try {
+                            const systemSettings = {
+                                scrape_enabled: document.getElementById("scrape-enabled").checked,
+                                context_docs_enabled: document.getElementById("context-docs-enabled").checked,
+                                context_docs_dir: document.getElementById("context-docs-dir").value.trim() || "agent_context_documents",
+                                context_docs_max_chars: parseInt(document.getElementById("context-docs-max-chars").value) || 4000,
+                                scrape_website_url: (document.getElementById("scrape-website-url").value || "").trim(),
+                                scrape_interval_minutes: parseInt(document.getElementById("scrape-interval-minutes").value) || 1440,
+                            };
+                            const sysToken = localStorage.getItem("access_token");
+                            await fetch("/system-config/settings/system", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${sysToken}`,
+                                },
+                                body: JSON.stringify(systemSettings),
+                            });
+                        } catch (e) {
+                            console.warn("Failed to save system settings:", e);
+                        }
+                    }
+                } else {
+                    const errorData = await response.json();
+                    console.error("Error response:", errorData); // Debug log
+                    console.error("Full error details:", {
+                        status: response.status,
+                        statusText: response.statusText,
+                        headers: Object.fromEntries(response.headers.entries()),
+                        errorData,
+                    });
+
+                    // Show detailed error information
+                    let errorMessage = "Failed to save settings";
+                    if (errorData.detail) {
+                        if (Array.isArray(errorData.detail)) {
+                            errorMessage += ": " + errorData.detail.map((e) => e.msg || e.message || "Unknown error").join(", ");
+                        } else {
+                            errorMessage += ": " + errorData.detail;
+                        }
+                    }
+
+                    showAlert(errorMessage, "error");
+                    updateStatus("Failed to save configuration", "error");
+                }
+            } catch (error) {
+                console.error("Error saving settings:", error);
+                let errorMessage = "Unknown error occurred";
+
+                if (error.detail) {
+                    if (Array.isArray(error.detail)) {
+                        errorMessage = error.detail.map((err) => err.msg || err).join(", ");
+                    } else if (typeof error.detail === "string") {
+                        errorMessage = error.detail;
+                    } else {
+                        errorMessage = JSON.stringify(error.detail);
+                    }
+                }
+
+                showAlert(`Failed to save settings: ${errorMessage}`, "error");
+                updateStatus("Error saving configuration", "error");
+            }
+        }
+
+        // Admin-only: create a brand new configuration without overwriting active
+        async function createNewConfig() {
+            try {
+                const token = localStorage.getItem("access_token");
+                const payload = await buildPayloadFromForm(false);
+                const resp = await fetch("/chatbot-config/new", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(payload),
+                });
+                if (!resp.ok) throw new Error("Create failed");
+                showAlert("New configuration created", "success");
+            } catch (e) {
+                console.warn(e);
+                showAlert("Failed to create configuration", "error");
+            }
+        }
+
+        async function cloneConfig(configId) {
+            try {
+                const token = localStorage.getItem("access_token");
+                const resp = await fetch(`/chatbot-config/${configId}/clone`, {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!resp.ok) throw new Error("Clone failed");
+                const data = await resp.json();
+                showAlert("Configuration cloned", "success");
+                // Optionally open test panel for the new config id
+                openTestPanelForConfig(data.id);
+            } catch (e) {
+                console.warn(e);
+                showAlert("Failed to clone configuration", "error");
+            }
+        }
+
+        function openTestPanelForConfig(configId) {
+            try {
+                // Implement a simple WS test popup for admins
+                const token = localStorage.getItem("access_token");
+                const url = new URL(window.location.origin.replace("http", "ws") + "/chat/ws");
+                url.searchParams.set("config_id", String(configId));
+                url.searchParams.set("debug", "1");
+                const ws = new WebSocket(url);
+                ws.addEventListener("open", () => {
+                    updateStatus("Connected to test chat (config " + configId + ")", "connected");
+                });
+                // Attach Authorization header via protocol is not supported in plain WS in browsers.
+                // Expect server to read token from cookies or unauthenticated test to fail gracefully.
+            } catch (e) {
+                console.warn("Failed to open test panel WS:", e);
+            }
+        }
+
+        async function listContextFiles() {
+            try {
+                const token = localStorage.getItem("access_token");
+                const resp = await fetch("/context-docs/list", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!resp.ok) throw new Error("Failed to list context files");
+                const data = await resp.json();
+                renderContextFiles(data.files || []);
+            } catch (e) {
+                renderContextFiles([]);
+                console.warn("List files failed", e);
+            }
+        }
+
+        function renderContextFiles(files) {
+            const container = document.getElementById("context-files-list");
+            if (!container) return;
+            container.innerHTML = "";
+            if (!files.length) {
+                const div = document.createElement("div");
+                div.style.padding = "10px";
+                div.style.fontSize = "14px";
+                div.style.color = "#666";
+                div.textContent = "No files loaded";
+                container.appendChild(div);
+                return;
+            }
+            for (const f of files) {
+                const row = document.createElement("div");
+                row.style.display = "flex";
+                row.style.alignItems = "center";
+                row.style.justifyContent = "space-between";
+                row.style.padding = "10px 12px";
+                row.style.borderBottom = "1px solid #f0f2f5";
+
+                const left = document.createElement("div");
+                left.style.display = "flex";
+                left.style.alignItems = "center";
+                left.style.gap = "10px";
+                const icon = document.createElement("span");
+                icon.textContent = "📄";
+                const name = document.createElement("span");
+                name.textContent = f.name;
+                name.style.fontWeight = "600";
+                const small = document.createElement("span");
+                small.style.color = "#888";
+                small.style.fontSize = "12px";
+                small.textContent = ` ${Math.ceil((f.size || 0) / 1024)} KB`;
+                left.appendChild(icon);
+                left.appendChild(name);
+                left.appendChild(small);
+
+                const del = document.createElement("button");
+                del.className = "btn-sm btn-danger";
+                del.textContent = window.I18N && I18N.t ? I18N.t("chatbotSettings.ctx.delete") : "Delete";
+                del.onclick = async () => {
+                    if (!confirm(`Delete ${f.name}?`)) return;
+                    try {
+                        const token = localStorage.getItem("access_token");
+                        const resp = await fetch(`/context-docs/${encodeURIComponent(f.name)}`, {
+                            method: "DELETE",
+                            headers: { Authorization: `Bearer ${token}` },
+                        });
+                        if (!resp.ok) throw new Error("Delete failed");
+                        showAlert("File deleted", "success");
+                        await listContextFiles();
+                    } catch (e) {
+                        showAlert("Failed to delete file", "error");
+                        console.warn(e);
+                    }
+                };
+
+                row.appendChild(left);
+                row.appendChild(del);
+                container.appendChild(row);
+            }
+        }
+
+        function setupContextUploader() {
+            if (__currentUserRole !== "system_admin") return;
+            const area = document.getElementById("context-upload-area");
+            const input = document.getElementById("context-file-input");
+            const uploadBtn = document.getElementById("upload-context-files");
+            const refreshBtn = document.getElementById("refresh-context-files");
+            const selectedContainer = document.getElementById("context-selected-files");
+
+            const highlight = () => {
+                area.style.borderColor = "#667eea";
+                area.style.background = "#f0f2ff";
+            };
+            const unhighlight = () => {
+                area.style.borderColor = "#e1e5e9";
+                area.style.background = "#fafbfc";
+            };
+
+            area.addEventListener("click", () => input.click());
+            area.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                highlight();
+            });
+            area.addEventListener("dragleave", (e) => {
+                e.preventDefault();
+                unhighlight();
+            });
+            area.addEventListener("drop", (e) => {
+                e.preventDefault();
+                unhighlight();
+                if (e.dataTransfer && e.dataTransfer.files) {
+                    input.files = e.dataTransfer.files;
+                    renderSelectedFiles(input.files);
+                    showAlert(`${input.files.length} file(s) selected`, "success");
+                }
+            });
+            input.addEventListener("change", () => {
+                renderSelectedFiles(input.files);
+                showAlert(`${input.files.length} file(s) selected`, "success");
+            });
+
+            uploadBtn.addEventListener("click", async () => {
+                try {
+                    if (!input.files || input.files.length === 0) {
+                        showAlert("No files selected", "error");
+                        return;
+                    }
+                    const fd = new FormData();
+                    for (const f of input.files) fd.append("files", f);
+                    const token = localStorage.getItem("access_token");
+                    const resp = await fetch("/context-docs/upload", {
+                        method: "POST",
+                        headers: { Authorization: `Bearer ${token}` },
+                        body: fd,
+                    });
+                    if (!resp.ok) throw new Error("Upload failed");
+                    const data = await resp.json();
+                    const saved = data.saved || [];
+                    const skipped = data.skipped || [];
+                    if (saved.length) showAlert(`Uploaded: ${saved.join(", ")}`, "success");
+                    if (skipped.length) showAlert(`Skipped: ${skipped.map((s) => s.name).join(", ")}`, "warning");
+                    input.value = "";
+                    renderSelectedFiles([]);
+                    await listContextFiles();
+                } catch (e) {
+                    console.warn(e);
+                    showAlert("Failed to upload files", "error");
+                }
+            });
+
+            refreshBtn.addEventListener("click", listContextFiles);
+
+            function renderSelectedFiles(fileList) {
+                if (!selectedContainer) return;
+                selectedContainer.innerHTML = "";
+                const files = Array.from(fileList || []);
                 if (!files.length) {
-                    const div = document.createElement("div");
-                    div.style.padding = "10px";
-                    div.style.fontSize = "14px";
-                    div.style.color = "#666";
-                    div.textContent = "No files loaded";
-                    container.appendChild(div);
+                    const empty = document.createElement("div");
+                    empty.style.padding = "8px";
+                    empty.style.fontSize = "13px";
+                    empty.style.color = "#666";
+                    empty.textContent = "No files selected";
+                    selectedContainer.appendChild(empty);
                     return;
                 }
                 for (const f of files) {
@@ -1181,7 +1439,7 @@ I understand this requires special attention. Let me connect you with one of our
                     row.style.display = "flex";
                     row.style.alignItems = "center";
                     row.style.justifyContent = "space-between";
-                    row.style.padding = "10px 12px";
+                    row.style.padding = "8px 10px";
                     row.style.borderBottom = "1px solid #f0f2f5";
 
                     const left = document.createElement("div");
@@ -1189,348 +1447,213 @@ I understand this requires special attention. Let me connect you with one of our
                     left.style.alignItems = "center";
                     left.style.gap = "10px";
                     const icon = document.createElement("span");
-                    icon.textContent = "📄";
+                    icon.textContent = "📎";
                     const name = document.createElement("span");
                     name.textContent = f.name;
                     name.style.fontWeight = "600";
-                    const small = document.createElement("span");
-                    small.style.color = "#888";
-                    small.style.fontSize = "12px";
-                    small.textContent = ` ${Math.ceil((f.size || 0) / 1024)} KB`;
+                    const size = document.createElement("span");
+                    size.style.color = "#888";
+                    size.style.fontSize = "12px";
+                    size.textContent = ` ${Math.ceil((f.size || 0) / 1024)} KB`;
                     left.appendChild(icon);
                     left.appendChild(name);
-                    left.appendChild(small);
-
-                    const del = document.createElement("button");
-                    del.className = "btn-sm btn-danger";
-                    del.textContent = window.I18N && I18N.t ? I18N.t("chatbotSettings.ctx.delete") : "Delete";
-                    del.onclick = async () => {
-                        if (!confirm(`Delete ${f.name}?`)) return;
-                        try {
-                            const token = localStorage.getItem("access_token");
-                            const resp = await fetch(`/context-docs/${encodeURIComponent(f.name)}`, {
-                                method: "DELETE",
-                                headers: { Authorization: `Bearer ${token}` },
-                            });
-                            if (!resp.ok) throw new Error("Delete failed");
-                            showAlert("File deleted", "success");
-                            await listContextFiles();
-                        } catch (e) {
-                            showAlert("Failed to delete file", "error");
-                            console.warn(e);
-                        }
-                    };
+                    left.appendChild(size);
 
                     row.appendChild(left);
-                    row.appendChild(del);
-                    container.appendChild(row);
+                    selectedContainer.appendChild(row);
                 }
             }
+        }
 
-            function setupContextUploader() {
-                if (__currentUserRole !== "system_admin") return;
-                const area = document.getElementById("context-upload-area");
-                const input = document.getElementById("context-file-input");
-                const uploadBtn = document.getElementById("upload-context-files");
-                const refreshBtn = document.getElementById("refresh-context-files");
-                const selectedContainer = document.getElementById("context-selected-files");
-
-                const highlight = () => {
-                    area.style.borderColor = "#667eea";
-                    area.style.background = "#f0f2ff";
-                };
-                const unhighlight = () => {
-                    area.style.borderColor = "#e1e5e9";
-                    area.style.background = "#fafbfc";
-                };
-
-                area.addEventListener("click", () => input.click());
-                area.addEventListener("dragover", (e) => {
-                    e.preventDefault();
-                    highlight();
-                });
-                area.addEventListener("dragleave", (e) => {
-                    e.preventDefault();
-                    unhighlight();
-                });
-                area.addEventListener("drop", (e) => {
-                    e.preventDefault();
-                    unhighlight();
-                    if (e.dataTransfer && e.dataTransfer.files) {
-                        input.files = e.dataTransfer.files;
-                        renderSelectedFiles(input.files);
-                        showAlert(`${input.files.length} file(s) selected`, "success");
-                    }
-                });
-                input.addEventListener("change", () => {
-                    renderSelectedFiles(input.files);
-                    showAlert(`${input.files.length} file(s) selected`, "success");
-                });
-
-                uploadBtn.addEventListener("click", async () => {
-                    try {
-                        if (!input.files || input.files.length === 0) {
-                            showAlert("No files selected", "error");
-                            return;
-                        }
-                        const fd = new FormData();
-                        for (const f of input.files) fd.append("files", f);
-                        const token = localStorage.getItem("access_token");
-                        const resp = await fetch("/context-docs/upload", {
-                            method: "POST",
-                            headers: { Authorization: `Bearer ${token}` },
-                            body: fd,
-                        });
-                        if (!resp.ok) throw new Error("Upload failed");
-                        const data = await resp.json();
-                        const saved = data.saved || [];
-                        const skipped = data.skipped || [];
-                        if (saved.length) showAlert(`Uploaded: ${saved.join(", ")}`, "success");
-                        if (skipped.length) showAlert(`Skipped: ${skipped.map((s) => s.name).join(", ")}`, "warning");
-                        input.value = "";
-                        renderSelectedFiles([]);
-                        await listContextFiles();
-                    } catch (e) {
-                        console.warn(e);
-                        showAlert("Failed to upload files", "error");
-                    }
-                });
-
-                refreshBtn.addEventListener("click", listContextFiles);
-
-                function renderSelectedFiles(fileList) {
-                    if (!selectedContainer) return;
-                    selectedContainer.innerHTML = "";
-                    const files = Array.from(fileList || []);
-                    if (!files.length) {
-                        const empty = document.createElement("div");
-                        empty.style.padding = "8px";
-                        empty.style.fontSize = "13px";
-                        empty.style.color = "#666";
-                        empty.textContent = "No files selected";
-                        selectedContainer.appendChild(empty);
-                        return;
-                    }
-                    for (const f of files) {
-                        const row = document.createElement("div");
-                        row.style.display = "flex";
-                        row.style.alignItems = "center";
-                        row.style.justifyContent = "space-between";
-                        row.style.padding = "8px 10px";
-                        row.style.borderBottom = "1px solid #f0f2f5";
-
-                        const left = document.createElement("div");
-                        left.style.display = "flex";
-                        left.style.alignItems = "center";
-                        left.style.gap = "10px";
-                        const icon = document.createElement("span");
-                        icon.textContent = "📎";
-                        const name = document.createElement("span");
-                        name.textContent = f.name;
-                        name.style.fontWeight = "600";
-                        const size = document.createElement("span");
-                        size.style.color = "#888";
-                        size.style.fontSize = "12px";
-                        size.textContent = ` ${Math.ceil((f.size || 0) / 1024)} KB`;
-                        left.appendChild(icon);
-                        left.appendChild(name);
-                        left.appendChild(size);
-
-                        row.appendChild(left);
-                        selectedContainer.appendChild(row);
-                    }
+        // Persist and restore Context Documents toggle across language changes and reloads
+        function setupContextDocsTogglePersistence() {
+            const el = document.getElementById("context-docs-enabled");
+            if (!el) return;
+            // Initialize from localStorage if present (does not overwrite loaded value unless explicitly set)
+            try {
+                const stored = localStorage.getItem("context_docs_enabled");
+                if (stored !== null) {
+                    el.checked = stored === "true";
                 }
-            }
-
-            // Persist and restore Context Documents toggle across language changes and reloads
-            function setupContextDocsTogglePersistence() {
-                const el = document.getElementById("context-docs-enabled");
-                if (!el) return;
-                // Initialize from localStorage if present (does not overwrite loaded value unless explicitly set)
+            } catch { }
+            // On user change, persist locally and to backend immediately
+            el.addEventListener("change", async function () {
+                const v = !!this.checked;
+                try {
+                    localStorage.setItem("context_docs_enabled", String(v));
+                } catch { }
+                try {
+                    const token = localStorage.getItem("access_token");
+                    await fetch("/system-config/settings/system", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({ context_docs_enabled: v }),
+                    });
+                } catch (e) {
+                    console.warn("Failed to persist context_docs_enabled", e);
+                }
+            });
+            // Re-apply stored state when UI language changes to avoid visual reset
+            document.addEventListener("i18n:languageChanged", function () {
                 try {
                     const stored = localStorage.getItem("context_docs_enabled");
                     if (stored !== null) {
                         el.checked = stored === "true";
                     }
-                } catch {}
-                // On user change, persist locally and to backend immediately
-                el.addEventListener("change", async function () {
-                    const v = !!this.checked;
-                    try {
-                        localStorage.setItem("context_docs_enabled", String(v));
-                    } catch {}
-                    try {
-                        const token = localStorage.getItem("access_token");
-                        await fetch("/system-config/settings/system", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({ context_docs_enabled: v }),
-                        });
-                    } catch (e) {
-                        console.warn("Failed to persist context_docs_enabled", e);
+                } catch { }
+            });
+        }
+
+        function setReadOnlyForSystemCards() {
+            const makeReadOnly = function (card) {
+                if (!card) return;
+                // Banner
+                const note = document.createElement("div");
+                note.className = "alert alert-warning";
+                note.style.display = "block";
+                note.setAttribute("data-i18n", "chatbotSettings.readOnlyNotice");
+                note.textContent = window.I18N && I18N.t ? I18N.t("chatbotSettings.readOnlyNotice") : "View only. System Administrator required to edit.";
+                card.prepend(note);
+                // Disable inputs/buttons inside
+                card.querySelectorAll("input, select, textarea, button").forEach(function (el) {
+                    if (el) {
+                        el.disabled = true;
                     }
                 });
-                // Re-apply stored state when UI language changes to avoid visual reset
-                document.addEventListener("i18n:languageChanged", function () {
-                    try {
-                        const stored = localStorage.getItem("context_docs_enabled");
-                        if (stored !== null) {
-                            el.checked = stored === "true";
-                        }
-                    } catch {}
-                });
-            }
+            };
+            try {
+                makeReadOnly(document.querySelector(".settings-card.large-card"));
+                makeReadOnly(document.querySelector(".settings-card.small-card-2"));
+            } catch { }
+        }
 
-            function setReadOnlyForSystemCards() {
-                const makeReadOnly = function (card) {
-                    if (!card) return;
-                    // Banner
-                    const note = document.createElement("div");
-                    note.className = "alert alert-warning";
-                    note.style.display = "block";
-                    note.setAttribute("data-i18n", "chatbotSettings.readOnlyNotice");
-                    note.textContent = window.I18N && I18N.t ? I18N.t("chatbotSettings.readOnlyNotice") : "View only. System Administrator required to edit.";
-                    card.prepend(note);
-                    // Disable inputs/buttons inside
-                    card.querySelectorAll("input, select, textarea, button").forEach(function (el) {
-                        if (el) {
-                            el.disabled = true;
-                        }
-                    });
-                };
-                try {
-                    makeReadOnly(document.querySelector(".settings-card.large-card"));
-                    makeReadOnly(document.querySelector(".settings-card.small-card-2"));
-                } catch {}
+        // Reset to defaults
+        function resetToDefaults() {
+            if (confirm("Are you sure you want to reset all settings to default values? This action cannot be undone.")) {
+                setDefaults();
+                showAlert("Settings reset to defaults!", "success");
+                updateStatus("Settings reset to defaults", "success");
             }
+        }
 
-            // Reset to defaults
-            function resetToDefaults() {
-                if (confirm("Are you sure you want to reset all settings to default values? This action cannot be undone.")) {
-                    setDefaults();
-                    showAlert("Settings reset to defaults!", "success");
-                    updateStatus("Settings reset to defaults", "success");
+        // Test configuration
+        function testConfiguration() {
+            showAlert("Testing configuration... This may take a few moments.", "warning");
+            updateStatus("Testing configuration...", "connecting");
+
+            // Simulate configuration test
+            setTimeout(() => {
+                showAlert("Configuration test completed successfully! All settings are valid.", "success");
+                updateStatus("Configuration test completed successfully", "success");
+            }, 2000);
+        }
+
+        // Export settings
+        function exportSettings() {
+            // Collect current form values for export
+            const exportSettings = {
+                scrapeEnabled: document.getElementById("scrape-enabled").checked,
+                chatbotLanguage: document.getElementById("chatbot-language").value,
+                forceLanguage: document.getElementById("force-language").checked,
+                companyName: document.getElementById("company-name").value,
+                businessDescription: document.getElementById("business-description").value,
+                specializations: document.getElementById("specializations").value,
+                friendlyTone: document.getElementById("friendly-tone").checked,
+                professionalStyle: document.getElementById("professional-style").checked,
+                suggestiveResponses: document.getElementById("suggestive-responses").checked,
+                managerHandover: document.getElementById("manager-handover").checked,
+                greetingMessage: document.getElementById("greeting-message").value,
+                fallbackMessage: document.getElementById("fallback-message").value,
+                handoverMessage: document.getElementById("handover-message").value,
+                responseTimeout: parseInt(document.getElementById("response-timeout").value),
+                conversationLogging: document.getElementById("conversation-logging").checked,
+                performanceAnalytics: document.getElementById("performance-analytics").checked,
+                errorReporting: document.getElementById("error-reporting").checked,
+                // Context Documents
+                contextDocsEnabled: document.getElementById("context-docs-enabled").checked,
+                contextDocsDir: document.getElementById("context-docs-dir").value,
+                contextDocsMaxChars: parseInt(document.getElementById("context-docs-max-chars").value),
+                // Website Scraping
+                scrapeWebsiteUrl: document.getElementById("scrape-website-url").value,
+                scrapeIntervalMinutes: parseInt(document.getElementById("scrape-interval-minutes").value),
+            };
+
+            const settingsData = JSON.stringify(exportSettings, null, 2);
+            const blob = new Blob([settingsData], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `chatbot-settings-${new Date().toISOString().split("T")[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showAlert("Settings exported successfully!", "success");
+        }
+
+        // Show alert message
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById("alert-container");
+            const alertDiv = document.createElement("div");
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+
+            alertContainer.appendChild(alertDiv);
+            alertDiv.style.display = "block";
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Update status indicator
+        function updateStatus(message, type) {
+            const statusText = document.getElementById("status-text");
+            const statusDot = document.getElementById("status-dot");
+
+            statusText.textContent = message;
+            statusDot.className = `status-dot ${type}`;
+        }
+
+        // Handle range slider updates (guard for non-existent elements)
+        const temperatureEl = document.getElementById("temperature");
+        if (temperatureEl) {
+            temperatureEl.addEventListener("input", function () {
+                const temperatureValueEl = document.getElementById("temperature-value");
+                if (temperatureValueEl) {
+                    temperatureValueEl.textContent = this.value;
                 }
-            }
+            });
+        }
 
-            // Test configuration
-            function testConfiguration() {
-                showAlert("Testing configuration... This may take a few moments.", "warning");
-                updateStatus("Testing configuration...", "connecting");
+        const maxTokensEl = document.getElementById("max-tokens");
+        if (maxTokensEl) {
+            maxTokensEl.addEventListener("input", function () {
+                const maxTokensValueEl = document.getElementById("max-tokens-value");
+                if (maxTokensValueEl) {
+                    maxTokensValueEl.textContent = this.value;
+                }
+            });
+        }
 
-                // Simulate configuration test
-                setTimeout(() => {
-                    showAlert("Configuration test completed successfully! All settings are valid.", "success");
-                    updateStatus("Configuration test completed successfully", "success");
-                }, 2000);
-            }
+        const responseTimeoutEl = document.getElementById("response-timeout");
+        if (responseTimeoutEl) {
+            responseTimeoutEl.addEventListener("input", function () {
+                const responseTimeoutValueEl = document.getElementById("response-timeout-value");
+                if (responseTimeoutValueEl) {
+                    responseTimeoutValueEl.textContent = this.value;
+                }
+            });
+        }
 
-            // Export settings
-            function exportSettings() {
-                // Collect current form values for export
-                const exportSettings = {
-                    scrapeEnabled: document.getElementById("scrape-enabled").checked,
-                    chatbotLanguage: document.getElementById("chatbot-language").value,
-                    forceLanguage: document.getElementById("force-language").checked,
-                    companyName: document.getElementById("company-name").value,
-                    businessDescription: document.getElementById("business-description").value,
-                    specializations: document.getElementById("specializations").value,
-                    friendlyTone: document.getElementById("friendly-tone").checked,
-                    professionalStyle: document.getElementById("professional-style").checked,
-                    suggestiveResponses: document.getElementById("suggestive-responses").checked,
-                    managerHandover: document.getElementById("manager-handover").checked,
-                    greetingMessage: document.getElementById("greeting-message").value,
-                    fallbackMessage: document.getElementById("fallback-message").value,
-                    handoverMessage: document.getElementById("handover-message").value,
-                    responseTimeout: parseInt(document.getElementById("response-timeout").value),
-                    conversationLogging: document.getElementById("conversation-logging").checked,
-                    performanceAnalytics: document.getElementById("performance-analytics").checked,
-                    errorReporting: document.getElementById("error-reporting").checked,
-                    // Context Documents
-                    contextDocsEnabled: document.getElementById("context-docs-enabled").checked,
-                    contextDocsDir: document.getElementById("context-docs-dir").value,
-                    contextDocsMaxChars: parseInt(document.getElementById("context-docs-max-chars").value),
-                    // Website Scraping
-                    scrapeWebsiteUrl: document.getElementById("scrape-website-url").value,
-                    scrapeIntervalMinutes: parseInt(document.getElementById("scrape-interval-minutes").value),
-                };
-
-                const settingsData = JSON.stringify(exportSettings, null, 2);
-                const blob = new Blob([settingsData], { type: "application/json" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `chatbot-settings-${new Date().toISOString().split("T")[0]}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-
-                showAlert("Settings exported successfully!", "success");
-            }
-
-            // Show alert message
-            function showAlert(message, type) {
-                const alertContainer = document.getElementById("alert-container");
-                const alertDiv = document.createElement("div");
-                alertDiv.className = `alert alert-${type}`;
-                alertDiv.textContent = message;
-
-                alertContainer.appendChild(alertDiv);
-                alertDiv.style.display = "block";
-
-                setTimeout(() => {
-                    alertDiv.remove();
-                }, 5000);
-            }
-
-            // Update status indicator
-            function updateStatus(message, type) {
-                const statusText = document.getElementById("status-text");
-                const statusDot = document.getElementById("status-dot");
-
-                statusText.textContent = message;
-                statusDot.className = `status-dot ${type}`;
-            }
-
-            // Handle range slider updates (guard for non-existent elements)
-            const temperatureEl = document.getElementById("temperature");
-            if (temperatureEl) {
-                temperatureEl.addEventListener("input", function () {
-                    const temperatureValueEl = document.getElementById("temperature-value");
-                    if (temperatureValueEl) {
-                        temperatureValueEl.textContent = this.value;
-                    }
-                });
-            }
-
-            const maxTokensEl = document.getElementById("max-tokens");
-            if (maxTokensEl) {
-                maxTokensEl.addEventListener("input", function () {
-                    const maxTokensValueEl = document.getElementById("max-tokens-value");
-                    if (maxTokensValueEl) {
-                        maxTokensValueEl.textContent = this.value;
-                    }
-                });
-            }
-
-            const responseTimeoutEl = document.getElementById("response-timeout");
-            if (responseTimeoutEl) {
-                responseTimeoutEl.addEventListener("input", function () {
-                    const responseTimeoutValueEl = document.getElementById("response-timeout-value");
-                    if (responseTimeoutValueEl) {
-                        responseTimeoutValueEl.textContent = this.value;
-                    }
-                });
-            }
-
-            // Show access denied message and redirect
-            function showAccessDeniedMessage() {
-                // Hide the main content
-                const container = document.querySelector(".container");
-                if (container) {
-                    container.innerHTML = `
+        // Show access denied message and redirect
+        function showAccessDeniedMessage() {
+            // Hide the main content
+            const container = document.querySelector(".container");
+            if (container) {
+                container.innerHTML = `
                     <div class="page-header">
                         <h2>🚫 Access Denied</h2>
                         <p>You do not have permission to access this page. Only administrators and system administrators can access General Settings.</p>
@@ -1541,20 +1664,22 @@ I understand this requires special attention. Let me connect you with one of our
                         </button>
                     </div>
                 `;
-                }
             }
+        }
 
-            // Logout function
-            function logout() {
-                localStorage.removeItem("access_token");
-                window.location.href = "/login";
-            }
+        // Logout function
+        function logout() {
+            localStorage.removeItem("access_token");
+            window.location.href = "/login";
+        }
 
-            // Initialize on page load
-            document.addEventListener("DOMContentLoaded", async () => {
-                checkAuth();
-                setupContextDocsTogglePersistence();
-            });
-        </script>
-    </body>
+        // Initialize on page load
+        document.addEventListener("DOMContentLoaded", async () => {
+            checkAuth();
+            setupContextDocsTogglePersistence();
+            try { await renderConfigsSidebar(); } catch (e) { console.warn("Configs sidebar failed:", e); }
+        });
+    </script>
+</body>
+
 </html>
