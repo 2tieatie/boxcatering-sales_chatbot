@@ -13,20 +13,6 @@
             flex-direction: column;
         }
 
-        .chat-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-            background: white;
-            border-radius: 15px;
-            margin: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-        }
-
         .chat-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -44,13 +30,6 @@
             opacity: 0.9;
         }
 
-        .chat-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            max-height: 500px;
-            background: #f8f9fa;
-        }
 
         .message {
             margin-bottom: 20px;
@@ -349,57 +328,61 @@
         </div>
     </div>
 
-    <div class="chat-container" style="display:grid; grid-template-columns: 1fr 320px; gap: 0;">
-        <div class="chat-header">
-            <h2 data-i18n="chatTest.headerTitle">💬 Test chat with Marichka</h2>
-            <p data-i18n="chatTest.headerSubtitle">Test and interact with your AI-powered chatbot</p>
-        </div>
+    <div class="chat-container">
+        <div class="chat-area">
+            <div class="chat-header">
+                <h2 data-i18n="chatTest.headerTitle">💬 Test chat with Marichka</h2>
+                <p data-i18n="chatTest.headerSubtitle">Test and interact with your AI-powered chatbot</p>
+            </div>
 
-        <div class="chat-messages" id="chat-messages">
-            <div class="message bot">
-                <div class="message-avatar">👩</div>
-                <div class="message-content">
-                    <div id="bot-welcome-content" data-i18n="chatTest.welcome.loading">Loading welcome message…</div>
-                    <div class="message-time" id="bot-welcome-time"></div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="message bot">
+                    <div class="message-avatar">👩</div>
+                    <div class="message-content">
+                        <div id="bot-welcome-content" data-i18n="chatTest.welcome.loading">Loading welcome message…
+                        </div>
+                        <div class="message-time" id="bot-welcome-time"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typing-indicator">
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <form class="chat-input-form" id="chat-form">
+                    <div class="input-group">
+                        <label for="chat-input" data-i18n="chatTest.input.label">Enter a message:</label>
+                        <textarea id="chat-input" class="chat-input" placeholder="" rows="1"></textarea>
+                    </div>
+                    <button type="submit" class="send-btn" id="send-btn" data-i18n="chatTest.send">Send</button>
+                </form>
+
+                <div class="chat-controls">
+                    <button class="control-btn primary" onclick="clearChat()" data-i18n="chatTest.controls.clear">Clear
+                        chat</button>
+                    <button class="control-btn" onclick="exportChat()" data-i18n="chatTest.controls.export">Export
+                        chat</button>
+                </div>
+
+                <div class="status-indicator">
+                    <div class="status-dot" id="status-dot"></div>
+                    <span id="status-text" data-i18n="chatTest.status.connectedToAI">Connected to AI service</span>
                 </div>
             </div>
         </div>
 
-        <div class="typing-indicator" id="typing-indicator">
-            <div class="typing-dots">
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-            </div>
-        </div>
-
-        <div class="chat-input-container">
-            <form class="chat-input-form" id="chat-form">
-                <div class="input-group">
-                    <label for="chat-input" data-i18n="chatTest.input.label">Enter a message:</label>
-                    <textarea id="chat-input" class="chat-input" placeholder="" rows="1"></textarea>
-                </div>
-                <button type="submit" class="send-btn" id="send-btn" data-i18n="chatTest.send">Send</button>
-            </form>
-
-            <div class="chat-controls">
-                <button class="control-btn primary" onclick="clearChat()" data-i18n="chatTest.controls.clear">Clear
-                    chat</button>
-                <button class="control-btn" onclick="exportChat()" data-i18n="chatTest.controls.export">Export
-                    chat</button>
-            </div>
-
-            <div class="status-indicator" style="margin-top: 15px; justify-content: center">
-                <div class="status-dot" id="status-dot"></div>
-                <span id="status-text" data-i18n="chatTest.status.connectedToAI">Connected to AI service</span>
-            </div>
-        </div>
-        <div id="configs-sidebar" style="border-left:1px solid #e9ecef; padding:16px; display:none;">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+        <div id="configs-sidebar" class="configs-sidebar">
+            <div class="configs-header">
                 <strong>Configs</strong>
-                <button id="new-config-btn" class="control-btn" style="padding:6px 10px;">+ New</button>
+                <button id="new-config-btn" class="control-btn config-btn">+ New</button>
             </div>
-            <div id="configs-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+            <div id="configs-list" class="configs-list"></div>
         </div>
     </div>
 
@@ -760,13 +743,13 @@
                 list.innerHTML = '';
                 for (const c of configs) {
                     const item = document.createElement('div');
-                    item.style.border = '1px solid #e1e5e9';
-                    item.style.borderRadius = '8px';
-                    item.style.padding = '8px';
-                    item.style.background = c.is_active ? '#f0fff4' : '#fff';
+                    item.className = 'config-item';
+                    if (c.is_active) {
+                        item.classList.add('active');
+                    }
                     item.innerHTML = `
-                            <div style="font-weight:600; font-size:14px; margin-bottom:6px;">${c.name}${c.is_active ? ' (active)' : ''}</div>
-                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <div class="config-name">${c.name}${c.is_active ? ' (active)' : ''}</div>
+                            <div class="config-actions">
                                 <button class="control-btn" data-act="test" data-id="${c.id}">Test</button>
                                 <button class="control-btn" data-act="activate" data-id="${c.id}">Activate</button>
                                 <button class="control-btn" data-act="clone" data-id="${c.id}">Clone</button>
@@ -775,7 +758,12 @@
                         `;
                     list.appendChild(item);
                 }
-                list.addEventListener('click', async (e) => {
+
+                // Remove any existing event listeners to prevent duplicates
+                list.removeEventListener('click', handleConfigClick);
+                list.addEventListener('click', handleConfigClick);
+
+                async function handleConfigClick(e) {
                     const btn = e.target.closest('button[data-act]');
                     if (!btn) return;
                     const id = btn.getAttribute('data-id');
@@ -795,11 +783,18 @@
                         await fetch(`/chatbot-config/${id}/clone`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
                         await loadConfigsSidebar();
                     } else if (act === 'delete') {
-                        if (!confirm('Delete this config?')) return;
-                        await fetch(`/chatbot-config/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-                        await loadConfigsSidebar();
+                        const confirmed = confirm('Delete this config?');
+                        if (!confirmed) return;
+
+                        try {
+                            await fetch(`/chatbot-config/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+                            await loadConfigsSidebar();
+                        } catch (error) {
+                            console.error('Failed to delete config:', error);
+                            alert('Failed to delete config. Please try again.');
+                        }
                     }
-                });
+                }
                 const newBtn = document.getElementById('new-config-btn');
                 if (newBtn) newBtn.onclick = async () => {
                     const payload = { name: 'New Config', welcome_message: 'Hello!', business_context: 'Box Catering', language: 'uk', force_language: true, is_active: false };
