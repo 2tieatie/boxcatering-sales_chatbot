@@ -1076,6 +1076,7 @@ I understand this requires special attention. Let me connect you with one of our
                     return;
                 }
 
+                // Build payload
                 const settings = {
                     name: "Box Catering Chatbot Configuration",
                     chatbot_name: chatbotName || "Marichka",
@@ -1083,7 +1084,6 @@ I understand this requires special attention. Let me connect you with one of our
                     business_context: businessDescription,
                     language: language,
                     force_language: forceLanguage,
-                    is_active: true,
                     // Additional fields
                     company_name: document.getElementById("company-name").value.trim(),
                     specializations: document.getElementById("specializations").value.trim(),
@@ -1105,6 +1105,16 @@ I understand this requires special attention. Let me connect you with one of our
                     other_instruction: document.getElementById("other-instruction").value.trim(),
                 };
 
+                // Determine target endpoint/method
+                const isEditingSpecificConfig = !!__currentConfigId;
+                if (!isEditingSpecificConfig) {
+                    // Only when saving to the active config upsert flow
+                    settings.is_active = true;
+                } else {
+                    // Do not override name on a specific draft; avoid unique-name collisions
+                    try { delete settings.name; } catch { }
+                }
+
                 console.log("Saving settings:", settings); // Debug log
                 console.log("Field values:", {
                     greetingMessage,
@@ -1122,8 +1132,11 @@ I understand this requires special attention. Let me connect you with one of our
                 const token = localStorage.getItem("access_token");
                 console.log("Using token:", token ? "Token exists" : "No token"); // Debug log
 
-                const response = await fetch("/chatbot-config/", {
-                    method: "POST",
+                const endpoint = isEditingSpecificConfig ? `/chatbot-config/${__currentConfigId}` : "/chatbot-config/";
+                const method = isEditingSpecificConfig ? "PUT" : "POST";
+
+                const response = await fetch(endpoint, {
+                    method: method,
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
