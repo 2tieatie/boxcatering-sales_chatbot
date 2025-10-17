@@ -13,6 +13,7 @@ class ChatbotConfigBase(BaseModel):
     language: str = Field(default="uk", min_length=2, max_length=5, description="Language code")
     force_language: bool = Field(default=True, description="Whether to enforce language compliance")
     is_active: bool = Field(default=False, description="Whether this configuration is active")
+    chatbot_name: Optional[str] = Field(None, description="Public chatbot display name (e.g., Marichka)")
     
     # Additional fields for enhanced configuration
     company_name: Optional[str] = Field(None, description="Company name")
@@ -44,6 +45,7 @@ class ChatbotConfigCreate(BaseModel):
     language: str = Field(default="uk", min_length=2, max_length=5, description="Language code")
     force_language: bool = Field(default=True, description="Whether to enforce language compliance")
     is_active: Optional[bool] = Field(False, description="Whether this configuration is active")
+    chatbot_name: Optional[str] = Field(None, description="Public chatbot display name (e.g., Marichka)")
     
     # Additional fields for enhanced configuration
     company_name: Optional[str] = Field(None, description="Company name")
@@ -75,6 +77,7 @@ class ChatbotConfigUpdate(BaseModel):
     language: Optional[str] = Field(None, min_length=2, max_length=5, description="Language code")
     force_language: Optional[bool] = Field(None, description="Whether to enforce language compliance")
     is_active: Optional[bool] = Field(None, description="Whether this configuration is active")
+    chatbot_name: Optional[str] = Field(None, description="Public chatbot display name (e.g., Marichka)")
     
     # Additional fields for enhanced configuration
     company_name: Optional[str] = Field(None, description="Company name")

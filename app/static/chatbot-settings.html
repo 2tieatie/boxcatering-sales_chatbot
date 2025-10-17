@@ -364,6 +364,13 @@
             <h2 data-i18n="chatbotSettings.headerTitle">⚙️ Chatbot Configuration</h2>
             <p data-i18n="chatbotSettings.headerSubtitle">Customize your AI-powered chatbot settings, behavior, and
                 responses to match your business needs</p>
+            <div class="form-group" style="margin-top: 20px;">
+                <label for="chatbot-name" data-i18n="chatbotSettings.labels.chatbotName">Chatbot Name</label>
+                <input type="text" id="chatbot-name" value="Marichka" placeholder="Marichka"
+                    data-i18n-placeholder="chatbotSettings.placeholders.chatbotName" />
+                <div class="help-text" data-i18n="chatbotSettings.labels.chatbotNameHelp">Shown in widgets and test
+                    header</div>
+            </div>
         </div>
 
         <div id="alert-container"></div>
@@ -373,7 +380,6 @@
             <div class="settings-card">
                 <h3><span class="icon">🏢</span><span data-i18n="chatbotSettings.section.business">Business
                         Context</span></h3>
-
                 <div class="form-group">
                     <label for="company-name" data-i18n="chatbotSettings.companyName">Company Name</label>
                     <input type="text" id="company-name" placeholder="Your Company Name" value="Box Catering"
@@ -778,6 +784,7 @@ I understand this requires special attention. Let me connect you with one of our
         let currentSettings = {};
         let pendingContextFiles = [];
         let __currentUserRole = null;
+        let __currentConfigId = null;
 
         // Default settings
         const defaultSettings = {
@@ -870,7 +877,13 @@ I understand this requires special attention. Let me connect you with one of our
         async function loadSettings() {
             try {
                 const token = localStorage.getItem("access_token");
-                const response = await fetch("/chatbot-config/active", {
+                // Allow editing a specific config via query param
+                const url = new URL(window.location.href);
+                const qpConfigId = url.searchParams.get('config_id');
+                __currentConfigId = qpConfigId ? parseInt(qpConfigId) : null;
+
+                const endpoint = __currentConfigId ? `/chatbot-config/${__currentConfigId}` : "/chatbot-config/active";
+                const response = await fetch(endpoint, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -887,6 +900,8 @@ I understand this requires special attention. Let me connect you with one of our
                         forceLanguage: dbSettings.force_language !== undefined ? dbSettings.force_language : true,
                         greetingMessage: dbSettings.welcome_message || defaultSettings.greetingMessage,
                         businessDescription: dbSettings.business_context || defaultSettings.businessDescription,
+                        // New: chatbot name
+                        chatbotName: dbSettings.chatbot_name || "Marichka",
                         // Additional fields
                         companyName: dbSettings.company_name || defaultSettings.companyName,
                         specializations: dbSettings.specializations || defaultSettings.specializations,
@@ -980,6 +995,10 @@ I understand this requires special attention. Let me connect you with one of our
 
         // Apply settings to form
         function applySettings() {
+            // Header Chatbot Name
+            const botNameEl = document.getElementById("chatbot-name");
+            if (botNameEl) botNameEl.value = currentSettings.chatbotName || "Marichka";
+
             // Language Settings
             document.getElementById("chatbot-language").value = currentSettings.chatbotLanguage;
             document.getElementById("force-language").checked = currentSettings.forceLanguage;
@@ -1036,6 +1055,7 @@ I understand this requires special attention. Let me connect you with one of our
             try {
                 // Collect all form values
                 const greetingMessage = document.getElementById("greeting-message").value.trim();
+                const chatbotName = (document.getElementById("chatbot-name").value || "").trim();
                 const businessDescription = document.getElementById("business-description").value.trim();
                 const language = document.getElementById("chatbot-language").value;
                 const forceLanguage = document.getElementById("force-language").checked;
@@ -1058,6 +1078,7 @@ I understand this requires special attention. Let me connect you with one of our
 
                 const settings = {
                     name: "Box Catering Chatbot Configuration",
+                    chatbot_name: chatbotName || "Marichka",
                     welcome_message: greetingMessage,
                     business_context: businessDescription,
                     language: language,
@@ -1117,6 +1138,7 @@ I understand this requires special attention. Let me connect you with one of our
                     currentSettings = {
                         chatbotLanguage: document.getElementById("chatbot-language").value,
                         forceLanguage: document.getElementById("force-language").checked,
+                        chatbotName: (document.getElementById("chatbot-name").value || "").trim() || "Marichka",
                         companyName: document.getElementById("company-name").value,
                         businessDescription: document.getElementById("business-description").value,
                         specializations: document.getElementById("specializations").value,
