@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "20250910_add_assortment_items"
-down_revision = "a2e5b7c9d3f1"
+down_revision = "20251020_fix_migration_error"
 branch_labels = None
 depends_on = None
 
