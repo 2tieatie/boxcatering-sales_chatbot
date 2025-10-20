@@ -5,11 +5,14 @@ import csv
 import re
 from openai import OpenAI
 from loguru import logger
+import hashlib
+import time
 
 from app.config import settings
 from app.models.assortment_item import AssortmentItem
 from app.schemas.chat import ChatRequest, ChatResponse, HandoverReason
 from app.database import get_db
+from app.models.prompt_log import PromptLog
 
 from haystack.components.embedders import OpenAITextEmbedder, OpenAIDocumentEmbedder
 from haystack import Document
@@ -56,8 +59,14 @@ class ChatbotService:
     ) -> ChatResponse:
         """Process a chat message and return response."""
         try:
+            start_time = time.perf_counter()
             # Build the system prompt with language settings and context docs
-            system_prompt = self._build_system_prompt(language, force_language, config)
+            # system_prompt = self._build_system_prompt(language, force_language, config)
+            system_prompt, prompt_trace = self._build_system_prompt_with_trace(language, force_language, config)
+            # Compute a short hash to identify system prompts without logging full content
+            system_prompt_hash = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()[:16]
+            
+            logger.debug(f"System prompt len={len(system_prompt)} hash={system_prompt_hash}")
             
             # Build conversation messages with history
             messages = [{"role": "system", "content": system_prompt}]
@@ -363,7 +372,7 @@ class ChatbotService:
                     action = None
                     data = None
 
-            return ChatResponse(
+            chat_result = ChatResponse(
                 response=user_text,
                 handover_to_manager=needs_handover,
                 handover_reason=handover_reason,
@@ -382,6 +391,87 @@ class ChatbotService:
                     else None
                 ),
             )
+            # Write DB prompt log if enabled in config or settings
+            try:
+                duration_ms = int((time.perf_counter() - start_time) * 1000)
+                # Best-effort; do not fail user flow if logging fails
+                db = next(get_db())
+                convo_id = None
+                try:
+                    # A bit hacky: last message history entry may include conversation context
+                    # We rely on caller to augment via WS layer when needed
+                    pass
+                except Exception:
+                    pass
+                # Truncate request/response bodies to keep DB lean
+                def trunc(text: str, limit: int = 4000) -> str:
+                    try:
+                        if text is None:
+                            return None
+                        return text if len(text) <= limit else text[:limit]
+                    except Exception:
+                        return None
+
+                req_json = trunc(json.dumps({k: v for k, v in request_kwargs.items() if k != "messages"}, ensure_ascii=False))
+                resp_json = trunc(json.dumps({
+                    "content": ai_response,
+                    "function_call": getattr(response.choices[0].message, "function_call", None)
+                }, ensure_ascii=False))
+
+                # Attempt to extract config_id if passed in config
+                config_id = None
+                if isinstance(config, dict):
+                    config_id = config.get("id")
+
+                # Get configurable logging settings from system config
+                try:
+                    from app.models.system_config import SystemConfig
+                    prompt_preview_chars = 2000  # default
+                    prompt_trace_enabled = True  # default
+                    
+                    preview_config = db.query(SystemConfig).filter(SystemConfig.key == "system_prompt_preview_chars").first()
+                    if preview_config:
+                        try:
+                            prompt_preview_chars = int(preview_config.value)
+                        except (ValueError, TypeError):
+                            prompt_preview_chars = 2000
+                    
+                    trace_config = db.query(SystemConfig).filter(SystemConfig.key == "system_prompt_trace_enabled").first()
+                    if trace_config:
+                        prompt_trace_enabled = trace_config.value.lower() in ("true", "1", "yes", "on")
+                except Exception:
+                    # Fallback to defaults if system config is not available
+                    prompt_preview_chars = 2000
+                    prompt_trace_enabled = True
+
+                # Apply configurable settings
+                system_prompt_preview = system_prompt[:prompt_preview_chars] if prompt_preview_chars > 0 else None
+                system_prompt_length = len(system_prompt)
+                prompt_trace_json = trunc(json.dumps(prompt_trace, ensure_ascii=False), 4000) if prompt_trace_enabled else None
+
+                logger.debug(f"Logging prompt trace: {len(prompt_trace_json or '')} chars, preview: {len(system_prompt_preview or '')} chars")
+
+                db_log = PromptLog(
+                    user_id=None,
+                    conversation_id=convo_id,
+                    config_id=config_id,
+                    model=request_kwargs.get("model"),
+                    system_prompt_hash=system_prompt_hash,
+                    system_prompt_preview=system_prompt_preview,
+                    system_prompt_length=system_prompt_length,
+                    prompt_trace_json=prompt_trace_json,
+                    user_message=chat_request.message,
+                    request_json=req_json,
+                    response_json=resp_json,
+                    duration_ms=duration_ms,
+                    error=None,
+                )
+                db.add(db_log)
+                db.commit()
+            except Exception as log_err:
+                logger.warning(f"Failed to write prompt log: {log_err}")
+
+            return chat_result
             
         except Exception as e:
             logger.error(f"Error processing message: {e}")
@@ -673,6 +763,223 @@ class ChatbotService:
         Otherwise, respond normally with just your message to the customer.
         """
     
+    def _build_system_prompt_with_trace(
+        self,
+        language: str = "uk",
+        force_language: bool = True,
+        config: Optional[Dict[str, Any]] = None,
+    ) -> tuple[str, dict]:
+        company_name = (config or {}).get("company_name")
+        business_context = (config or {}).get("business_context")
+        specializations = (config or {}).get("specializations")
+        friendly_tone = bool((config or {}).get("friendly_tone", True))
+        professional_style = bool((config or {}).get("professional_style", True))
+        suggestive_responses = bool((config or {}).get("suggestive_responses", True))
+        manager_handover = bool((config or {}).get("manager_handover", True))
+        language_instruction = (config or {}).get("language_instruction")
+        persona_instruction = (config or {}).get("persona_instruction")
+        system_instruction = (config or {}).get("system_instruction")
+        order_flow_block = (config or {}).get("order_flow_block")
+        other_instruction = (config or {}).get("other_instruction")
+
+        context_lines = []
+        if company_name:
+            context_lines.append(f"Company: {company_name}")
+        if business_context:
+            context_lines.append(f"Business Context: {business_context}")
+        if specializations:
+            context_lines.append(f"Specializations: {specializations}")
+
+        # Enhanced conversational style instructions
+        style_lines = []
+        if language == "uk":
+            if friendly_tone:
+                style_lines.append("Спілкуйтеся тепло та дружньо, як з близькою людиною.")
+            if professional_style:
+                style_lines.append("Залишайтеся професійною, але не формальною. Будьте природною та живою.")
+            if suggestive_responses:
+                style_lines.append(
+                    "Коли це доречно, пропонуйте 1-3 короткі наступні кроки або варіанти клієнту. "
+                    "Завжди пояснюйте, чому саме ці варіанти підходять."
+                )
+            style_lines.extend([
+                "Використовуйте природні переходи між темами та питаннями.",
+                "Показуйте справжній інтерес до потреб клієнта.",
+                "Якщо клієнт згадував щось раніше, посилайтеся на це в розмові.",
+                "Задавайте уточнюючі питання, але не надто багато одночасно.",
+                "Використовуйте емодзі помірно (1-2 на повідомлення), щоб зробити розмову живішою."
+            ])
+        else:
+            if friendly_tone:
+                style_lines.append("Communicate warmly and friendly, like with a close person.")
+            if professional_style:
+                style_lines.append("Stay professional but not formal. Be natural and lively.")
+            if suggestive_responses:
+                style_lines.append(
+                    "When appropriate, suggest 1-3 short next steps or options to the customer. "
+                    "Always explain why these options are suitable."
+                )
+            style_lines.extend([
+                "Use natural transitions between topics and questions.",
+                "Show genuine interest in the customer's needs.",
+                "If the customer mentioned something earlier, refer to it in the conversation.",
+                "Ask clarifying questions, but not too many at once.",
+                "Use emojis moderately (1-2 per message) to make conversations livelier."
+            ])
+
+        handover_block = ""
+        
+        if manager_handover:
+            handover_block = """
+        If you encounter any of the following situations, you should request a handover to a human manager.
+        Assign a reason code to the handover:
+        
+        - "LOW_CONFIDENCE" - You're not confident in your answer
+        - "OUT_OF_SCOPE" - The request is outside your scope (you don't have the information)
+        - "SENSITIVE_CASE" - Sensitive cases like complaints or VIP customers
+        - "TECH_OR_FINANCIAL_LIMITATION" - Technical or financial limitations
+        - "USER_REQUEST_MANAGER" - Customer directly requests to speak with a manager
+        
+        When requesting handover, respond in this JSON format:
+        
+        {
+            "response": "Your response to the customer",
+            "handover_to_manager": true,
+            "handover_reason": "<REASON_CODE>",
+            "handover_reason_description": "Brief description of why handover is needed"
+            "summary": "Summary of the conversation"
+        }
+
+        Important:
+        - Only the value of "response" will be shown to the customer.
+        - The other JSON fields are used internally to notify a manager (e.g., via Telegram) and will not be visible to the customer.
+        - Craft "response" as a short, polite message informing the customer that a manager will take over soon. Do not include the JSON itself or technical details in "response".
+        - Keep any sensitive or operational details in the JSON fields, not in the "response" text.
+            """
+        else:
+            handover_block = """
+        Do not request a handover to a human manager. Provide your best, most helpful answer directly to the customer.
+            """
+
+        # context_docs_block = self._get_context_block(config)
+        # examples_block = self._get_examples_block(config)
+        context_docs_block = ""
+        examples_block = ""
+
+        prompt = f"""
+            You are a helpful AI assistant for a catering business.
+            {language_instruction}
+            {persona_instruction}
+            {system_instruction}
+
+            {('\n'.join(context_lines)) if context_lines else ''}
+
+            Your goal is to make customers' ordering experience as convenient and pleasant as possible:
+            • Answer questions about menus, prices, and services
+            • Help customers place orders step by step
+            • Share information about discounts and special offers
+            • Handle any customer service inquiries
+
+            {order_flow_block}
+
+            {('Стиль спілкування на основі реальних розмов із клієнтами:' if language == 'uk' else 
+            'Conversation style inspired by real customer calls:')}
+            {('• Починайте з ввічливого вітання і короткого запитання, чим можете допомогти.' if language == 'uk' else 
+            '• Start with a polite greeting and a short offer to help.')}
+            {('• Уточнюйте місто, дату/інтервал доставки та терміновість.' if language == 'uk' else 
+            '• Confirm city, delivery date/time window, and urgency.')}
+            {('• Пропонуйте 1–3 релевантні варіанти (набори/бокси) і допоміжні позиції (келихи, тарілки, прибори).' if language == 'uk' else 
+            '• Offer 1–3 relevant menu sets and helpful add-ons (cups, plates, utensils).')}
+            {('• Пояснюйте логіку поради просто і коротко.' if language == 'uk' else 
+            '• Explain recommendations briefly and clearly.')}
+            {('• Тактовно повідомляйте про доставку/самовивіз і можливі знижки/умови.' if language == 'uk' else 
+            '• Mention delivery/pickup and any fees/discounts tactfully.')}
+            {('• Не ставте забагато питань одночасно — рухайтеся крок за кроком.' if language == 'uk' else 
+            '• Avoid asking too many questions at once; proceed step by step.')}
+            {('• Підсумовуйте домовленості коротко перед оформленням.' if language == 'uk' else 
+            '• Summarize agreements briefly before finalizing.')}
+
+            {'\n'.join(style_lines)}
+
+            {handover_block}
+
+            When and only when the customer clearly wants to place an order and all
+            required details are collected (menu_items, delivery_date, customer_name,
+            customer_phone, customer_address), IMMEDIATELY emit ONLY a JSON object with
+            `create_order` action. Do NOT include any additional text outside the JSON.
+            The customer-visible confirmation message must be inside the JSON as the
+            value of the "response" field (e.g., UA: "Все супер, дякуємо за замовлення! Менеджер зв'яжеться з вами.").
+            Do not ask for an extra confirmation if the user already provided all required details.
+            Use this format exactly:
+
+            {{
+                "response": "<your short confirmation to the user in {language}>",
+                "action": "create_order",
+                "data": {{
+                    "customer_name": "<name>",
+                    "customer_phone": "<phone>",
+                    "customer_email": "<optional email>",
+                    "customer_address": "<address>",
+                    "menu_items": "<menu items>",
+                    "total_amount": <number>,
+                    "delivery_date": "<date in ISO format YYYY-MM-DD>",
+                    "delivery_time": "<optional time>",
+                    "notes": "<optional notes>",
+                    "currency": "UAH",
+                    "guests_count": <optional number of guests>
+                    "priority": "<optional priority>"
+                }}
+            }}
+
+            If some required details are missing, ask a concise follow-up question for the
+            missing details instead of emitting the action. As soon as all required fields
+            are present, emit ONLY the `create_order` action JSON as above and nothing else.
+
+            {context_docs_block}
+
+            {examples_block}
+
+            {other_instruction}
+
+            Otherwise, respond normally with just your message to the customer.
+        """.strip()
+
+        trace = {
+            "language": language,
+            "force_language": force_language,
+            "components": {
+                "language_instruction": {
+                    "included": bool(language_instruction), "len": len(language_instruction or ""), "content": language_instruction
+                },
+                "persona_instruction": {
+                    "included": bool(persona_instruction), "len": len(persona_instruction or ""), "content": persona_instruction
+                },
+                "system_instruction": {
+                    "included": bool(system_instruction), "len": len(system_instruction or ""), "content": system_instruction
+                },
+                "order_flow_block": {
+                    "included": bool(order_flow_block), "len": len(order_flow_block or ""), "content": order_flow_block
+                },
+                "other_instruction": {
+                    "included": bool(other_instruction), "len": len(other_instruction or ""), "content": other_instruction
+                },
+                "context_lines": {"count": len(context_lines), "content": context_lines},
+                "style_lines": {"count": len(style_lines), "content": style_lines},
+                "handover_block": {"included": True, "len": len(handover_block)},
+                "context_docs_block": {"included": bool(context_docs_block), "len": len(context_docs_block)},
+                "examples_block": {"included": bool(examples_block), "len": len(examples_block)},
+            }
+        }
+
+        logger.debug(
+            f"Prompt components: { {k:v['len'] if isinstance(v, dict) and 'len' in v else v.get('count', 0) \
+            if isinstance(v, dict) else 0 for k,v in trace['components'].items()} }"
+        )
+        logger.debug(f"System prompt len={len(prompt)} hash={hashlib.sha256(prompt.encode('utf-8')).hexdigest()[:16]}")
+
+        return prompt, trace
+
+
     def _get_context_block(self, config: Optional[Dict[str, Any]] = None) -> str:
         """Return a formatted context block built from local documents.
 
@@ -1093,7 +1400,7 @@ class ChatbotService:
                 }
             })
 
-            # logger.debug(f"Resultі: {results}")
+            # logger.debug(f"Results: {results}")
 
             result_documents = []
             for doc in results["retriever"]["documents"]:
@@ -1153,7 +1460,7 @@ class ChatbotService:
                 }
             })
 
-            # logger.debug(f"Resultі: {results}")
+            # logger.debug(f"Results: {results}")
 
             result_documents = []
             for doc in results["retriever"]["documents"]:

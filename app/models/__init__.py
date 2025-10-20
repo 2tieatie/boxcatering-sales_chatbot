@@ -9,6 +9,7 @@ from .customer import Customer
 from .chatbot_config import ChatbotConfig
 from .system_config import SystemConfig
 from .assortment_item import AssortmentItem
+from .prompt_log import PromptLog
 
 __all__ = [
     "Base",
@@ -20,5 +21,6 @@ __all__ = [
     "ChatbotConfig",
     "SystemConfig"
     ,
-    "AssortmentItem"
+    "AssortmentItem",
+    "PromptLog",
 ]

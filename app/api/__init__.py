@@ -14,6 +14,7 @@ from .customers import router as customers_router
 from .context_docs import router as context_docs_router
 from .scrape import router as scrape_router
 from .assortment import router as assortment_router
+from .logs import router as logs_router
 
 __all__ = [
     "chat_router",
@@ -29,4 +30,5 @@ __all__ = [
     "context_docs_router",
     "scrape_router",
     "assortment_router",
+    "logs_router",
 ]

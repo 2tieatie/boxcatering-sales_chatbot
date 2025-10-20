@@ -18,6 +18,7 @@ class ChatbotConfig(Base):
     language = Column(String, default="uk", nullable=False)  # Default to Ukrainian
     force_language = Column(Boolean, default=True, nullable=False)  # Default to strict language enforcement
     is_active = Column(Boolean, default=True)
+    chatbot_name = Column(String, nullable=True)
     
     # Additional fields for enhanced configuration
     company_name = Column(String, nullable=True)

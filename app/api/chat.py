@@ -57,17 +57,53 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 db.commit()
                 db.refresh(conversation)
                 logger.debug(f"Created new conversation for session_id={chat_request.session_id}")
-            # Get active chatbot configuration
+            # Get active chatbot configuration by default
             from app.models.chatbot_config import ChatbotConfig
             active_config = db.query(ChatbotConfig).filter(ChatbotConfig.is_active == True).first()
+
+            # Optional admin-only override via config_id query param
+            try:
+                config_id_param = websocket.query_params.get("config_id")
+            except Exception:
+                config_id_param = None
+            selected_config = active_config
+            if config_id_param is not None:
+                # Authenticate user from Authorization header to ensure only admins can override
+                try:
+                    from app.services.auth_service import AuthService
+                    from app.services.role_service import RoleService
+                    authz = websocket.headers.get("Authorization") or ""
+                    token = authz.split(" ")[1] if " " in authz else authz
+                    # Allow token via query string for browser WebSocket (no custom headers supported)
+                    if not token:
+                        try:
+                            token = websocket.query_params.get("token") or ""
+                        except Exception:
+                            token = ""
+                    auth_service = AuthService()
+                    role_service = RoleService()
+                    # Build a faux Depends flow: decode token, load user, ensure admin
+                    user = await auth_service.get_current_user(token, db)
+                    role_service.require_admin_or_system_admin(user)
+                    # If authorized, attempt to load the requested config
+                    try:
+                        cid = int(config_id_param)
+                        manual = db.query(ChatbotConfig).filter(ChatbotConfig.id == cid).first()
+                        if manual is not None:
+                            selected_config = manual
+                    except Exception:
+                        pass
+                except Exception:
+                    # If auth fails, ignore override and use active config
+                    selected_config = active_config
             
             # Set default language settings (Ukrainian by default)
             language = "uk"
             force_language = True
             
-            if active_config:
-                language = active_config.language
-                force_language = active_config.force_language
+            if selected_config:
+                language = selected_config.language
+                force_language = selected_config.force_language
             
             # Load OpenAI and system settings from system configs if present
             from app.models.system_config import SystemConfig
@@ -133,21 +169,29 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 debug=debug_enabled,
                 config=(
                     {
-                        "company_name": active_config.company_name,
-                        "business_context": active_config.business_context,
-                        "specializations": active_config.specializations,
-                        "friendly_tone": active_config.friendly_tone,
-                        "professional_style": active_config.professional_style,
-                        "suggestive_responses": active_config.suggestive_responses,
-                        "manager_handover": active_config.manager_handover,
-                        "fallback_message": active_config.fallback_message,
-                        "handover_message": active_config.handover_message,
+                        "company_name": selected_config.company_name,
+                        "business_context": selected_config.business_context,
+                        "specializations": selected_config.specializations,
+                        "friendly_tone": selected_config.friendly_tone,
+                        "professional_style": selected_config.professional_style,
+                        "suggestive_responses": selected_config.suggestive_responses,
+                        "manager_handover": selected_config.manager_handover,
+                        "fallback_message": selected_config.fallback_message,
+                        "handover_message": selected_config.handover_message,
                         # Context docs overrides
                         "context_docs_enabled": ctx_enabled if ctx_enabled is not None else None,
                         "context_docs_dir": ctx_dir,
                         "context_docs_max_chars": ctx_max_chars,
+                        # Prompt template fields so they affect the model
+                        "language_instruction": selected_config.language_instruction,
+                        "persona_instruction": selected_config.persona_instruction,
+                        "system_instruction": selected_config.system_instruction,
+                        "order_flow_block": selected_config.order_flow_block,
+                        "other_instruction": selected_config.other_instruction,
+                        # Pass id through for logging
+                        "id": selected_config.id,
                     }
-                    if active_config
+                    if selected_config
                     else None
                 ),
                 conversation_history=conversation_history,
