@@ -439,7 +439,6 @@
     "changePassword.alert.failed": "Failed to change password",
     "chatTest.headerTitle": "💬 Test chat with Marichka",
     "chatTest.headerTitleName": "Marichka",
-    "chatTest.headerSubtitle": "Test and interact with your AI-powered chatbot",
     "chatTest.input.label": "Enter a message:",
     "chatTest.input.placeholder": "Ask about the menu, place an order or get catering advice...",
     "chatTest.send": "Send",
