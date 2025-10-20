@@ -331,8 +331,7 @@
     <div class="chat-container">
         <div class="chat-area">
             <div class="chat-header">
-                <h2 id="chat-header-title" data-i18n="chatTest.headerTitle">💬 Test chat with Marichka</h2>
-                <p data-i18n="chatTest.headerSubtitle">Test and interact with your AI-powered chatbot</p>
+                <h2 id="chat-header-title" data-i18n="chatTest.headerTitleName">Marichka</h2>
             </div>
 
             <div class="chat-messages" id="chat-messages">
@@ -493,7 +492,7 @@
                     const titleNode = document.getElementById("chat-header-title");
                     if (titleNode) {
                         const botName = (cfg.chatbot_name || "Marichka").trim();
-                        titleNode.textContent = `💬 Test chat with ${botName}`;
+                        titleNode.textContent = `${botName}`;
                     }
                 } catch { }
             } catch (e) {
@@ -676,6 +675,20 @@
             this.style.height = Math.min(this.scrollHeight, 120) + "px";
         });
 
+        // Enter-to-send, Shift+Enter for newline
+        document.getElementById("chat-input").addEventListener("keydown", function (e) {
+            if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+                e.preventDefault();
+                const form = document.getElementById("chat-form");
+                if (form && typeof form.requestSubmit === "function") {
+                    form.requestSubmit();
+                } else {
+                    const btn = document.getElementById("send-btn");
+                    if (btn) btn.click();
+                }
+            }
+        });
+
         // Control functions
         function clearChat() {
             if (confirm(window.I18N && I18N.t ? I18N.t("chatTest.clear.confirm") : "Are you sure you want to clear the chat history?")) {
@@ -854,7 +867,7 @@
                                 const titleNode = document.getElementById('chat-header-title');
                                 if (titleNode) {
                                     const botName = (cfg.chatbot_name || 'Marichka').trim();
-                                    titleNode.textContent = `💬 Test chat with ${botName}`;
+                                    titleNode.textContent = `${botName}`;
                                 }
                             }
                         } catch { }
