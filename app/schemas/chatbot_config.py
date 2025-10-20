@@ -29,7 +29,7 @@ class ChatbotConfigBase(BaseModel):
     performance_analytics: Optional[bool] = Field(True, description="Enable performance analytics")
     error_reporting: Optional[bool] = Field(True, description="Enable error reporting")
 
-    # Promt fields
+    # Prompt fields
     language_instruction: Optional[str] = Field(None, description="Language instruction")
     persona_instruction: Optional[str] = Field(None, description="Persona instruction")
     system_instruction: Optional[str] = Field(None, description="System instruction")
@@ -61,7 +61,7 @@ class ChatbotConfigCreate(BaseModel):
     performance_analytics: Optional[bool] = Field(True, description="Enable performance analytics")
     error_reporting: Optional[bool] = Field(True, description="Enable error reporting")
 
-    # Promt fields
+    # Prompt fields
     language_instruction: Optional[str] = Field(None, description="Language instruction")
     persona_instruction: Optional[str] = Field(None, description="Persona instruction")
     system_instruction: Optional[str] = Field(None, description="System instruction")
@@ -93,7 +93,7 @@ class ChatbotConfigUpdate(BaseModel):
     performance_analytics: Optional[bool] = Field(None, description="Enable performance analytics")
     error_reporting: Optional[bool] = Field(None, description="Enable error reporting")
 
-    # Promt fields
+    # Prompt fields
     language_instruction: Optional[str] = Field(None, description="Language instruction")
     persona_instruction: Optional[str] = Field(None, description="Persona instruction")
     system_instruction: Optional[str] = Field(None, description="System instruction")
