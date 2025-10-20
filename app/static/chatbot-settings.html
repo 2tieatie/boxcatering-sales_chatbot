@@ -437,9 +437,9 @@ I understand this requires special attention. Let me connect you with one of our
             </div>
 
             <div class="special-row">
-                <!-- Promt Templates -->
+                <!-- Prompt Templates -->
                 <div class="settings-card large-card">
-                    <h3><span class="icon">📝</span><span data-i18n="chatbotSettings.section.promts">Promt
+                    <h3><span class="icon">📝</span><span data-i18n="chatbotSettings.section.prompts">Prompt
                             Templates</span></h3>
 
                     <div class="form-group">
@@ -468,7 +468,7 @@ I understand this requires special attention. Let me connect you with one of our
 
                     <div class="form-group">
                         <label for="other-instruction" data-i18n="chatbotSettings.labels.other_instruction">Other
-                            Instruction</label>
+                            Instructions</label>
                         <textarea id="other-instruction" placeholder=""></textarea>
                     </div>
                 </div>
@@ -915,7 +915,7 @@ I understand this requires special attention. Let me connect you with one of our
                         conversationLogging: dbSettings.conversation_logging !== undefined ? dbSettings.conversation_logging : defaultSettings.conversationLogging,
                         performanceAnalytics: dbSettings.performance_analytics !== undefined ? dbSettings.performance_analytics : defaultSettings.performanceAnalytics,
                         errorReporting: dbSettings.error_reporting !== undefined ? dbSettings.error_reporting : defaultSettings.errorReporting,
-                        // Promt fields
+                        // Prompt fields
                         language_instruction: dbSettings.language_instruction || defaultSettings.languageInstruction,
                         persona_instruction: dbSettings.persona_instruction || defaultSettings.personaInstruction,
                         system_instruction: dbSettings.system_instruction || defaultSettings.systemInstruction,
@@ -1026,7 +1026,7 @@ I understand this requires special attention. Let me connect you with one of our
             document.getElementById("performance-analytics").checked = currentSettings.performanceAnalytics;
             document.getElementById("error-reporting").checked = currentSettings.errorReporting;
 
-            // Promt fields
+            // Prompt fields
             document.getElementById("language-instruction").value = currentSettings.language_instruction;
             document.getElementById("persona-instruction").value = currentSettings.persona_instruction;
             document.getElementById("system-instruction").value = currentSettings.system_instruction;
@@ -1097,7 +1097,7 @@ I understand this requires special attention. Let me connect you with one of our
                     conversation_logging: document.getElementById("conversation-logging").checked,
                     performance_analytics: document.getElementById("performance-analytics").checked,
                     error_reporting: document.getElementById("error-reporting").checked,
-                    // Promt fields
+                    // Prompt fields
                     language_instruction: document.getElementById("language-instruction").value.trim(),
                     persona_instruction: document.getElementById("persona-instruction").value.trim(),
                     system_instruction: document.getElementById("system-instruction").value.trim(),
@@ -1173,7 +1173,7 @@ I understand this requires special attention. Let me connect you with one of our
                         // Website Scraping
                         scrapeWebsiteUrl: (document.getElementById("scrape-website-url").value || "").trim(),
                         scrapeIntervalMinutes: parseInt(document.getElementById("scrape-interval-minutes").value) || 1440,
-                        // Promt fields
+                        // Prompt fields
                         language_instruction: document.getElementById("language-instruction").value,
                         persona_instruction: document.getElementById("persona-instruction").value,
                         system_instruction: document.getElementById("system-instruction").value,
