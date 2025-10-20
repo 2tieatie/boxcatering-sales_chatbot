@@ -20,12 +20,16 @@ class PromptLog(Base):
 
     model = Column(String, nullable=True)
     system_prompt_hash = Column(String, nullable=True)
+    # first N chars of the final system prompt (e.g., 1–2k)
+    system_prompt_preview = Column(Text, nullable=True)
+    # length in chars of the final system prompt
+    system_prompt_length = Column(Integer, nullable=True)
 
     user_message = Column(Text, nullable=True)
     request_json = Column(Text, nullable=True)
     response_json = Column(Text, nullable=True)
+    # JSON capturing each component used to assemble the system prompt: content, enabled flags, and lengths
+    prompt_trace_json = Column(Text, nullable=True)
 
     duration_ms = Column(Integer, nullable=True)
     error = Column(Text, nullable=True)
-
-
