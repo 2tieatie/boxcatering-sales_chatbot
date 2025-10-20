@@ -12,7 +12,6 @@ from app.dependencies import require_admin_or_system_admin_dependency
 
 router = APIRouter(prefix="/logs", tags=["logs"])
 
-
 @router.get("/prompts", response_model=List[dict])
 async def list_prompt_logs(
     conversation_id: Optional[int] = None,
@@ -38,6 +37,7 @@ async def list_prompt_logs(
             "config_id": r.config_id,
             "model": r.model,
             "system_prompt_hash": r.system_prompt_hash,
+            "system_prompt_length": r.system_prompt_length,
             "duration_ms": r.duration_ms,
             "error": r.error,
         }
@@ -63,11 +63,12 @@ async def get_prompt_log(
         "config_id": row.config_id,
         "model": row.model,
         "system_prompt_hash": row.system_prompt_hash,
+        "system_prompt_preview": row.system_prompt_preview,
+        "system_prompt_length": row.system_prompt_length,
+        "prompt_trace_json": row.prompt_trace_json,
         "user_message": row.user_message,
         "request_json": row.request_json,
         "response_json": row.response_json,
         "duration_ms": row.duration_ms,
         "error": row.error,
     }
-
-
