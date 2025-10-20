@@ -21,6 +21,7 @@ from app.api import (
     context_docs_router,
     scrape_router,
     assortment_router,
+    logs_router,
 )
 # from app.api.test_router import router as test_router
 # from app.api.chatbot_config_simple import router as chatbot_config_simple_router
@@ -81,6 +82,7 @@ app.include_router(customers_router)
 app.include_router(context_docs_router)
 app.include_router(scrape_router)
 app.include_router(assortment_router)
+app.include_router(logs_router)
 # app.include_router(test_router)
 # app.include_router(chatbot_config_simple_router)
 
@@ -186,6 +188,13 @@ async def chrome_devtools_probe_get() -> JSONResponse:
 
 if __name__ == "__main__":
     import uvicorn
+    # Configure loguru sinks
+    try:
+        logger.add("logs/app.log", rotation="10 MB", retention="14 days", enqueue=True, backtrace=False, diagnose=False)
+        logger.add("logs/prompt.log", rotation="10 MB", retention="14 days", enqueue=True, backtrace=False, diagnose=False)
+    except Exception:
+        # Logging config should not block app start
+        pass
     
     uvicorn.run(
         "app.main:app",

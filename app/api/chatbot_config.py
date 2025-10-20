@@ -112,6 +112,95 @@ async def create_chatbot_config(
     return db_config
 
 
+@router.post("/new", response_model=ChatbotConfigResponse)
+async def create_new_chatbot_config(
+    config_data: ChatbotConfigCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_or_system_admin_dependency),
+):
+    """Create a new chatbot configuration (admin/system admin only).
+
+    - Creates a brand new row with provided values.
+    - If `is_active=True` is provided, deactivates all other configs.
+    - Returns the newly created configuration.
+    """
+    from sqlalchemy.exc import IntegrityError
+
+    payload = config_data.model_dump()
+    # If requested active, deactivate others first
+    if payload.get("is_active"):
+        db.query(ChatbotConfig).update({"is_active": False})
+
+    new_config = ChatbotConfig(**payload)
+    try:
+        db.add(new_config)
+        db.commit()
+        db.refresh(new_config)
+        return new_config
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to create config: {exc.__class__.__name__}")
+
+
+@router.post("/{config_id}/clone", response_model=ChatbotConfigResponse)
+async def clone_chatbot_config(
+    config_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_or_system_admin_dependency),
+):
+    """Clone an existing chatbot configuration (admin/system admin only).
+
+    Duplicates all fields except identifiers and timestamps. The clone is created
+    as inactive and with a unique name.
+    """
+    from datetime import datetime
+    from sqlalchemy.exc import IntegrityError
+
+    source = db.query(ChatbotConfig).filter(ChatbotConfig.id == config_id).first()
+    if source is None:
+        raise HTTPException(status_code=404, detail="Chatbot configuration not found")
+
+    # Generate a safe unique name
+    timestamp = datetime.utcnow().strftime("%Y%m%d-%H%M")
+    base_name = f"{source.name} - copy - {timestamp}"
+
+    clone = ChatbotConfig(
+        name=base_name,
+        chatbot_name=source.chatbot_name,
+        welcome_message=source.welcome_message,
+        business_context=source.business_context,
+        language=source.language,
+        force_language=source.force_language,
+        is_active=False,
+        company_name=source.company_name,
+        specializations=source.specializations,
+        friendly_tone=source.friendly_tone,
+        professional_style=source.professional_style,
+        suggestive_responses=source.suggestive_responses,
+        manager_handover=source.manager_handover,
+        fallback_message=source.fallback_message,
+        handover_message=source.handover_message,
+        response_timeout=source.response_timeout,
+        conversation_logging=source.conversation_logging,
+        performance_analytics=source.performance_analytics,
+        error_reporting=source.error_reporting,
+        language_instruction=source.language_instruction,
+        persona_instruction=source.persona_instruction,
+        system_instruction=source.system_instruction,
+        order_flow_block=source.order_flow_block,
+        other_instruction=source.other_instruction,
+    )
+
+    try:
+        db.add(clone)
+        db.commit()
+        db.refresh(clone)
+        return clone
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to clone config: {exc.__class__.__name__}")
+
+
 @router.put("/{config_id}", response_model=ChatbotConfigResponse)
 async def update_chatbot_config(
     config_id: int,
