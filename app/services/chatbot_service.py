@@ -17,6 +17,7 @@ from app.schemas.chat import ChatRequest, ChatResponse, HandoverReason
 from app.database import get_db
 from app.models.prompt_log import PromptLog
 from app.utils.logging_config import get_logger
+from app.services.unified_logger import UnifiedLogger
 
 from haystack.components.embedders import OpenAITextEmbedder, OpenAIDocumentEmbedder
 from haystack import Document
@@ -48,8 +49,9 @@ class ChatbotService:
             recreate_index=False
         )
         self.openai_api_key = api_key
-        self.prompt_logger = get_logger("prompt")
-        self.app_logger = get_logger("app")
+        # self.prompt_logger = get_logger("prompt")
+        # self.app_logger = get_logger("app")
+        self.unified_logger = UnifiedLogger()
     
     async def process_message(
         self,
@@ -70,12 +72,13 @@ class ChatbotService:
             # Generate correlation ID for this request
             correlation_id = str(uuid.uuid4())[:8]
 
-            # Log incoming request
-            self.prompt_logger.info(
-                f"[{correlation_id}] CHAT_REQUEST: user_message='{chat_request.message[:100]}...' | "
-                f"language={language} | model={model or self.model} | "
-                f"conversation_history_length={len(conversation_history) if conversation_history else 0}"
-            )
+            # Log incoming request using UnifiedLogger
+            self.unified_logger.log_chat_request(correlation_id, {
+                "user_message": chat_request.message,
+                "language": language,
+                "model": model or self.model,
+                "conversation_history_length": len(conversation_history) if conversation_history else 0
+            })
 
             # Build the system prompt with language settings and context docs
             # system_prompt = self._build_system_prompt(language, force_language, config)
@@ -83,11 +86,12 @@ class ChatbotService:
             # Compute a short hash to identify system prompts without logging full content
             system_prompt_hash = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()[:16]
             
-             # Log system prompt details
-            self.prompt_logger.info(
-                f"[{correlation_id}] SYSTEM_PROMPT: hash={system_prompt_hash} | "
+             # Log system prompt details using UnifiedLogger
+            self.unified_logger.prompt_logger.info(
+                f"[{correlation_id}] SYSTEM_PROMPT: {system_prompt} | hash={system_prompt_hash} | "
                 f"length={len(system_prompt)} | "
-                f"components={json.dumps({k: v.get('len', 0) if isinstance(v, dict) else 0 for k, v in prompt_trace['components'].items()})}"
+                f"components={json.dumps({k: v['len'] if isinstance(v, dict) and 'len' in v else v.get('count', 0) \
+                    if isinstance(v, dict) else 0 for k, v in prompt_trace['components'].items()})}"
             )
             
             # Build conversation messages with history
@@ -210,8 +214,8 @@ class ChatbotService:
                 else:
                     raise
             
-            # Log API request details
-            self.prompt_logger.info(
+            # Log API request details using UnifiedLogger
+            self.unified_logger.prompt_logger.info(
                 f"[{correlation_id}] OPENAI_REQUEST: model={request_kwargs.get('model')} | "
                 f"temperature={request_kwargs.get('temperature')} | "
                 f"max_tokens={request_kwargs.get('max_tokens') or request_kwargs.get('max_completion_tokens')} | "
@@ -269,25 +273,25 @@ class ChatbotService:
 
 
             ai_response = (response.choices[0].message.content or "")
-            logger.debug(f"AI response: {ai_response}")
-            logger.debug(f"Response: {response}")
-            logger.debug(f"Function call: {response.choices[0].message.function_call}")
+            # logger.debug(f"AI response: {ai_response}")
+            # logger.debug(f"Response: {response}")
+            # logger.debug(f"Function call: {response.choices[0].message.function_call}")
 
             # Parse the response to check for handover
             parsed_response = self._parse_ai_response(ai_response)
-            logger.debug(f"Parsed response: {parsed_response}")
+            # logger.debug(f"Parsed response: {parsed_response}")
 
             # Backend safety net: never return empty customer-visible text
             user_text = (parsed_response.get("response") or ai_response or "").strip()
-            logger.debug(f"User text: {user_text}")
+            # logger.debug(f"User text: {user_text}")
             needs_handover = bool(parsed_response.get("handover_to_manager", False))
-            logger.debug(f"Needs handover: {needs_handover}")
+            # logger.debug(f"Needs handover: {needs_handover}")
             handover_reason = parsed_response.get("handover_reason")
-            logger.debug(f"Handover reason: {handover_reason}")
+            # logger.debug(f"Handover reason: {handover_reason}")
             handover_desc = parsed_response.get("handover_reason_description")
-            logger.debug(f"Handover description: {handover_desc}")
+            # logger.debug(f"Handover description: {handover_desc}")
             summary = parsed_response.get("debug", {}).get("summary")
-            logger.debug(f"Conversation summary: {summary}")
+            # logger.debug(f"Conversation summary: {summary}")
 
             # Messages from configuration or localized defaults
             default_fallback = (
@@ -421,108 +425,62 @@ class ChatbotService:
                 ),
             )
 
-            # Log OpenAI response
+            # Log OpenAI response using UnifiedLogger
             duration_ms = int((time.perf_counter() - start_time) * 1000)
-            self.prompt_logger.info(
-                f"[{correlation_id}] OPENAI_RESPONSE: duration={duration_ms}ms | "
-                f"response_length={len(ai_response)} | "
-                f"function_call={bool(response.choices[0].message.function_call)} | "
-                f"handover={needs_handover}"
+            self.unified_logger.prompt_logger.info(
+                f"[{correlation_id}] OPENAI_RESPONSE: {ai_response} | full_response={response} | response_length={len(ai_response)} | "
+                f"duration={duration_ms}ms | "
+                f"function_call={response.choices[0].message.function_call if response.choices[0].message.function_call else 'none'}"
             )
             
-            # Log final response
-            self.prompt_logger.info(
-                f"[{correlation_id}] CHAT_RESPONSE: response_length={len(user_text)} | "
-                f"handover={needs_handover} | "
-                f"action={action} | "
-                f"total_duration={duration_ms}ms"
-            )
+            # Log final response using UnifiedLogger
+            self.unified_logger.log_chat_response(correlation_id, {
+                "parsed_response": parsed_response,
+                "response": user_text,
+                "response_length": len(user_text),
+                "handover": needs_handover,
+                "handover_reason": handover_reason,
+                "handover_reason_description": handover_desc,
+                "conversation_summary": summary,
+                "action": action,
+                "total_duration": duration_ms
+            })
 
-            # Write DB prompt log if enabled in config or settings
+            # Write DB prompt log using UnifiedLogger
             try:
                 duration_ms = int((time.perf_counter() - start_time) * 1000)
-                # Best-effort; do not fail user flow if logging fails
-                db = next(get_db())
-                convo_id = None
-                try:
-                    # A bit hacky: last message history entry may include conversation context
-                    # We rely on caller to augment via WS layer when needed
-                    pass
-                except Exception:
-                    pass
-                # Truncate request/response bodies to keep DB lean
-                def trunc(text: str, limit: int = 4000) -> str:
-                    try:
-                        if text is None:
-                            return None
-                        return text if len(text) <= limit else text[:limit]
-                    except Exception:
-                        return None
-
-                req_json = trunc(json.dumps({k: v for k, v in request_kwargs.items() if k != "messages"}, ensure_ascii=False))
-                resp_json = trunc(json.dumps({
-                    "content": ai_response,
-                    "function_call": getattr(response.choices[0].message, "function_call", None)
-                }, ensure_ascii=False))
-
-                # Attempt to extract config_id if passed in config
-                config_id = None
-                if isinstance(config, dict):
-                    config_id = config.get("id")
-
-                # Get configurable logging settings from system config
-                try:
-                    from app.models.system_config import SystemConfig
-                    prompt_preview_chars = 2000  # default
-                    prompt_trace_enabled = True  # default
-                    
-                    preview_config = db.query(SystemConfig).filter(SystemConfig.key == "system_prompt_preview_chars").first()
-                    if preview_config:
-                        try:
-                            prompt_preview_chars = int(preview_config.value)
-                        except (ValueError, TypeError):
-                            prompt_preview_chars = 2000
-                    
-                    trace_config = db.query(SystemConfig).filter(SystemConfig.key == "system_prompt_trace_enabled").first()
-                    if trace_config:
-                        prompt_trace_enabled = trace_config.value.lower() in ("true", "1", "yes", "on")
-                except Exception:
-                    # Fallback to defaults if system config is not available
-                    prompt_preview_chars = 2000
-                    prompt_trace_enabled = True
-
-                # Apply configurable settings
-                system_prompt_preview = system_prompt[:prompt_preview_chars] if prompt_preview_chars > 0 else None
-                system_prompt_length = len(system_prompt)
-                prompt_trace_json = trunc(json.dumps(prompt_trace, ensure_ascii=False), 4000) if prompt_trace_enabled else None
-
-                logger.debug(f"Logging prompt trace: {len(prompt_trace_json or '')} chars, preview: {len(system_prompt_preview or '')} chars")
-
-                db_log = PromptLog(
-                    correlation_id=correlation_id,
-                    user_id=None,
-                    conversation_id=convo_id,
-                    config_id=config_id,
-                    model=request_kwargs.get("model"),
-                    system_prompt_hash=system_prompt_hash,
-                    system_prompt_preview=system_prompt_preview,
-                    system_prompt_length=system_prompt_length,
-                    prompt_trace_json=prompt_trace_json,
-                    user_message=chat_request.message,
-                    request_json=req_json,
-                    response_json=resp_json,
-                    duration_ms=duration_ms,
-                    error=None,
-                )
-                db.add(db_log)
-                db.commit()
+                
+                # Prepare data for database logging
+                log_data = {
+                    "user_id": None,  # Could be extracted from request context if available
+                    "conversation_id": None,  # Could be extracted from request context if available
+                    "config_id": config.get("id") if isinstance(config, dict) else None,
+                    "model": request_kwargs.get("model"),
+                    "system_prompt_hash": system_prompt_hash,
+                    "system_prompt_preview": system_prompt[:2000] if len(system_prompt) > 2000 else system_prompt,
+                    "system_prompt_length": len(system_prompt),
+                    "prompt_trace_json": json.dumps(prompt_trace, ensure_ascii=False)[:4000] if prompt_trace else None,
+                    "user_message": chat_request.message,
+                    "request_json": json.dumps({k: v for k, v in request_kwargs.items() if k != "messages"}, ensure_ascii=False)[:4000],
+                    "response_json": json.dumps({
+                        "content": ai_response,
+                        "function_call": getattr(response.choices[0].message, "function_call", None)
+                    }, ensure_ascii=False)[:4000],
+                    "duration_ms": duration_ms,
+                    "error": None,
+                }
+                
+                # Log to database using UnifiedLogger
+                self.unified_logger.log_to_database(correlation_id, log_data)
+                
             except Exception as log_err:
+                self.unified_logger.app_logger.warning(f"[{correlation_id}] Failed to write prompt log: {log_err}")
                 logger.warning(f"Failed to write prompt log: {log_err}")
 
             return chat_result
             
         except Exception as e:
-            self.app_logger.error(f"[{correlation_id}] CHAT_ERROR: {str(e)}")
+            self.unified_logger.app_logger.error(f"[{correlation_id}] CHAT_ERROR: {str(e)}")
             logger.error(f"Error processing message: {e}")
             
             # Return a fallback response
@@ -1021,11 +979,13 @@ class ChatbotService:
             }
         }
 
-        logger.debug(
-            f"Prompt components: { {k:v['len'] if isinstance(v, dict) and 'len' in v else v.get('count', 0) \
-            if isinstance(v, dict) else 0 for k,v in trace['components'].items()} }"
+        self.unified_logger.prompt_logger.debug(
+            f"[_build_system_prompt_with_trace] Prompt components: { {k: v['len'] if isinstance(v, dict) and 'len' in v else v.get('count', 0) 
+            if isinstance(v, dict) else 0 for k, v in trace['components'].items()} }"
         )
-        logger.debug(f"System prompt len={len(prompt)} hash={hashlib.sha256(prompt.encode('utf-8')).hexdigest()[:16]}")
+        self.unified_logger.prompt_logger.debug(
+            f"[_build_system_prompt_with_trace] System prompt len={len(prompt)} hash={hashlib.sha256(prompt.encode('utf-8')).hexdigest()[:16]}"
+        )
 
         return prompt, trace
 
