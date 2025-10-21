@@ -1,18 +1,21 @@
-import json
-from pathlib import Path
-from typing import Optional, Dict, Any
-import csv
 import re
-from openai import OpenAI
-from loguru import logger
+import json
+import csv
 import hashlib
 import time
+
+from pathlib import Path
+from typing import Optional, Dict, Any
+
+from openai import OpenAI
+from loguru import logger
 
 from app.config import settings
 from app.models.assortment_item import AssortmentItem
 from app.schemas.chat import ChatRequest, ChatResponse, HandoverReason
 from app.database import get_db
 from app.models.prompt_log import PromptLog
+from app.utils.logging_config import get_logger
 
 from haystack.components.embedders import OpenAITextEmbedder, OpenAIDocumentEmbedder
 from haystack import Document
@@ -44,6 +47,8 @@ class ChatbotService:
             recreate_index=False
         )
         self.openai_api_key = api_key
+        self.prompt_logger = get_logger("prompt")
+        self.app_logger = get_logger("app")
     
     async def process_message(
         self,
@@ -60,13 +65,26 @@ class ChatbotService:
         """Process a chat message and return response."""
         try:
             start_time = time.perf_counter()
+
+            # Log incoming request
+            self.prompt_logger.info(
+                f"CHAT_REQUEST: user_message='{chat_request.message[:100]}...' | "
+                f"language={language} | model={model or self.model} | "
+                f"conversation_history_length={len(conversation_history) if conversation_history else 0}"
+            )
+
             # Build the system prompt with language settings and context docs
             # system_prompt = self._build_system_prompt(language, force_language, config)
             system_prompt, prompt_trace = self._build_system_prompt_with_trace(language, force_language, config)
             # Compute a short hash to identify system prompts without logging full content
             system_prompt_hash = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()[:16]
             
-            logger.debug(f"System prompt len={len(system_prompt)} hash={system_prompt_hash}")
+             # Log system prompt details
+            self.prompt_logger.info(
+                f"SYSTEM_PROMPT: hash={system_prompt_hash} | "
+                f"length={len(system_prompt)} | "
+                f"components={json.dumps({k: v.get('len', 0) if isinstance(v, dict) else 0 for k, v in prompt_trace['components'].items()})}"
+            )
             
             # Build conversation messages with history
             messages = [{"role": "system", "content": system_prompt}]
@@ -188,6 +206,14 @@ class ChatbotService:
                 else:
                     raise
             
+            # Log API request details
+            self.prompt_logger.info(
+                f"OPENAI_REQUEST: model={request_kwargs.get('model')} | "
+                f"temperature={request_kwargs.get('temperature')} | "
+                f"max_tokens={request_kwargs.get('max_tokens') or request_kwargs.get('max_completion_tokens')} | "
+                f"messages_count={len(request_kwargs['messages'])}"
+            )
+
             # Extract the response
             message = response.choices[0].message
             # Check for function_call
@@ -235,7 +261,6 @@ class ChatbotService:
                     }
 
                     request_kwargs["messages"].append(messages)
-
                     response = self.client.chat.completions.create(**request_kwargs)
 
 
@@ -391,6 +416,24 @@ class ChatbotService:
                     else None
                 ),
             )
+
+            # Log OpenAI response
+            duration_ms = int((time.perf_counter() - start_time) * 1000)
+            self.prompt_logger.info(
+                f"OPENAI_RESPONSE: duration={duration_ms}ms | "
+                f"response_length={len(ai_response)} | "
+                f"function_call={bool(response.choices[0].message.function_call)} | "
+                f"handover={needs_handover}"
+            )
+            
+            # Log final response
+            self.prompt_logger.info(
+                f"CHAT_RESPONSE: response_length={len(user_text)} | "
+                f"handover={needs_handover} | "
+                f"action={action} | "
+                f"total_duration={duration_ms}ms"
+            )
+
             # Write DB prompt log if enabled in config or settings
             try:
                 duration_ms = int((time.perf_counter() - start_time) * 1000)
@@ -474,7 +517,9 @@ class ChatbotService:
             return chat_result
             
         except Exception as e:
+            self.app_logger.error(f"CHAT_ERROR: {str(e)}")
             logger.error(f"Error processing message: {e}")
+            
             # Return a fallback response
             return ChatResponse(
                 response=("Перепрошую, але в мене виникли технічні проблеми. Будь ласка, спробуйте пізніше." 
