@@ -17,6 +17,7 @@ class PromptLog(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     conversation_id = Column(Integer, ForeignKey("conversations.id"), nullable=True)
     config_id = Column(Integer, ForeignKey("chatbot_configs.id"), nullable=True)
+    correlation_id = Column(String, nullable=True, index=True)
 
     model = Column(String, nullable=True)
     system_prompt_hash = Column(String, nullable=True)

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from loguru import logger
 from openai import OpenAI
 
+from app.config import settings
 from app.database import get_db
 from app.services.chatbot_service import ChatbotService
 from app.services.telegram_service import TelegramService
@@ -17,6 +18,8 @@ from app.models import Order
 from app.models import Conversation
 from app.models.conversation import HandoverState
 from app.models.message import Message, MessageSender, MessageChannel
+from app.utils.logging_config import get_logger
+
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -28,15 +31,19 @@ telegram_service = TelegramService()
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)):
     """WebSocket endpoint for chat."""
+    app_logger = get_logger("app")
+    prompt_logger = get_logger("prompt")
+    
     await websocket.accept()
-    logger.info("WebSocket connection established")
+    app_logger.info("WebSocket connection established")
     
     try:
         while True:
             # Receive message from client
             data = await websocket.receive_text()
-            chat_data = json.loads(data)
+            app_logger.info(f"WebSocket message received: {len(data)} characters")
             
+            chat_data = json.loads(data)
             # Create chat request
             chat_request = ChatRequest(
                 session_id=chat_data.get("session_id"),
@@ -57,6 +64,10 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 db.commit()
                 db.refresh(conversation)
                 logger.debug(f"Created new conversation for session_id={chat_request.session_id}")
+            
+             # Log chatbot service call
+            prompt_logger.info(f"WEBSOCKET_CHAT: processing message for conversation {conversation.id}")
+
             # Get active chatbot configuration by default
             from app.models.chatbot_config import ChatbotConfig
             active_config = db.query(ChatbotConfig).filter(ChatbotConfig.is_active == True).first()
@@ -415,11 +426,15 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                     chat_request.message,
                     chat_response
                 )
-                
+            
+            # Log response
+            prompt_logger.info(f"WEBSOCKET_RESPONSE: sent response to conversation {conversation.id}")
+
     except WebSocketDisconnect:
-        logger.info("WebSocket connection closed")
+        app_logger.info("WebSocket connection closed")
     except Exception as e:
-        logger.error(f"WebSocket error: {e}")
+        app_logger.error(f"WebSocket error: {str(e)}")
+
         # Attempt to notify on generic WebSocket-level errors when configured
         try:
             # cfg might not be available if error happens very early; guard usage
@@ -431,6 +446,7 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 await telegram_service.send_error_notification(None, f"WebSocket error: {e}")
             except Exception:
                 pass
+        
         await websocket.close()
 
 @router.post("/summary", response_model=str)
