@@ -27,25 +27,34 @@ from app.api import (
 # from app.api.chatbot_config_simple import router as chatbot_config_simple_router
 from app.config import settings
 from app.services.web_scraper_service import web_scraper
+from app.utils.logging_config import logging_config, get_logger
+from app.middleware.logging_middleware import LoggingMiddleware
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler."""
-    logger.info("Starting Boxcatering Chatbot API...")
+    # Setup logging first
+    logging_config.setup_logging()
+    app_logger = get_logger("app")
+    app_logger.info("Starting Boxcatering Chatbot API...")
     # Start background web scraper
     try:
         await web_scraper.start()
+        app_logger.info("Web scraper started successfully")
     except Exception as e:
-        logger.warning(f"Failed to start web scraper: {e}")
+        app_logger.warning(f"Failed to start web scraper: {e}")
+    
     try:
         yield
     finally:
         # Stop background web scraper
         try:
             await web_scraper.stop()
+            app_logger.info("Web scraper stopped successfully")
         except Exception as e:
-            logger.warning(f"Failed to stop web scraper cleanly: {e}")
-        logger.info("Shutting down Boxcatering Chatbot API...")
+            app_logger.warning(f"Failed to stop web scraper cleanly: {e}")
+        app_logger.info("Shutting down Boxcatering Chatbot API...")
 
 
 # Create FastAPI app
@@ -56,7 +65,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Add CORS middleware
+app.add_middleware(LoggingMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Configure this properly for production
@@ -188,14 +197,13 @@ async def chrome_devtools_probe_get() -> JSONResponse:
 
 if __name__ == "__main__":
     import uvicorn
-    # Configure loguru sinks
-    try:
-        logger.add("logs/app.log", rotation="10 MB", retention="14 days", enqueue=True, backtrace=False, diagnose=False)
-        logger.add("logs/prompt.log", rotation="10 MB", retention="14 days", enqueue=True, backtrace=False, diagnose=False)
-    except Exception:
-        # Logging config should not block app start
-        pass
-    
+    # # Configure loguru sinks
+    # try:
+    #     logger.add("logs/app.log", rotation="10 MB", retention="14 days", enqueue=True, backtrace=False, diagnose=False)
+    #     logger.add("logs/prompt.log", rotation="10 MB", retention="14 days", enqueue=True, backtrace=False, diagnose=False)
+    # except Exception:
+    #     # Logging config should not block app start
+    #     pass
     uvicorn.run(
         "app.main:app",
         host=settings.host,

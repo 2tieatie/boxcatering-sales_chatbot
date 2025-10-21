@@ -16,6 +16,7 @@ router = APIRouter(prefix="/logs", tags=["logs"])
 async def list_prompt_logs(
     conversation_id: Optional[int] = None,
     config_id: Optional[int] = None,
+    correlation_id: Optional[str] = None,
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
@@ -27,6 +28,8 @@ async def list_prompt_logs(
         q = q.filter(PromptLog.conversation_id == conversation_id)
     if config_id is not None:
         q = q.filter(PromptLog.config_id == config_id)
+    if correlation_id:
+        q = q.filter(PromptLog.correlation_id == correlation_id)
     rows = q.offset(skip).limit(limit).all()
     return [
         {
