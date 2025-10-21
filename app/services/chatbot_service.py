@@ -3,6 +3,7 @@ import json
 import csv
 import hashlib
 import time
+import uuid
 
 from pathlib import Path
 from typing import Optional, Dict, Any
@@ -66,9 +67,12 @@ class ChatbotService:
         try:
             start_time = time.perf_counter()
 
+            # Generate correlation ID for this request
+            correlation_id = str(uuid.uuid4())[:8]
+
             # Log incoming request
             self.prompt_logger.info(
-                f"CHAT_REQUEST: user_message='{chat_request.message[:100]}...' | "
+                f"[{correlation_id}] CHAT_REQUEST: user_message='{chat_request.message[:100]}...' | "
                 f"language={language} | model={model or self.model} | "
                 f"conversation_history_length={len(conversation_history) if conversation_history else 0}"
             )
@@ -81,7 +85,7 @@ class ChatbotService:
             
              # Log system prompt details
             self.prompt_logger.info(
-                f"SYSTEM_PROMPT: hash={system_prompt_hash} | "
+                f"[{correlation_id}] SYSTEM_PROMPT: hash={system_prompt_hash} | "
                 f"length={len(system_prompt)} | "
                 f"components={json.dumps({k: v.get('len', 0) if isinstance(v, dict) else 0 for k, v in prompt_trace['components'].items()})}"
             )
@@ -208,7 +212,7 @@ class ChatbotService:
             
             # Log API request details
             self.prompt_logger.info(
-                f"OPENAI_REQUEST: model={request_kwargs.get('model')} | "
+                f"[{correlation_id}] OPENAI_REQUEST: model={request_kwargs.get('model')} | "
                 f"temperature={request_kwargs.get('temperature')} | "
                 f"max_tokens={request_kwargs.get('max_tokens') or request_kwargs.get('max_completion_tokens')} | "
                 f"messages_count={len(request_kwargs['messages'])}"
@@ -420,7 +424,7 @@ class ChatbotService:
             # Log OpenAI response
             duration_ms = int((time.perf_counter() - start_time) * 1000)
             self.prompt_logger.info(
-                f"OPENAI_RESPONSE: duration={duration_ms}ms | "
+                f"[{correlation_id}] OPENAI_RESPONSE: duration={duration_ms}ms | "
                 f"response_length={len(ai_response)} | "
                 f"function_call={bool(response.choices[0].message.function_call)} | "
                 f"handover={needs_handover}"
@@ -428,7 +432,7 @@ class ChatbotService:
             
             # Log final response
             self.prompt_logger.info(
-                f"CHAT_RESPONSE: response_length={len(user_text)} | "
+                f"[{correlation_id}] CHAT_RESPONSE: response_length={len(user_text)} | "
                 f"handover={needs_handover} | "
                 f"action={action} | "
                 f"total_duration={duration_ms}ms"
@@ -495,6 +499,7 @@ class ChatbotService:
                 logger.debug(f"Logging prompt trace: {len(prompt_trace_json or '')} chars, preview: {len(system_prompt_preview or '')} chars")
 
                 db_log = PromptLog(
+                    correlation_id=correlation_id,
                     user_id=None,
                     conversation_id=convo_id,
                     config_id=config_id,
@@ -517,7 +522,7 @@ class ChatbotService:
             return chat_result
             
         except Exception as e:
-            self.app_logger.error(f"CHAT_ERROR: {str(e)}")
+            self.app_logger.error(f"[{correlation_id}] CHAT_ERROR: {str(e)}")
             logger.error(f"Error processing message: {e}")
             
             # Return a fallback response
