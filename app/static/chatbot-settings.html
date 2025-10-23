@@ -370,6 +370,10 @@
                     <label for="system-instruction" data-i18n="chatbotSettings.section.prompts">Prompt Templates</label>
                     <textarea id="system-instruction" placeholder=""></textarea>
                 </div>
+                <div class="form-group" style="margin-top: 20px">
+                    <label for="greeting-message" data-i18n="chatbotSettings.labels.welcome">Welcome Message</label>
+                    <textarea id="greeting-message" placeholder="Custom greeting message..." data-i18n-placeholder="chatbotSettings.placeholders.welcome"></textarea>
+                </div>
             </div>
 
             <div id="alert-container"></div>
@@ -430,6 +434,7 @@
             // Default settings
             const defaultSettings = {
                 systemInstruction: "",
+                greetingMessage: "",
             };
 
             // Check authentication
@@ -506,6 +511,7 @@
                             ...defaultSettings,
                             // New: chatbot name
                             chatbotName: dbSettings.chatbot_name || "Marichka",
+                            greetingMessage: dbSettings.welcome_message || defaultSettings.greetingMessage,
                             // Prompt fields
                             system_instruction: dbSettings.system_instruction || defaultSettings.systemInstruction,
                         };
@@ -585,6 +591,7 @@
                 // Header Chatbot Name
                 const botNameEl = document.getElementById("chatbot-name");
                 if (botNameEl) botNameEl.value = currentSettings.chatbotName || "Marichka";
+                document.getElementById("greeting-message").value = currentSettings.greetingMessage;
 
                 // Prompt fields
                 document.getElementById("system-instruction").value = currentSettings.system_instruction;
@@ -594,13 +601,15 @@
             async function saveSettings() {
                 try {
                     // Collect all form values
+                    const greetingMessage = document.getElementById("greeting-message").value.trim();
                     const chatbotName = (document.getElementById("chatbot-name").value || "").trim();
-                    const system_instruction = document.getElementById("system-instruction").value.trim();
+                    const system_instruction = (document.getElementById("system-instruction").value || "").trim();
 
                     // Build payload
                     const settings = {
                         name: "Box Catering Chatbot Configuration",
                         chatbot_name: chatbotName || "Marichka",
+                        welcome_message: greetingMessage,
                         system_instruction: document.getElementById("system-instruction").value.trim(),
                     };
 
@@ -645,6 +654,7 @@
                         // Update current settings in memory
                         currentSettings = {
                             chatbotName: (document.getElementById("chatbot-name").value || "").trim() || "Marichka",
+                            greetingMessage: (document.getElementById("greeting-message").value || "").trim() || "",
                             system_instruction: document.getElementById("system-instruction").value,
                         };
 
