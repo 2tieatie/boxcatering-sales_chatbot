@@ -13,32 +13,32 @@ class ChatbotConfig(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    welcome_message = Column(Text, nullable=False)
-    business_context = Column(Text, nullable=False)
-    language = Column(String, default="uk", nullable=False)  # Default to Ukrainian
-    force_language = Column(Boolean, default=True, nullable=False)  # Default to strict language enforcement
+    # welcome_message = Column(Text, nullable=False)
+    # business_context = Column(Text, nullable=False)
+    # language = Column(String, default="uk", nullable=False)  # Default to Ukrainian
+    # force_language = Column(Boolean, default=True, nullable=False)  # Default to strict language enforcement
     is_active = Column(Boolean, default=True)
     chatbot_name = Column(String, nullable=True)
     
     # Additional fields for enhanced configuration
-    company_name = Column(String, nullable=True)
-    specializations = Column(Text, nullable=True)
+    # company_name = Column(String, nullable=True)
+    # specializations = Column(Text, nullable=True)
     friendly_tone = Column(Boolean, default=True, nullable=True)
     professional_style = Column(Boolean, default=True, nullable=True)
     suggestive_responses = Column(Boolean, default=True, nullable=True)
     manager_handover = Column(Boolean, default=True, nullable=True)
-    fallback_message = Column(Text, nullable=True)
-    handover_message = Column(Text, nullable=True)
+    # fallback_message = Column(Text, nullable=True)
+    # handover_message = Column(Text, nullable=True)
     response_timeout = Column(Integer, default=30, nullable=True)
     conversation_logging = Column(Boolean, default=True, nullable=True)
     performance_analytics = Column(Boolean, default=True, nullable=True)
     error_reporting = Column(Boolean, default=True, nullable=True)
 
-    language_instruction = Column(Text, nullable=True)
-    persona_instruction = Column(Text, nullable=True)
+    # language_instruction = Column(Text, nullable=True)
+    # persona_instruction = Column(Text, nullable=True)
     system_instruction = Column(Text, nullable=True)
-    order_flow_block = Column(Text, nullable=True)
-    other_instruction = Column(Text, nullable=True)
+    # order_flow_block = Column(Text, nullable=True)
+    # other_instruction = Column(Text, nullable=True)
     
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

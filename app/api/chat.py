@@ -112,9 +112,9 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
             language = "uk"
             force_language = True
             
-            if selected_config:
-                language = selected_config.language
-                force_language = selected_config.force_language
+            # if selected_config:
+            #     language = selected_config.language
+            #     force_language = selected_config.force_language
             
             # Load OpenAI and system settings from system configs if present
             from app.models.system_config import SystemConfig
@@ -180,25 +180,25 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 debug=debug_enabled,
                 config=(
                     {
-                        "company_name": selected_config.company_name,
-                        "business_context": selected_config.business_context,
-                        "specializations": selected_config.specializations,
-                        "friendly_tone": selected_config.friendly_tone,
-                        "professional_style": selected_config.professional_style,
-                        "suggestive_responses": selected_config.suggestive_responses,
-                        "manager_handover": selected_config.manager_handover,
-                        "fallback_message": selected_config.fallback_message,
-                        "handover_message": selected_config.handover_message,
+                        # "company_name": selected_config.company_name,
+                        # "business_context": selected_config.business_context,
+                        # "specializations": selected_config.specializations,
+                        # "friendly_tone": selected_config.friendly_tone,
+                        # "professional_style": selected_config.professional_style,
+                        # "suggestive_responses": selected_config.suggestive_responses,
+                        # "manager_handover": selected_config.manager_handover,
+                        # "fallback_message": selected_config.fallback_message,
+                        # "handover_message": selected_config.handover_message,
                         # Context docs overrides
-                        "context_docs_enabled": ctx_enabled if ctx_enabled is not None else None,
-                        "context_docs_dir": ctx_dir,
-                        "context_docs_max_chars": ctx_max_chars,
+                        # "context_docs_enabled": ctx_enabled if ctx_enabled is not None else None,
+                        # "context_docs_dir": ctx_dir,
+                        # "context_docs_max_chars": ctx_max_chars,
                         # Prompt template fields so they affect the model
-                        "language_instruction": selected_config.language_instruction,
-                        "persona_instruction": selected_config.persona_instruction,
+                        # "language_instruction": selected_config.language_instruction,
+                        # "persona_instruction": selected_config.persona_instruction,
                         "system_instruction": selected_config.system_instruction,
-                        "order_flow_block": selected_config.order_flow_block,
-                        "other_instruction": selected_config.other_instruction,
+                        # "order_flow_block": selected_config.order_flow_block,
+                        # "other_instruction": selected_config.other_instruction,
                         # Pass id through for logging
                         "id": selected_config.id,
                     }
