@@ -386,21 +386,21 @@ let sessionId = getOrCreateSessionId();
 // Fetch active chatbot configuration and show welcome message
 async function fetchActiveChatbotConfig() {
     try {
-        // const token = localStorage.getItem("access_token");
-        // const resp = await fetch("/chatbot-config/active", {
-        //     headers: { Authorization: `Bearer ${token}` },
-        // });
-        // if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        // const cfg = await resp.json();
-        // const welcome = cfg.welcome_message || cfg.handover_message || (window.I18N && I18N.t ? I18N.t("chatTest.welcome.default") : "Welcome! How can I help?");
-        const welcome = window.I18N && I18N.t ? I18N.t("chatTest.welcome.default") : "Welcome! How can I help?";
+        const token = localStorage.getItem("access_token");
+        const resp = await fetch("/chatbot-config/active", {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const cfg = await resp.json();
+        const welcome = cfg.welcome_message || "";
+        // const welcome = window.I18N && I18N.t ? I18N.t("chatTest.welcome.default") : "Welcome! How can I help?";
         const node = document.getElementById("bot-welcome-content");
         if (node) node.textContent = welcome;
         // document.getElementById("bot-welcome-time").textContent = new Date().toLocaleTimeString();
     } catch (e) {
         console.warn("Failed to load active chatbot config:", e);
         const node = document.getElementById("bot-welcome-content");
-        if (node) node.textContent = window.I18N && I18N.t ? I18N.t("chatTest.welcome.default") : "Welcome! How can I help?";
+        if (node) node.textContent = "";
         // document.getElementById("bot-welcome-time").textContent = new Date().toLocaleTimeString();
     }
 }
