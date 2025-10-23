@@ -167,7 +167,7 @@ async def clone_chatbot_config(
     clone = ChatbotConfig(
         name=base_name,
         chatbot_name=source.chatbot_name,
-        # welcome_message=source.welcome_message,
+        welcome_message=source.welcome_message,
         # business_context=source.business_context,
         # language=source.language,
         # force_language=source.force_language,
