@@ -109,11 +109,59 @@ class ChatbotService:
             # Add current user message
             messages.append({"role": "user", "content": chat_request.message})
 
+                                    # Functions to search and make specific actions
+            get_products_schema = {
+                "name": "get_products",
+                "description": (
+                    "Повертає список товарів з асортименту, що відповідають запиту користувача. "
+                    "Використовується для пошуку страв, закусок, боксів, інгредієнтів, категорій."
+                    "Не використовуй для уточнення даних по вказаному товару, вартості, вазі, кількості людей."
+                    "Формуй промт тільки із категорій чи інгредієнтів, або слово 'набір, бокс'"
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": (
+                                "Запит користувача на пошук, пораду, рекомендацію, наприклад 'салати', 'круасани', 'вегетаріанське', 'чи є такі в наявності', 'гарячі закуски', 'страви', 'порекомендуй', 'будь які страви', 'всі страви','порадити бокси'"
+                            )
+                        }
+                    },
+                    "required": ["query"]
+                }
+            }
+
+            get_products_data = {
+                "name": "get_products_data",
+                "description": (
+                    "Повертає вартість всіх вказаних користувачем товарів із розрахунком на їх кількість"
+                    "Формуй промт тільки по назвам товарів та сумуй вартість із опису, або мета поля 'вартість'"
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": (
+                                "Запит користувача на вартість, кількість товарів для осіб"
+                                "Формуй промт тільки по назвам товарів та сумуй вартість із опису, або мета поля 'вартість'"
+                                "Повертай конкретну інформацію по товару яку хоче дізнатися користувач"
+                                "Не повертай перелік товарів, або описи про товари що не вказав користувач"
+                            )
+                        }
+                    },
+                    "required": ["query"]
+                }
+            }
+
             # Create the chat completion
             chosen_model = model or self.model
             request_kwargs = {
                 "model": chosen_model,
-                "messages": messages
+                "messages": messages,
+                "functions": [get_products_schema, get_products_data],
+                "function_call": "auto",
             }
 
             # Respect model capabilities: only send temperature if supported
@@ -180,6 +228,48 @@ class ChatbotService:
             if message.function_call:
                 func_name = message.function_call.name
                 args = json.loads(message.function_call.arguments)
+                if func_name == "get_products":
+                    # logger.debug(f"Function call: {func_name} with args: {args}")
+                    product_results = self.get_products(args["query"])
+                    # logger.debug(f"Found products: {product_results}")
+                    product_text = "\n".join(f"- {name}" for name in product_results)
+                    # logger.debug(f"Product text: {product_text}")
+                    if product_text: 
+                        messages = {
+                            "role": "system",
+                            "content": (
+                                "Ось перелік товарів, які відповідають запиту користувача:\n"
+                                f"{product_text}\n"
+                                "Сформуй відповідь для клієнта, поясни, чому ці варіанти підходять, Запропонуй наступні кроки (наприклад, уточнити кількість, дату доставки тощо)."
+                            )
+                        }
+                    else:
+                        messages = {
+                            "role": "system",
+                            "content": (
+                                "Сформуй відповідь для клієнта, поясни що не знайдено варіантів по його запиту. Запропонуй уточнити якімь конкретні деталі, побажання, що подобається."
+                            )
+                        }
+
+                    request_kwargs["messages"].append(messages)
+                    # request_kwargs["messages"] = messages
+
+                    response = self.client.chat.completions.create(**request_kwargs)
+                elif func_name == "get_products_data":
+                    product_results = self.get_products(args["query"])
+                    product_text = "\n".join(f"- {name}" for name in product_results)
+                    messages = {
+                        "role": "system",
+                        "content": (
+                            "Ось інформація по товарам для користувача:\n"
+                            f"{product_text}\n"
+                            "Сформуй відповідь для клієнта, із вказанням даних які хоче дізнатися користувач (наприклад: ціна, скільки потрібно боксів на кількість осіб, тощо)."
+                        )
+                    }
+
+                    request_kwargs["messages"].append(messages)
+                    response = self.client.chat.completions.create(**request_kwargs)
+
 
             ai_response = (response.choices[0].message.content or "")
             # logger.debug(f"AI response: {ai_response}")
