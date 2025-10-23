@@ -8,97 +8,97 @@ from pydantic import BaseModel, Field
 class ChatbotConfigBase(BaseModel):
     """Base chatbot configuration schema."""
     name: str = Field(..., min_length=1, description="Configuration name")
-    welcome_message: str = Field(..., min_length=1, description="Chatbot welcome message")
-    business_context: str = Field(..., min_length=1, description="Business context description")
-    language: str = Field(default="uk", min_length=2, max_length=5, description="Language code")
-    force_language: bool = Field(default=True, description="Whether to enforce language compliance")
+    # welcome_message: str = Field(..., min_length=1, description="Chatbot welcome message")
+    # business_context: str = Field(..., min_length=1, description="Business context description")
+    # language: str = Field(default="uk", min_length=2, max_length=5, description="Language code")
+    # force_language: bool = Field(default=True, description="Whether to enforce language compliance")
     is_active: bool = Field(default=False, description="Whether this configuration is active")
     chatbot_name: Optional[str] = Field(None, description="Public chatbot display name (e.g., Marichka)")
     
     # Additional fields for enhanced configuration
-    company_name: Optional[str] = Field(None, description="Company name")
-    specializations: Optional[str] = Field(None, description="Business specializations")
+    # company_name: Optional[str] = Field(None, description="Company name")
+    # specializations: Optional[str] = Field(None, description="Business specializations")
     friendly_tone: Optional[bool] = Field(True, description="Use friendly tone")
     professional_style: Optional[bool] = Field(True, description="Maintain professional style")
     suggestive_responses: Optional[bool] = Field(True, description="Offer follow-up suggestions")
     manager_handover: Optional[bool] = Field(True, description="Enable manager handover")
-    fallback_message: Optional[str] = Field(None, description="Fallback message when AI can't understand")
-    handover_message: Optional[str] = Field(None, description="Message when transferring to manager")
+    # fallback_message: Optional[str] = Field(None, description="Fallback message when AI can't understand")
+    # handover_message: Optional[str] = Field(None, description="Message when transferring to manager")
     response_timeout: Optional[int] = Field(30, description="Response timeout in seconds")
     conversation_logging: Optional[bool] = Field(True, description="Enable conversation logging")
     performance_analytics: Optional[bool] = Field(True, description="Enable performance analytics")
     error_reporting: Optional[bool] = Field(True, description="Enable error reporting")
 
     # Prompt fields
-    language_instruction: Optional[str] = Field(None, description="Language instruction")
-    persona_instruction: Optional[str] = Field(None, description="Persona instruction")
+    # language_instruction: Optional[str] = Field(None, description="Language instruction")
+    # persona_instruction: Optional[str] = Field(None, description="Persona instruction")
     system_instruction: Optional[str] = Field(None, description="System instruction")
-    order_flow_block: Optional[str] = Field(None, description="Order flow block")
-    other_instruction: Optional[str] = Field(None, description="Other instruction")
+    # order_flow_block: Optional[str] = Field(None, description="Order flow block")
+    # other_instruction: Optional[str] = Field(None, description="Other instruction")
 
 
 class ChatbotConfigCreate(BaseModel):
     """Chatbot configuration creation schema."""
     name: str = Field(..., min_length=1, description="Configuration name")
-    welcome_message: str = Field(..., min_length=1, description="Chatbot welcome message")
-    business_context: str = Field(..., min_length=1, description="Business context description")
-    language: str = Field(default="uk", min_length=2, max_length=5, description="Language code")
-    force_language: bool = Field(default=True, description="Whether to enforce language compliance")
+    # welcome_message: str = Field(..., min_length=1, description="Chatbot welcome message")
+    # business_context: str = Field(..., min_length=1, description="Business context description")
+    # language: str = Field(default="uk", min_length=2, max_length=5, description="Language code")
+    # force_language: bool = Field(default=True, description="Whether to enforce language compliance")
     is_active: Optional[bool] = Field(False, description="Whether this configuration is active")
     chatbot_name: Optional[str] = Field(None, description="Public chatbot display name (e.g., Marichka)")
     
     # Additional fields for enhanced configuration
-    company_name: Optional[str] = Field(None, description="Company name")
-    specializations: Optional[str] = Field(None, description="Business specializations")
+    # company_name: Optional[str] = Field(None, description="Company name")
+    # specializations: Optional[str] = Field(None, description="Business specializations")
     friendly_tone: Optional[bool] = Field(True, description="Use friendly tone")
     professional_style: Optional[bool] = Field(True, description="Maintain professional style")
     suggestive_responses: Optional[bool] = Field(True, description="Offer follow-up suggestions")
     manager_handover: Optional[bool] = Field(True, description="Enable manager handover")
-    fallback_message: Optional[str] = Field(None, description="Fallback message when AI can't understand")
-    handover_message: Optional[str] = Field(None, description="Message when transferring to manager")
+    # fallback_message: Optional[str] = Field(None, description="Fallback message when AI can't understand")
+    # handover_message: Optional[str] = Field(None, description="Message when transferring to manager")
     response_timeout: Optional[int] = Field(30, description="Response timeout in seconds")
     conversation_logging: Optional[bool] = Field(True, description="Enable conversation logging")
     performance_analytics: Optional[bool] = Field(True, description="Enable performance analytics")
     error_reporting: Optional[bool] = Field(True, description="Enable error reporting")
 
     # Prompt fields
-    language_instruction: Optional[str] = Field(None, description="Language instruction")
-    persona_instruction: Optional[str] = Field(None, description="Persona instruction")
+    # language_instruction: Optional[str] = Field(None, description="Language instruction")
+    # persona_instruction: Optional[str] = Field(None, description="Persona instruction")
     system_instruction: Optional[str] = Field(None, description="System instruction")
-    order_flow_block: Optional[str] = Field(None, description="Order flow block")
-    other_instruction: Optional[str] = Field(None, description="Other instruction")
+    # order_flow_block: Optional[str] = Field(None, description="Order flow block")
+    # other_instruction: Optional[str] = Field(None, description="Other instruction")
 
 
 class ChatbotConfigUpdate(BaseModel):
     """Chatbot configuration update schema."""
     name: Optional[str] = Field(None, min_length=1, description="Configuration name")
-    welcome_message: Optional[str] = Field(None, min_length=1, description="Chatbot welcome message")
-    business_context: Optional[str] = Field(None, min_length=1, description="Business context description")
-    language: Optional[str] = Field(None, min_length=2, max_length=5, description="Language code")
-    force_language: Optional[bool] = Field(None, description="Whether to enforce language compliance")
+    # welcome_message: Optional[str] = Field(None, min_length=1, description="Chatbot welcome message")
+    # business_context: Optional[str] = Field(None, min_length=1, description="Business context description")
+    # language: Optional[str] = Field(None, min_length=2, max_length=5, description="Language code")
+    # force_language: Optional[bool] = Field(None, description="Whether to enforce language compliance")
     is_active: Optional[bool] = Field(None, description="Whether this configuration is active")
     chatbot_name: Optional[str] = Field(None, description="Public chatbot display name (e.g., Marichka)")
     
     # Additional fields for enhanced configuration
-    company_name: Optional[str] = Field(None, description="Company name")
-    specializations: Optional[str] = Field(None, description="Business specializations")
+    # company_name: Optional[str] = Field(None, description="Company name")
+    # specializations: Optional[str] = Field(None, description="Business specializations")
     friendly_tone: Optional[bool] = Field(None, description="Use friendly tone")
     professional_style: Optional[bool] = Field(None, description="Maintain professional style")
     suggestive_responses: Optional[bool] = Field(None, description="Offer follow-up suggestions")
     manager_handover: Optional[bool] = Field(None, description="Enable manager handover")
-    fallback_message: Optional[str] = Field(None, description="Fallback message when AI can't understand")
-    handover_message: Optional[str] = Field(None, description="Message when transferring to manager")
+    # fallback_message: Optional[str] = Field(None, description="Fallback message when AI can't understand")
+    # handover_message: Optional[str] = Field(None, description="Message when transferring to manager")
     response_timeout: Optional[int] = Field(None, description="Response timeout in seconds")
     conversation_logging: Optional[bool] = Field(None, description="Enable conversation logging")
     performance_analytics: Optional[bool] = Field(None, description="Enable performance analytics")
     error_reporting: Optional[bool] = Field(None, description="Enable error reporting")
 
     # Prompt fields
-    language_instruction: Optional[str] = Field(None, description="Language instruction")
-    persona_instruction: Optional[str] = Field(None, description="Persona instruction")
+    # language_instruction: Optional[str] = Field(None, description="Language instruction")
+    # persona_instruction: Optional[str] = Field(None, description="Persona instruction")
     system_instruction: Optional[str] = Field(None, description="System instruction")
-    order_flow_block: Optional[str] = Field(None, description="Order flow block")
-    other_instruction: Optional[str] = Field(None, description="Other instruction")
+    # order_flow_block: Optional[str] = Field(None, description="Order flow block")
+    # other_instruction: Optional[str] = Field(None, description="Other instruction")
 
 
 class ChatbotConfigResponse(ChatbotConfigBase):

@@ -81,18 +81,18 @@ class ChatbotService:
             })
 
             # Build the system prompt with language settings and context docs
-            # system_prompt = self._build_system_prompt(language, force_language, config)
-            system_prompt, prompt_trace = self._build_system_prompt_with_trace(language, force_language, config)
+            system_prompt = self._build_system_prompt(language, force_language, config)
+            # system_prompt, prompt_trace = self._build_system_prompt_with_trace(language, force_language, config)
             # Compute a short hash to identify system prompts without logging full content
             system_prompt_hash = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()[:16]
             
              # Log system prompt details using UnifiedLogger
-            self.unified_logger.prompt_logger.info(
-                f"[{correlation_id}] SYSTEM_PROMPT: {system_prompt} | hash={system_prompt_hash} | "
-                f"length={len(system_prompt)} | "
-                f"components={json.dumps({k: v['len'] if isinstance(v, dict) and 'len' in v else v.get('count', 0) \
-                    if isinstance(v, dict) else 0 for k, v in prompt_trace['components'].items()})}"
-            )
+            # self.unified_logger.prompt_logger.info(
+            #     f"[{correlation_id}] SYSTEM_PROMPT: {system_prompt} | hash={system_prompt_hash} | "
+            #     f"length={len(system_prompt)} | "
+            #     f"components={json.dumps({k: v['len'] if isinstance(v, dict) and 'len' in v else v.get('count', 0) \
+            #         if isinstance(v, dict) else 0 for k, v in prompt_trace['components'].items()})}"
+            # )
             
             # Build conversation messages with history
             messages = [{"role": "system", "content": system_prompt}]
@@ -109,59 +109,11 @@ class ChatbotService:
             # Add current user message
             messages.append({"role": "user", "content": chat_request.message})
 
-            # Functions to search and make specific actions
-            get_products_schema = {
-                "name": "get_products",
-                "description": (
-                    "Повертає список товарів з асортименту, що відповідають запиту користувача. "
-                    "Використовується для пошуку страв, закусок, боксів, інгредієнтів, категорій."
-                    "Не використовуй для уточнення даних по вказаному товару, вартості, вазі, кількості людей."
-                    "Формуй промт тільки із категорій чи інгредієнтів, або слово 'набір, бокс'"
-                ),
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": (
-                                "Запит користувача на пошук, пораду, рекомендацію, наприклад 'салати', 'круасани', 'вегетаріанське', 'чи є такі в наявності', 'гарячі закуски', 'страви', 'порекомендуй', 'будь які страви', 'всі страви','порадити бокси'"
-                            )
-                        }
-                    },
-                    "required": ["query"]
-                }
-            }
-
-            get_products_data = {
-                "name": "get_products_data",
-                "description": (
-                    "Повертає вартість всіх вказаних користувачем товарів із розрахунком на їх кількість"
-                    "Формуй промт тільки по назвам товарів та сумуй вартість із опису, або мета поля 'вартість'"
-                ),
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": (
-                                "Запит користувача на вартість, кількість товарів для осіб"
-                                "Формуй промт тільки по назвам товарів та сумуй вартість із опису, або мета поля 'вартість'"
-                                "Повертай конкретну інформацію по товару яку хоче дізнатися користувач"
-                                "Не повертай перелік товарів, або описи про товари що не вказав користувач"
-                            )
-                        }
-                    },
-                    "required": ["query"]
-                }
-            }
-
             # Create the chat completion
             chosen_model = model or self.model
             request_kwargs = {
                 "model": chosen_model,
-                "messages": messages,
-                "functions": [get_products_schema, get_products_data],
-                "function_call": "auto",
+                "messages": messages
             }
 
             # Respect model capabilities: only send temperature if supported
@@ -171,11 +123,11 @@ class ChatbotService:
                 )
 
             # Use correct parameter name for token limit based on model
-            token_limit = max_tokens if max_tokens is not None else getattr(settings, "openai_max_tokens", 500)
-            if self._model_requires_max_completion_tokens(chosen_model):
-                request_kwargs["max_completion_tokens"] = token_limit
-            else:
-                request_kwargs["max_tokens"] = token_limit
+            # token_limit = max_tokens if max_tokens is not None else getattr(settings, "openai_max_tokens", 500)
+            # if self._model_requires_max_completion_tokens(chosen_model):
+            #     request_kwargs["max_completion_tokens"] = token_limit
+            # else:
+            #     request_kwargs["max_tokens"] = token_limit
 
             try:
                 response = self.client.chat.completions.create(**request_kwargs)
@@ -198,15 +150,15 @@ class ChatbotService:
                     if self._model_supports_temperature(default_model):
                         fallback_kwargs["temperature"] = request_kwargs.get("temperature")
                     # Token limit parameter per fallback model
-                    token_limit = (
-                        request_kwargs.get("max_tokens")
-                        or request_kwargs.get("max_completion_tokens")
-                        or getattr(settings, "openai_max_tokens", 500)
-                    )
-                    if self._model_requires_max_completion_tokens(default_model):
-                        fallback_kwargs["max_completion_tokens"] = token_limit
-                    else:
-                        fallback_kwargs["max_tokens"] = token_limit
+                    # token_limit = (
+                    #     request_kwargs.get("max_tokens")
+                    #     or request_kwargs.get("max_completion_tokens")
+                    #     or getattr(settings, "openai_max_tokens", 500)
+                    # )
+                    # if self._model_requires_max_completion_tokens(default_model):
+                    #     fallback_kwargs["max_completion_tokens"] = token_limit
+                    # else:
+                    #     fallback_kwargs["max_tokens"] = token_limit
 
                     response = self.client.chat.completions.create(**fallback_kwargs)
                     if debug:
@@ -218,7 +170,7 @@ class ChatbotService:
             self.unified_logger.prompt_logger.info(
                 f"[{correlation_id}] OPENAI_REQUEST: model={request_kwargs.get('model')} | "
                 f"temperature={request_kwargs.get('temperature')} | "
-                f"max_tokens={request_kwargs.get('max_tokens') or request_kwargs.get('max_completion_tokens')} | "
+                # f"max_tokens={request_kwargs.get('max_tokens') or request_kwargs.get('max_completion_tokens')} | "
                 f"messages_count={len(request_kwargs['messages'])}"
             )
 
@@ -228,49 +180,6 @@ class ChatbotService:
             if message.function_call:
                 func_name = message.function_call.name
                 args = json.loads(message.function_call.arguments)
-
-                if func_name == "get_products":
-                    # logger.debug(f"Function call: {func_name} with args: {args}")
-                    product_results = self.get_products(args["query"])
-                    # logger.debug(f"Found products: {product_results}")
-                    product_text = "\n".join(f"- {name}" for name in product_results)
-                    # logger.debug(f"Product text: {product_text}")
-                    if product_text: 
-                        messages = {
-                            "role": "system",
-                            "content": (
-                                "Ось перелік товарів, які відповідають запиту користувача:\n"
-                                f"{product_text}\n"
-                                "Сформуй відповідь для клієнта, поясни, чому ці варіанти підходять, Запропонуй наступні кроки (наприклад, уточнити кількість, дату доставки тощо)."
-                            )
-                        }
-                    else:
-                        messages = {
-                            "role": "system",
-                            "content": (
-                                "Сформуй відповідь для клієнта, поясни що не знайдено варіантів по його запиту. Запропонуй уточнити якімь конкретні деталі, побажання, що подобається."
-                            )
-                        }
-
-                    request_kwargs["messages"].append(messages)
-                    # request_kwargs["messages"] = messages
-
-                    response = self.client.chat.completions.create(**request_kwargs)
-                elif func_name == "get_products_data":
-                    product_results = self.get_products(args["query"])
-                    product_text = "\n".join(f"- {name}" for name in product_results)
-                    messages = {
-                        "role": "system",
-                        "content": (
-                            "Ось інформація по товарам для користувача:\n"
-                            f"{product_text}\n"
-                            "Сформуй відповідь для клієнта, із вказанням даних які хоче дізнатися користувач (наприклад: ціна, скільки потрібно боксів на кількість осіб, тощо)."
-                        )
-                    }
-
-                    request_kwargs["messages"].append(messages)
-                    response = self.client.chat.completions.create(**request_kwargs)
-
 
             ai_response = (response.choices[0].message.content or "")
             # logger.debug(f"AI response: {ai_response}")
@@ -298,16 +207,16 @@ class ChatbotService:
                 (config or {}).get("fallback_message")
                 or (
                     "Перепрошую, я не зовсім зрозуміла. Будь ласка, перефразуйте, я залюбки допоможу."
-                    if language == "uk"
-                    else "I apologize, I didn't quite understand. Could you please rephrase? I'm happy to help."
+                    # if language == "uk"
+                    # else "I apologize, I didn't quite understand. Could you please rephrase? I'm happy to help."
                 )
             )
             default_handover_msg = (
                 (config or {}).get("handover_message")
                 or (
                     "Вибачте, я не маю потрібної інформації. Передаю запит менеджеру."
-                    if language == "uk"
-                    else "I'm sorry, I don't have the required information. Let me forward your request to the manager."
+                    # if language == "uk"
+                    # else "I'm sorry, I don't have the required information. Let me forward your request to the manager."
                 )
             )
 
@@ -325,7 +234,7 @@ class ChatbotService:
                             {
                                 "model": request_kwargs.get("model"),
                                 "temperature": request_kwargs.get("temperature"),
-                                "max_tokens": request_kwargs.get("max_tokens") or request_kwargs.get("max_completion_tokens"),
+                                # "max_tokens": request_kwargs.get("max_tokens") or request_kwargs.get("max_completion_tokens"),
                                 "reason": "empty_text_fallback",
                             }
                             if debug
@@ -342,7 +251,7 @@ class ChatbotService:
                         {
                             "model": request_kwargs.get("model"),
                             "temperature": request_kwargs.get("temperature"),
-                            "max_tokens": request_kwargs.get("max_tokens") or request_kwargs.get("max_completion_tokens"),
+                            # "max_tokens": request_kwargs.get("max_tokens") or request_kwargs.get("max_completion_tokens"),
                             "reason": "empty_text_no_handover",
                         }
                         if debug
@@ -416,7 +325,7 @@ class ChatbotService:
                     {
                         "model": request_kwargs.get("model"),
                         "temperature": request_kwargs.get("temperature"),
-                        "max_tokens": request_kwargs.get("max_tokens") or request_kwargs.get("max_completion_tokens"),
+                        # "max_tokens": request_kwargs.get("max_tokens") or request_kwargs.get("max_completion_tokens"),
                         "handover": needs_handover,
                         **({"action": action} if action else {}),
                     }
@@ -459,7 +368,7 @@ class ChatbotService:
                     "system_prompt_hash": system_prompt_hash,
                     "system_prompt_preview": system_prompt[:2000] if len(system_prompt) > 2000 else system_prompt,
                     "system_prompt_length": len(system_prompt),
-                    "prompt_trace_json": json.dumps(prompt_trace, ensure_ascii=False)[:4000] if prompt_trace else None,
+                    # "prompt_trace_json": json.dumps(prompt_trace, ensure_ascii=False)[:4000] if prompt_trace else None,
                     "user_message": chat_request.message,
                     "request_json": json.dumps({k: v for k, v in request_kwargs.items() if k != "messages"}, ensure_ascii=False)[:4000],
                     "response_json": json.dumps({
@@ -486,8 +395,9 @@ class ChatbotService:
             # Return a fallback response
             return ChatResponse(
                 response=("Перепрошую, але в мене виникли технічні проблеми. Будь ласка, спробуйте пізніше." 
-                          if language == "uk" 
-                          else "I apologize, but I'm experiencing technical difficulties. Please try again later."),
+                        #   if language == "uk" 
+                        #   else "I apologize, but I'm experiencing technical difficulties. Please try again later."
+                          ),
                 handover_to_manager=True,
                 handover_reason=HandoverReason.TECH_OR_FINANCIAL_LIMITATION,
                 handover_reason_description="Technical error in AI service"
@@ -499,276 +409,10 @@ class ChatbotService:
         force_language: bool = True,
         config: Optional[Dict[str, Any]] = None,
     ) -> str:
-        """Build the system prompt for the AI using chatbot settings."""
-
-        # # More natural language instruction
-        # language_instruction = ""
-        # if language == "uk":
-        #     language_instruction = """
-        # ВАЖЛИВО: Ви ОБОВ'ЯЗКОВО повинні відповідати ТІЛЬКИ українською мовою. 
-        # Ніколи не використовуйте інші мови, навіть якщо клієнт пише англійською або іншою мовою.
-        # Всі ваші відповіді мають бути українською мовою.
-        # """
-        # elif force_language:
-        #     language_instruction = f"""
-        # IMPORTANT: You MUST respond ONLY in {language} language.
-        # Never use other languages, even if the customer writes in a different language.
-        # All your responses must be in {language}.
-        # """
-
-        # # Enhanced persona with more personality
-        # persona_instruction = ""
-        # if language == "uk":
-        #     persona_instruction = """
-        # Ваша особистість: Ви — Марічка, дружня та професійна асистентка з кейтерингу. 
-        # Ви ентузіастка свого діла, завжди готова допомогти клієнтам знайти ідеальне рішення для їх заходів.
-        # Спілкуйтеся тепло та природно, як справжня людина. Використовуйте емоції, емодзі (але не надто багато), 
-        # та робіть розмову живою та цікавою. Пам'ятайте деталі з попередніх повідомлень та не повторюйте питання.
-        # Пишіть завжди від першої особи в жіночому роді. Уникайте чоловічих висловлювань.
-        # """
-        # else:
-        #     persona_instruction = """
-        # Your personality: You are Marichka, a friendly and professional catering assistant. 
-        # You're passionate about your work and always ready to help customers find the perfect solution for their events.
-        # Communicate warmly and naturally, like a real person. Use emotions, emojis (but not too many), 
-        # and make conversations lively and engaging. Remember details from previous messages and don't repeat questions.
-        # Write in first person using feminine wording when applicable. Avoid masculine phrasing.
-        # """
-        
-        # system_inctruction = ""
-        # if language == "uk":
-        #     system_inctruction = """
-        #     Замовлення можливі тільки від поточного часу + дві години, але не пізніше 18:00.
-        #     Завжди перевіряй інформацію, що надає користувач на предмет реалістичності та відповідності нашим задачам. Клієнт хоче купити тостер - фізично не можливо оскільки ми кейтеринг компанія.
-        #     Не уточнюй додатково конфліктну інформацію.
-        #     Якщо вказана адреса доставки, значить клієнт хоче замовити доставку, не самовивіз.
-        #     Не пропонуй те чого немає в асортименті, асортимент тільки із функції 'get_products', ніякого придумування. Ніколи не пропонуй загальні товари чи послуги, тільки ті бокси, що знаходиться в асортименті і нічого більше, максимально конкретні бокси із асортименту, щоб продати клієнту.
-        #     Безкоштовна доставка по Києву та Одесі на суму замовлення від 3000 грн, доставка може виконуватися по області до 30км.
-        #     Перевіряй контактні дані, що вказує користувач, формати телефона, емейла, тощо.
-        #     Всі формули повертай тільки у вигляді тексту, не використовуй форматування MathJax, або KaTeX.
-        #     Тримай у пам'яті перелік товарів, що хоче клієнт, уникай виключень товарів без згоди клієнта.
-        #     Перевіряй час та локацію доставки на можливість доставки.
-        #     """
-        # else:
-        #     system_inctruction = """
-        #     """
-
-        company_name = (config or {}).get("company_name")
-        business_context = (config or {}).get("business_context")
-        specializations = (config or {}).get("specializations")
-        friendly_tone = bool((config or {}).get("friendly_tone", True))
-        professional_style = bool((config or {}).get("professional_style", True))
-        suggestive_responses = bool((config or {}).get("suggestive_responses", True))
-        manager_handover = bool((config or {}).get("manager_handover", True))
-        language_instruction = (config or {}).get("language_instruction")
-        persona_instruction = (config or {}).get("persona_instruction")
         system_instruction = (config or {}).get("system_instruction")
-        order_flow_block = (config or {}).get("order_flow_block")
-        other_instruction = (config or {}).get("other_instruction")
-
-        context_lines = []
-        if company_name:
-            context_lines.append(f"Company: {company_name}")
-        if business_context:
-            context_lines.append(f"Business Context: {business_context}")
-        if specializations:
-            context_lines.append(f"Specializations: {specializations}")
-
-        # Enhanced conversational style instructions
-        style_lines = []
-        if language == "uk":
-            if friendly_tone:
-                style_lines.append("Спілкуйтеся тепло та дружньо, як з близькою людиною.")
-            if professional_style:
-                style_lines.append("Залишайтеся професійною, але не формальною. Будьте природною та живою.")
-            if suggestive_responses:
-                style_lines.append(
-                    "Коли це доречно, пропонуйте 1-3 короткі наступні кроки або варіанти клієнту. "
-                    "Завжди пояснюйте, чому саме ці варіанти підходять."
-                )
-            style_lines.extend([
-                "Використовуйте природні переходи між темами та питаннями.",
-                "Показуйте справжній інтерес до потреб клієнта.",
-                "Якщо клієнт згадував щось раніше, посилайтеся на це в розмові.",
-                "Задавайте уточнюючі питання, але не надто багато одночасно.",
-                "Використовуйте емодзі помірно (1-2 на повідомлення), щоб зробити розмову живішою."
-            ])
-        else:
-            if friendly_tone:
-                style_lines.append("Communicate warmly and friendly, like with a close person.")
-            if professional_style:
-                style_lines.append("Stay professional but not formal. Be natural and lively.")
-            if suggestive_responses:
-                style_lines.append(
-                    "When appropriate, suggest 1-3 short next steps or options to the customer. "
-                    "Always explain why these options are suitable."
-                )
-            style_lines.extend([
-                "Use natural transitions between topics and questions.",
-                "Show genuine interest in the customer's needs.",
-                "If the customer mentioned something earlier, refer to it in the conversation.",
-                "Ask clarifying questions, but not too many at once.",
-                "Use emojis moderately (1-2 per message) to make conversations livelier."
-            ])
-
-        handover_block = ""
-        
-        if manager_handover:
-            handover_block = """
-        If you encounter any of the following situations, you should request a handover to a human manager.
-        Assign a reason code to the handover:
-        
-        - "LOW_CONFIDENCE" - You're not confident in your answer
-        - "OUT_OF_SCOPE" - The request is outside your scope (you don't have the information)
-        - "SENSITIVE_CASE" - Sensitive cases like complaints or VIP customers
-        - "TECH_OR_FINANCIAL_LIMITATION" - Technical or financial limitations
-        - "USER_REQUEST_MANAGER" - Customer directly requests to speak with a manager
-        
-        When requesting handover, respond in this JSON format:
-        
-        {
-            "response": "Your response to the customer",
-            "handover_to_manager": true,
-            "handover_reason": "<REASON_CODE>",
-            "handover_reason_description": "Brief description of why handover is needed"
-            "summary": "Summary of the conversation"
-        }
-
-        Important:
-        - Only the value of "response" will be shown to the customer.
-        - The other JSON fields are used internally to notify a manager (e.g., via Telegram) and will not be visible to the customer.
-        - Craft "response" as a short, polite message informing the customer that a manager will take over soon. Do not include the JSON itself or technical details in "response".
-        - Keep any sensitive or operational details in the JSON fields, not in the "response" text.
-            """
-        else:
-            handover_block = """
-        Do not request a handover to a human manager. Provide your best, most helpful answer directly to the customer.
-            """
-
-        # context_docs_block = self._get_context_block(config)
-        # examples_block = self._get_examples_block(config)
-        context_docs_block = ""
-        examples_block = ""
-
-        # order_flow_block_uk = f"""
-        # Послідовність оформлення замовлення (дуже важливо дотримуватися кроків):
-        # 1) З'ясуй, що саме хоче замовити клієнт (страви/бокси) та допоможи вибрати.
-        #    Якщо клієнт каже "підходять такі бокси" / "беремо ці" / подібне — вважай, що позиції обрано.
-        #    У полі menu_items зафіксуй вибрані позиції коротким переліком; якщо кількість не вказана,
-        #    вважай 1 шт. на кожну вибрану позицію (не питай додатково про кількість, якщо це не критично).
-        #    Додатково внеси у поле guests_count кількість гостей, виходячи із даних про позиції/асортимент.
-        # 2) Коли клієнт визначився з позиціями, запитай дату доставки.
-        #    Якщо дата надана без року (формат DD.MM або DD/MM), вважай поточний рік і перетвори у формат YYYY-MM-DD.
-        # 3) Зафіксуй у полі priority срочність замовлення ('low', 'medium', 'high') із розрахунку на години до доставки. Через 2 години - 'high', через 4 - 'medium', через 6 - 'low'.
-        # 4) Потім попроси дані для доставки: ім'я, телефон, адреса доставки.
-        # 5) Якщо чогось не вистачає — запитуй лише відсутні дані одним-двома питаннями. Не запитуй нічого зайвого.
-        # 6) Лише коли є: menu_items, delivery_date, customer_name, customer_phone, customer_address —
-        #    сформуй дію create_order без додаткового підтвердження.
-        #    Якщо потрібне якесь уточнення із виводом всіх даних, виведи дані у форматі:
-
-        #     "Ім'я": "<customer_name>",
-        #     "Телефон": "<customer_phone>",
-        #     "Email": "<customer_email>",
-        #     "Адреса": "<customer_address>",
-        #     "Перелік позицій": "<menu items>",
-        #         - "<item name>, <item quantity>, <item price>, <item_weight>",
-        #         - "<item name>, <item quantity>, <item price>, <item_weight>",
-        #     "Дата доставки": "<date in ISO format YYYY-MM-DD> <optional time>",
-        #     "Загальна сума": "UAH"
-        # """
-
-        # order_flow_block_en = """
-        # Order intake sequence (follow the steps strictly):
-        # 1) Clarify what the customer wants to order and help choose items.
-        #    If the customer says "these boxes work" / "we'll take these" / similar — treat items as chosen.
-        #    In menu_items, record a concise list of the chosen items; if quantity is not specified,
-        #    assume 1 per selected item (do not ask for quantity unless critical).
-        # 2) Once items are chosen, ask for the delivery date.
-        #    If the date is provided without a year (DD.MM or DD/MM), assume the current year and convert to YYYY-MM-DD.
-        # 3) Then ask for delivery details: name, phone number, delivery address.
-        # 4) If something is missing, ask only for the missing details concisely. Do not ask anything extra.
-        # 5) Only when you have: menu_items, delivery_date, customer_name, customer_phone,
-        #    customer_address — emit the create_order action without extra confirmation.
-        # """
-
-        # order_flow_block = order_flow_block_uk if language == "uk" else order_flow_block_en
 
         return f"""
-        You are a helpful AI assistant for a catering business.
-        {language_instruction}
-        {persona_instruction}
         {system_instruction}
-
-        {('\n'.join(context_lines)) if context_lines else ''}
-
-        Your goal is to make customers' ordering experience as convenient and pleasant as possible:
-        • Answer questions about menus, prices, and services
-        • Help customers place orders step by step
-        • Share information about discounts and special offers
-        • Handle any customer service inquiries
-
-        {order_flow_block}
-
-        {('Стиль спілкування на основі реальних розмов із клієнтами:' if language == 'uk' else 
-        'Conversation style inspired by real customer calls:')}
-        {('• Починайте з ввічливого вітання і короткого запитання, чим можете допомогти.' if language == 'uk' else 
-        '• Start with a polite greeting and a short offer to help.')}
-        {('• Уточнюйте місто, дату/інтервал доставки та терміновість.' if language == 'uk' else 
-        '• Confirm city, delivery date/time window, and urgency.')}
-        {('• Пропонуйте 1–3 релевантні варіанти (набори/бокси) і допоміжні позиції (келихи, тарілки, прибори).' if language == 'uk' else 
-        '• Offer 1–3 relevant menu sets and helpful add-ons (cups, plates, utensils).')}
-        {('• Пояснюйте логіку поради просто і коротко.' if language == 'uk' else 
-        '• Explain recommendations briefly and clearly.')}
-        {('• Тактовно повідомляйте про доставку/самовивіз і можливі знижки/умови.' if language == 'uk' else 
-        '• Mention delivery/pickup and any fees/discounts tactfully.')}
-        {('• Не ставте забагато питань одночасно — рухайтеся крок за кроком.' if language == 'uk' else 
-        '• Avoid asking too many questions at once; proceed step by step.')}
-        {('• Підсумовуйте домовленості коротко перед оформленням.' if language == 'uk' else 
-        '• Summarize agreements briefly before finalizing.')}
-
-        {'\n'.join(style_lines)}
-
-        {handover_block}
-
-        When and only when the customer clearly wants to place an order and all
-        required details are collected (menu_items, delivery_date, customer_name,
-        customer_phone, customer_address), IMMEDIATELY emit ONLY a JSON object with
-        `create_order` action. Do NOT include any additional text outside the JSON.
-        The customer-visible confirmation message must be inside the JSON as the
-        value of the "response" field (e.g., UA: "Все супер, дякуємо за замовлення! Менеджер зв'яжеться з вами.").
-        Do not ask for an extra confirmation if the user already provided all required details.
-        Use this format exactly:
-
-        {{
-            "response": "<your short confirmation to the user in {language}>",
-            "action": "create_order",
-            "data": {{
-                "customer_name": "<name>",
-                "customer_phone": "<phone>",
-                "customer_email": "<optional email>",
-                "customer_address": "<address>",
-                "menu_items": "<menu items>",
-                "total_amount": <number>,
-                "delivery_date": "<date in ISO format YYYY-MM-DD>",
-                "delivery_time": "<optional time>",
-                "notes": "<optional notes>",
-                "currency": "UAH",
-                "guests_count": <optional number of guests>
-                "priority": "<optional priority>"
-            }}
-        }}
-
-        If some required details are missing, ask a concise follow-up question for the
-        missing details instead of emitting the action. As soon as all required fields
-        are present, emit ONLY the `create_order` action JSON as above and nothing else.
-
-        {context_docs_block}
-
-        {examples_block}
-
-        {other_instruction}
-
-        Otherwise, respond normally with just your message to the customer.
         """
     
     def _build_system_prompt_with_trace(
