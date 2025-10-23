@@ -385,7 +385,7 @@ class WebScraperService:
     #     return clean
     
     def _scrape_catalog_pages(self, base_url: str) -> List[Dict[str, str]]:
-        # return None # Remove this line on publish
+        return None # Remove this line on publish
     
         import cloudscraper
         from bs4 import BeautifulSoup
