@@ -1,3 +1,4 @@
+from datetime import date, datetime, timedelta
 import re
 import json
 import csv
@@ -148,6 +149,7 @@ class ChatbotService:
                                 "Формуй промт тільки по назвам товарів та сумуй вартість із опису, або мета поля 'вартість'"
                                 "Повертай конкретну інформацію по товару яку хоче дізнатися користувач"
                                 "Не повертай перелік товарів, або описи про товари що не вказав користувач"
+                                "Ключові слова: сьогодні, завтра, на дату, годині, часу"
                             )
                         }
                     },
@@ -155,12 +157,34 @@ class ChatbotService:
                 }
             }
 
+            get_date_time = {
+                "name": "get_date_time",
+                "description": (
+                    "Повертає мінімально можливу для замовлення дату та час"
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": (
+                                "Запит користувача про час та дату, коли він хоче замовити"
+                                "Запит користувача про дата чи час"
+                                "Запит або бажання користувача доставити на вказану дату та час"
+                                "Формуй 'query' у форматі ISO 'HH:MM' та кількість днів => 'сьогодні = 0, завтра = 1, після завтра = 2' => приклад '10:00, 2'"
+                            )
+                        }
+                    }
+                },
+                "required": ["query"]
+            }
+
             # Create the chat completion
             chosen_model = model or self.model
             request_kwargs = {
                 "model": chosen_model,
                 "messages": messages,
-                "functions": [get_products_schema, get_products_data],
+                "functions": [get_date_time, get_products_schema, get_products_data],
                 "function_call": "auto",
             }
 
@@ -264,6 +288,20 @@ class ChatbotService:
                             "Ось інформація по товарам для користувача:\n"
                             f"{product_text}\n"
                             "Сформуй відповідь для клієнта, із вказанням даних які хоче дізнатися користувач (наприклад: ціна, скільки потрібно боксів на кількість осіб, тощо)."
+                        )
+                    }
+
+                    request_kwargs["messages"].append(messages)
+                    response = self.client.chat.completions.create(**request_kwargs)
+                elif func_name == "get_date_time":
+                    time_results = self.get_date_time(args["query"])
+                    logger.debug(f"Time results: {time_results}")
+                    messages = {
+                        "role": "system",
+                        "content": (
+                            "Ось інформація по даті та часу для користувача:\n"
+                            f"{time_results}\n"
+                            "Сформуй відповідь для клієнта, якщо мінімальна дата свівпадає, то підтверди час, якщо ні, то сформуй пропозицію, що можливо тільки на мінімальну дату."
                         )
                     }
 
@@ -1224,3 +1262,112 @@ class ChatbotService:
         except Exception as e:
             logger.warning(f"Failed to retrieve products: {e}")
             return []
+
+    def get_date_time(self, query: str):
+        try:
+            logger.info(f"query {query}")
+            result = self.validate_delivery(query)
+            logger.info(f"result {result}")
+            return result
+            # time_part, days_part = query.split(', ')
+            # hour, minute = map(int, time_part.split(':'))
+            # days_to_add = int(days_part)
+            # today = datetime.now()
+            # date_time = (today + timedelta(days=days_to_add)).replace(hour=hour, minute=minute, second=0, microsecond=0)
+            # logger.info(f"result {date_time}")
+
+            # # date_time_now = date.today()
+            # # date_time = datetime.fromisoformat(query.replace("Z", "+00:00"))
+            # logger.info(f"000")
+            # if (today - date_time).total_seconds() / 3600 >= 2 and date_time.time().hour >= 9 and date_time.time().hour < 18:
+            #     logger.info(f"101")
+            #     return {
+            #         "valid": True,
+            #         "approved_date": datetime.strftime("%d-%B-%Y"),
+            #         "approved_time": datetime.strftime("%H:%M"),
+            #         "priority": "low"
+            #     }
+            # else:
+            #     logger.info(f"111")
+            #     # now = date.today(datetime.timezone.utc)
+            #     logger.info(f"222")
+            #     two_hours_from_now = today + datetime.timedelta(hours=2)
+            #     logger.info(f"333")
+            #     tomorrow = today + datetime.timedelta(days=1)
+            #     logger.info(f"444")
+            #     nine_am = today.replace(hour=9, minute=0, second=0, microsecond=0)
+            #     logger.info(f"555")
+            #     six_pm = today.replace(hour=18, minute=0, second=0, microsecond=0)
+            #     logger.info(f"666")
+            #     approved_time = max(nine_am, min(two_hours_from_now, six_pm))
+            #     logger.info(f"777")
+            #     if approved_time < today:
+            #         approved_time = max(nine_am, min(tomorrow + datetime.timedelta(hours=2), six_pm))
+            #     return {
+            #         "valid": False,
+            #         "approved_date": approved_time.strftime("%d-%B-%Y"),
+            #         "approved_time": approved_time.strftime("%H:%M"),
+            #         "priority": "low"
+            #     }
+        except Exception as e:
+            logger.warning(f"Failed to get date and time: {e}")
+            return ""
+        
+    # WORK_START = 9
+    # WORK_END = 19
+    # MIN_PREP_MINUTES = 120  # Мінімум 2 години
+
+    def parse_input(self, input_str: str) -> datetime:
+        """Парсить строку 'HH:MM, D' у datetime з сьогоднішньою датою + D днів"""
+        time_part, days_part = input_str.strip().split(', ')
+        hour, minute = map(int, time_part.split(':'))
+        days_to_add = int(days_part)
+        base_date = datetime.now() + timedelta(days=days_to_add)
+        return base_date.replace(hour=hour, minute=minute, second=0, microsecond=0)
+
+    def is_within_working_hours(self, dt: datetime) -> bool:
+        """Перевіряє чи час доставки в межах робочих годин"""
+        WORK_START = 9
+        WORK_END = 19
+        return WORK_START <= dt.hour < WORK_END
+
+    def calculate_priority(self, minutes_diff: int) -> str:
+        MIN_PREP_MINUTES = 120
+        """Визначає пріоритет доставки за кількістю хвилин до доставки"""
+        if minutes_diff > 240:
+            return "low"
+        elif 180 <= minutes_diff <= 240:
+            return "medium"
+        elif MIN_PREP_MINUTES <= minutes_diff < 180:
+            return "high"
+        else:
+            return "invalid"
+
+    def validate_delivery(self, input_str: str) -> dict:
+        MIN_PREP_MINUTES = 120
+        """Основна функція перевірки доставки"""
+        now = datetime.now()
+        requested_dt = self.parse_input(input_str)
+        min_ready_dt = now + timedelta(minutes=MIN_PREP_MINUTES)
+
+        if requested_dt < min_ready_dt or not self.is_within_working_hours(requested_dt):
+            return {
+                "valid": False,
+                "reason": "Requested time is too early or outside working hours"
+            }
+
+        minutes_until_delivery = int((requested_dt - now).total_seconds() // 60)
+        priority = self.calculate_priority(minutes_until_delivery)
+
+        if priority == "invalid":
+            return {
+                "valid": False,
+                "reason": "Not enough time for preparation"
+            }
+
+        return {
+            "valid": True,
+            "approved_time": requested_dt.strftime("%H:%M"),
+            "approved_date": requested_dt.strftime("%d-%B-%Y"),
+            "priority": priority
+        }
