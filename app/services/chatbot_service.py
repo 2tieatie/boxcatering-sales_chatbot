@@ -35,7 +35,8 @@ class ChatbotService:
     def __init__(self):
         # Get API key from environment or use a placeholder
         api_key = settings.openai_api_key
-        model = settings.openai_model
+        # model = settings.openai_model
+        model = "gpt-4o"
         
         self.client = OpenAI(api_key=api_key)
         self.model = model
@@ -100,7 +101,7 @@ class ChatbotService:
             
             # Add conversation history if provided
             if conversation_history:
-                for msg in conversation_history[-10:]:  # Keep last 10 messages for context
+                for msg in conversation_history[-20:]:  # Keep last 20 messages for context
                     if isinstance(msg, dict) and "role" in msg and "content" in msg:
                         messages.append({
                             "role": msg["role"],
@@ -1269,46 +1270,6 @@ class ChatbotService:
             result = self.validate_delivery(query)
             logger.info(f"result {result}")
             return result
-            # time_part, days_part = query.split(', ')
-            # hour, minute = map(int, time_part.split(':'))
-            # days_to_add = int(days_part)
-            # today = datetime.now()
-            # date_time = (today + timedelta(days=days_to_add)).replace(hour=hour, minute=minute, second=0, microsecond=0)
-            # logger.info(f"result {date_time}")
-
-            # # date_time_now = date.today()
-            # # date_time = datetime.fromisoformat(query.replace("Z", "+00:00"))
-            # logger.info(f"000")
-            # if (today - date_time).total_seconds() / 3600 >= 2 and date_time.time().hour >= 9 and date_time.time().hour < 18:
-            #     logger.info(f"101")
-            #     return {
-            #         "valid": True,
-            #         "approved_date": datetime.strftime("%d-%B-%Y"),
-            #         "approved_time": datetime.strftime("%H:%M"),
-            #         "priority": "low"
-            #     }
-            # else:
-            #     logger.info(f"111")
-            #     # now = date.today(datetime.timezone.utc)
-            #     logger.info(f"222")
-            #     two_hours_from_now = today + datetime.timedelta(hours=2)
-            #     logger.info(f"333")
-            #     tomorrow = today + datetime.timedelta(days=1)
-            #     logger.info(f"444")
-            #     nine_am = today.replace(hour=9, minute=0, second=0, microsecond=0)
-            #     logger.info(f"555")
-            #     six_pm = today.replace(hour=18, minute=0, second=0, microsecond=0)
-            #     logger.info(f"666")
-            #     approved_time = max(nine_am, min(two_hours_from_now, six_pm))
-            #     logger.info(f"777")
-            #     if approved_time < today:
-            #         approved_time = max(nine_am, min(tomorrow + datetime.timedelta(hours=2), six_pm))
-            #     return {
-            #         "valid": False,
-            #         "approved_date": approved_time.strftime("%d-%B-%Y"),
-            #         "approved_time": approved_time.strftime("%H:%M"),
-            #         "priority": "low"
-            #     }
         except Exception as e:
             logger.warning(f"Failed to get date and time: {e}")
             return ""
@@ -1369,5 +1330,5 @@ class ChatbotService:
             "valid": True,
             "approved_time": requested_dt.strftime("%H:%M"),
             "approved_date": requested_dt.strftime("%d-%B-%Y"),
-            "priority": priority
+            # "priority": priority
         }
