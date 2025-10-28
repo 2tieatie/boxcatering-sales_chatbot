@@ -278,11 +278,12 @@ body {
 /* Chat layout */
 .chat-container {
     display: grid;
-    grid-template-columns: 1fr 320px 400px;
+    /* grid-template-columns: 1fr 320px 400px; */
+    grid-template-columns: 1fr 320px;
     gap: 0;
     flex: 1;
-    /* max-width: 1200px; */
-    max-width: 90dvw;
+    max-width: 1200px;
+    /* max-width: 90dvw; */
     margin: 0 auto;
     width: 100%;
     background: white;

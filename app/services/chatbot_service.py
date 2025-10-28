@@ -16,7 +16,7 @@ from loguru import logger
 
 from app.config import settings
 from app.models.assortment_item import AssortmentItem
-from app.models.backend_log import BackendLog
+# from app.models.backend_log import BackendLog
 from app.schemas.chat import ChatRequest, ChatResponse, HandoverReason
 from app.database import get_db
 from app.models.prompt_log import PromptLog
