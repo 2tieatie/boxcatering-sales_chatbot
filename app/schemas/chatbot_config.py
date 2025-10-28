@@ -9,15 +9,15 @@ class ChatbotConfigBase(BaseModel):
     """Base chatbot configuration schema."""
     name: str = Field(..., min_length=1, description="Configuration name")
     welcome_message: str = Field(..., min_length=1, description="Chatbot welcome message")
-    # business_context: str = Field(..., min_length=1, description="Business context description")
-    # language: str = Field(default="uk", min_length=2, max_length=5, description="Language code")
-    # force_language: bool = Field(default=True, description="Whether to enforce language compliance")
+    business_context: str = Field(..., min_length=1, description="Business context description")
+    language: str = Field(default="uk", min_length=2, max_length=5, description="Language code")
+    force_language: bool = Field(default=True, description="Whether to enforce language compliance")
     is_active: bool = Field(default=False, description="Whether this configuration is active")
     chatbot_name: Optional[str] = Field(None, description="Public chatbot display name (e.g., Marichka)")
     
     # Additional fields for enhanced configuration
     # company_name: Optional[str] = Field(None, description="Company name")
-    # specializations: Optional[str] = Field(None, description="Business specializations")
+    specializations: Optional[str] = Field(None, description="Business specializations")
     friendly_tone: Optional[bool] = Field(True, description="Use friendly tone")
     professional_style: Optional[bool] = Field(True, description="Maintain professional style")
     suggestive_responses: Optional[bool] = Field(True, description="Offer follow-up suggestions")
