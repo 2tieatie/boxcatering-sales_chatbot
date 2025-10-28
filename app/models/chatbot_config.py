@@ -14,15 +14,15 @@ class ChatbotConfig(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     welcome_message = Column(Text, nullable=False)
-    # business_context = Column(Text, nullable=False)
-    # language = Column(String, default="uk", nullable=False)  # Default to Ukrainian
-    # force_language = Column(Boolean, default=True, nullable=False)  # Default to strict language enforcement
+    business_context = Column(Text, nullable=False)
+    language = Column(String, default="uk", nullable=False)  # Default to Ukrainian
+    force_language = Column(Boolean, default=True, nullable=False)  # Default to strict language enforcement
     is_active = Column(Boolean, default=True)
     chatbot_name = Column(String, nullable=True)
     
     # Additional fields for enhanced configuration
     # company_name = Column(String, nullable=True)
-    # specializations = Column(Text, nullable=True)
+    specializations = Column(Text, nullable=True)
     friendly_tone = Column(Boolean, default=True, nullable=True)
     professional_style = Column(Boolean, default=True, nullable=True)
     suggestive_responses = Column(Boolean, default=True, nullable=True)
