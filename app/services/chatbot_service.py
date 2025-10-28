@@ -3,17 +3,20 @@ import re
 import json
 import csv
 import hashlib
+from sqlite3 import IntegrityError
 import time
 import uuid
 
 from pathlib import Path
 from typing import Optional, Dict, Any
 
+from fastapi import HTTPException
 from openai import OpenAI
 from loguru import logger
 
 from app.config import settings
 from app.models.assortment_item import AssortmentItem
+# from app.models.backend_log import BackendLog
 from app.schemas.chat import ChatRequest, ChatResponse, HandoverReason
 from app.database import get_db
 from app.models.prompt_log import PromptLog
@@ -215,6 +218,7 @@ class ChatbotService:
                     logger.warning(
                         f"Model '{chosen_model}' unavailable. Falling back to default model '{default_model}'."
                     )
+
                     fallback_kwargs = {
                         "model": default_model,
                         "messages": request_kwargs["messages"],
@@ -1332,3 +1336,4 @@ class ChatbotService:
             "approved_date": requested_dt.strftime("%d-%B-%Y"),
             # "priority": priority
         }
+    
