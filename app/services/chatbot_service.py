@@ -39,7 +39,7 @@ class ChatbotService:
         # Get API key from environment or use a placeholder
         api_key = settings.openai_api_key
         # model = settings.openai_model
-        model = "gpt-4o"
+        model = "gpt-4o mini"
         
         self.client = OpenAI(api_key=api_key)
         self.model = model
