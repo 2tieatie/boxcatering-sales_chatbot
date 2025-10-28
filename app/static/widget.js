@@ -5,6 +5,11 @@ let ws = null;
 let reconnectTimer = null;
 const RECONNECT_DELAY_MS = 1500;
 
+const scriptTag = Array.from(document.getElementsByTagName("script")).find((s) => s.src.includes("widget.js"));
+const srcLink = scriptTag.getAttribute("src");
+const homeLink = srcLink.includes("http") ? srcLink.split("//")[0] + "//" + srcLink.split("//")[1].split("/")[0] : "";
+// console.log(homeLink);
+
 /**
  * Load the widget.
  *
@@ -16,10 +21,8 @@ function loadWidget() {
         try {
             // Fetch auth data
             const token = localStorage.getItem("access_token");
-            const response = await fetch("/system-config/settings/widget", {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+            const response = await fetch(homeLink + "/system-config/settings/widget", {
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
             });
 
             if (response.ok) {
@@ -27,12 +30,12 @@ function loadWidget() {
                 const settings = await response.json();
 
                 // Load styles
-                const styles = [`./call_style.min.css`, `./ui_style.min.css`, `./live_chat.css`];
+                const styles = [`./call_style.min.css`, `./live_chat.css`];
 
                 styles.forEach((styleHref) => {
                     const link = document.createElement("link");
                     link.rel = "stylesheet";
-                    link.href = "static/" + styleHref;
+                    link.href = homeLink ? homeLink + "/static/" + styleHref : "static/" + styleHref;
                     document.head.appendChild(link);
                 });
 
@@ -252,18 +255,26 @@ function loadWidget() {
 async function initI18N() {
     try {
         const token = localStorage.getItem("access_token");
-        const meRes = await fetch("/users/me", { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        const meRes = await fetch(homeLink + "/users/me", {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         const storedLang = localStorage.getItem("ui_language");
         let lang = storedLang || "uk";
         if (!storedLang && meRes && meRes.ok) {
             const me = await meRes.json();
             lang = me.preferred_language || lang;
         }
+        console.log(111);
+
         if (window.I18N && I18N.setLanguage) {
             await I18N.setLanguage(lang);
         }
+        console.log(I18N);
+
         try {
             const input = document.getElementById("chat-input");
+            console.log(222);
+
             if (input && window.I18N && I18N.t) {
                 input.placeholder = I18N.t("chatTest.input.label");
             }
@@ -274,7 +285,11 @@ async function initI18N() {
                 el.textContent = I18N.t(k);
             }
         });
-    } catch {}
+    } catch (e) {
+        console.log(e);
+
+        console.log(333);
+    }
 }
 
 loadWidget();
@@ -387,8 +402,8 @@ let sessionId = getOrCreateSessionId();
 async function fetchActiveChatbotConfig() {
     try {
         const token = localStorage.getItem("access_token");
-        const resp = await fetch("/chatbot-config/active", {
-            headers: { Authorization: `Bearer ${token}` },
+        const resp = await fetch(homeLink + "/chatbot-config/active", {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const cfg = await resp.json();
@@ -421,7 +436,8 @@ function addMessage(content, isUser = false, timestamp = null) {
             `;
 
     messagesContainer.appendChild(messageDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    // messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    messagesContainer.scrollTop = messagesContainer.scrollTop + 300;
 
     // Store in chat history
     chatHistory.push({

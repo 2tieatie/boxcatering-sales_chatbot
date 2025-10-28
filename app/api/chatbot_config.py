@@ -27,7 +27,7 @@ async def get_chatbot_configs(
 @router.get("/active", response_model=ChatbotConfigResponse)
 async def get_active_chatbot_config(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user_dependency)  # All authenticated users can see active config
+    # current_user: User = Depends(get_current_active_user_dependency)  # All authenticated users can see active config
 ):
     """Get active chatbot configuration (all authenticated users).
 
