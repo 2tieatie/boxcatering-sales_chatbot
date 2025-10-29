@@ -377,12 +377,13 @@
                 <div id="configs-list" class="configs-list"></div>
             </div>
 
-            <!-- <div id="logs-sidebar" class="logs-sidebar">
+            <div id="logs-sidebar" class="logs-sidebar">
                 <div class="logs-header">
                     <strong>Logs</strong>
+                    <button id="new-log-btn" class="control-btn config-btn">Refresh</button>
                 </div>
                 <div id="logs-list" class="logs-list"></div>
-            </div> -->
+            </div>
         </div>
 
         <script src="/static/auth.js"></script>
@@ -529,6 +530,8 @@
                     isUser,
                     timestamp: time,
                 });
+
+                this.loadLogsSidebar();
             }
 
             // Show typing indicator
@@ -746,7 +749,7 @@
                 connectWebSocket();
                 try {
                     loadConfigsSidebar();
-                    // loadLogsSidebar();
+                    loadLogsSidebar();
                 } catch {}
             });
 
@@ -954,101 +957,26 @@
                     const list = document.getElementById("logs-list");
 
                     const resp = await fetch("/logs/back", { headers: { Authorization: `Bearer ${token}` } });
-                    console.log(resp);
 
-                    // if (!resp.ok) return;
-                    // const configs = await resp.json();
-                    // list.innerHTML = "";
-                    // for (const c of configs) {
-                    //     const item = document.createElement("div");
-                    //     item.className = "config-item";
-                    //     if (c.is_active) {
-                    //         item.classList.add("active");
-                    //     }
-                    //     item.innerHTML = `
-                    //         <div class="config-name" data-id="${c.id}" title="Double-click to rename">
-                    //             <span class="config-name-text">${c.name}</span>
-                    //             ${c.is_active ? '<span class="config-badge"> (active)</span>' : ""}
-                    //         </div>
-                    //         <div class="config-actions">
-                    //             <button class="control-btn icon-btn" data-act="test" data-id="${c.id}" title="Test this configuration">🔍</button>
-                    //             <button class="control-btn icon-btn" data-act="activate" data-id="${c.id}" title="Activate this configuration (for all users)">✅</button>
-                    //             <button class="control-btn icon-btn" data-act="edit" data-id="${c.id}" title="Edit configuration">✏️</button>
-                    //             <button class="control-btn icon-btn" data-act="clone" data-id="${c.id}" title="Clone this configuration">📋</button>
-                    //             <button class="control-btn icon-btn danger" data-act="delete" data-id="${c.id}" title="Delete this configuration">🗑️</button>
-                    //         </div>
-                    //     `;
-                    //     list.appendChild(item);
-                    // }
+                    if (!resp.ok) return;
+                    const logs = await resp.json();
+                    list.innerHTML = "";
+                    for (const c of logs) {
+                        const item = document.createElement("div");
+                        item.className = "log-item";
+                        item.innerHTML = `<div class="log-text">${c}</div>`;
+                        list.appendChild(item);
+                    }
 
-                    // // Remove any existing event listeners to prevent duplicates
-                    // list.removeEventListener("click", handleConfigClick);
-                    // list.addEventListener("click", handleConfigClick);
+                    setTimeout(() => {
+                        wrap.scrollTop = wrap.scrollHeight;
+                    }, 250);
 
-                    // // Inline rename: double-click on name to edit
-                    // list.querySelectorAll(".config-name").forEach(function (el) {
-                    //     el.addEventListener("dblclick", function (e) {
-                    //         const id = el.getAttribute("data-id");
-                    //         const nameSpan = el.querySelector(".config-name-text");
-                    //         if (!nameSpan) return;
-                    //         const original = nameSpan.textContent;
-
-                    //         const input = document.createElement("input");
-                    //         input.type = "text";
-                    //         input.value = original;
-                    //         input.style.width = Math.max(120, nameSpan.offsetWidth + 20) + "px";
-                    //         input.className = "inline-rename-input";
-
-                    //         // Replace text with input
-                    //         nameSpan.replaceWith(input);
-                    //         input.focus();
-                    //         input.select();
-
-                    //         const finish = async (commit) => {
-                    //             const newName = (input.value || "").trim();
-                    //             const text = document.createElement("span");
-                    //             text.className = "config-name-text";
-                    //             text.textContent = commit && newName ? newName : original;
-                    //             input.replaceWith(text);
-                    //             if (commit && newName && newName !== original) {
-                    //                 try {
-                    //                     const token = localStorage.getItem("access_token");
-                    //                     const resp = await fetch(`/chatbot-config/${id}`, {
-                    //                         method: "PUT",
-                    //                         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                    //                         body: JSON.stringify({ name: newName }),
-                    //                     });
-                    //                     if (!resp.ok) {
-                    //                         alert("Rename failed");
-                    //                         text.textContent = original;
-                    //                     } else {
-                    //                         // If we just renamed the active config, refresh sidebar to reflect
-                    //                         // Also refresh header if this config is currently tested via WS params
-                    //                         try {
-                    //                             await loadConfigsSidebar();
-                    //                         } catch {}
-                    //                     }
-                    //                 } catch {
-                    //                     alert("Rename failed");
-                    //                     text.textContent = original;
-                    //                 }
-                    //             }
-                    //         };
-
-                    //         input.addEventListener("keydown", function (ev) {
-                    //             if (ev.key === "Enter") {
-                    //                 ev.preventDefault();
-                    //                 finish(true);
-                    //             } else if (ev.key === "Escape") {
-                    //                 ev.preventDefault();
-                    //                 finish(false);
-                    //             }
-                    //         });
-                    //         input.addEventListener("blur", function () {
-                    //             finish(true);
-                    //         });
-                    //     });
-                    // });
+                    const newBtn = document.getElementById("new-log-btn");
+                    if (newBtn)
+                        newBtn.onclick = async () => {
+                            this.loadLogsSidebar();
+                        };
                 } catch {}
             }
         </script>

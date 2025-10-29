@@ -78,17 +78,17 @@ async def get_prompt_log(
 
 from collections import deque
 
-# @router.get("/back", response_model=List[BackendLogResponse])
-# async def get_backend_logs(
-#     skip: int = 0, 
-#     limit: int = 100, 
-#     db: Session = Depends(get_db),
-#     current_user: User = Depends(require_admin_or_system_admin_dependency)
-# ):
-#     """Get last N lines of logs (admin and system admin only)."""
+@router.get("/back", response_model=List[str])
+async def get_backend_logs(
+    skip: int = 0, 
+    limit: int = 100, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_or_system_admin_dependency)
+):
+    """Get last N lines of logs (admin and system admin only)."""
 
-#     with open('logs/prompt.log', 'r') as log_file:
-#         # Efficiently get the last `limit` lines
-#         logs = list(deque((line.strip() for line in log_file), maxlen=limit))
+    with open('logs/prompt.log', 'r') as log_file:
+        # Efficiently get the last `limit` lines
+        logs = list(deque((line.strip() for line in log_file), maxlen=limit))
 
-#     return logs
+    return logs
