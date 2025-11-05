@@ -185,21 +185,6 @@
             color: #721c24;
         }
 
-        .priority-high {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .priority-medium {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .priority-low {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-
         .action-buttons {
             display: flex;
             gap: 8px;
@@ -488,15 +473,6 @@
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label for="priority-filter" data-i18n="orderHistory.filters.priority">Priority</label>
-                    <select id="priority-filter">
-                        <option value="" data-i18n="orderHistory.filters.allPriorities">All Priorities</option>
-                        <option value="high" data-i18n="orderHistory.priority.high">High</option>
-                        <option value="medium" data-i18n="orderHistory.priority.medium">Medium</option>
-                        <option value="low" data-i18n="orderHistory.priority.low">Low</option>
-                    </select>
-                </div>
-                <div class="filter-group">
                     <label for="date-from" data-i18n="orderHistory.filters.dateFrom">Date From</label>
                     <input type="date" id="date-from">
                 </div>
@@ -609,14 +585,6 @@
                             placeholder="Dietary restrictions, allergies, special requests..."></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="order-priority">Priority</label>
-                        <select id="order-priority">
-                            <option value="low">Low</option>
-                            <option value="medium" selected>Medium</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
                         <label for="order-notes">Notes</label>
                         <textarea id="order-notes" placeholder="Additional notes for the order..."></textarea>
                     </div>
@@ -722,7 +690,7 @@
                         order.delivery_address = order.customer.address || "";
                         order.status = this.mapStateToStatus(order.state);
                     });
-                    
+
                     filteredOrders = [...orders];
                     updateStats();
                     renderOrdersTable();
@@ -751,7 +719,6 @@
                     menu_items: "Appetizers: Spring rolls, Calamari\nMain: Grilled salmon, Beef tenderloin\nDesserts: Chocolate cake, Tiramisu",
                     special_requirements: "2 vegetarian meals, 1 gluten-free",
                     status: "confirmed",
-                    priority: "high",
                     total_amount: 2250.00,
                     created_at: "2024-01-10T10:30:00Z",
                     notes: "Corporate event - please deliver 2 hours before start time"
@@ -768,7 +735,6 @@
                     menu_items: "Appetizers: Bruschetta, Stuffed mushrooms\nMain: Chicken marsala, Pasta primavera\nDesserts: Cheesecake, Fruit platter",
                     special_requirements: "All vegetarian options",
                     status: "pending",
-                    priority: "medium",
                     total_amount: 1125.00,
                     created_at: "2024-01-12T14:20:00Z",
                     notes: "Wedding anniversary celebration"
@@ -785,7 +751,6 @@
                     menu_items: "Appetizers: Mini quiches, Shrimp cocktail\nMain: Roast beef, Grilled chicken\nDesserts: Assorted pastries, Coffee service",
                     special_requirements: "Corporate lunch - quick service required",
                     status: "preparing",
-                    priority: "high",
                     total_amount: 4500.00,
                     created_at: "2024-01-08T09:15:00Z",
                     notes: "Annual company meeting - strict timing"
@@ -802,7 +767,6 @@
                     menu_items: "Appetizers: Dumplings, Edamame\nMain: Teriyaki chicken, Vegetable stir-fry\nDesserts: Mochi, Green tea ice cream",
                     special_requirements: "Asian fusion theme",
                     status: "delivered",
-                    priority: "low",
                     total_amount: 675.00,
                     created_at: "2024-01-05T16:45:00Z",
                     notes: "Birthday party - successful delivery"
@@ -819,7 +783,6 @@
                     menu_items: "Appetizers: Oysters, Charcuterie board\nMain: Lobster thermidor, Filet mignon\nDesserts: Crème brûlée, Chocolate soufflé",
                     special_requirements: "Premium service, wine pairing suggestions",
                     status: "pending",
-                    priority: "high",
                     total_amount: 3375.00,
                     created_at: "2024-01-14T11:00:00Z",
                     notes: "High-end corporate dinner - attention to detail required"
@@ -851,7 +814,6 @@
         // Apply filters
         function applyFilters() {
             const statusFilter = document.getElementById('status-filter').value;
-            const priorityFilter = document.getElementById('priority-filter').value;
             const dateFrom = document.getElementById('date-from').value;
             const dateTo = document.getElementById('date-to').value;
             const searchTerm = document.getElementById('search-input').value.toLowerCase();
@@ -859,9 +821,6 @@
             filteredOrders = orders.filter(order => {
                 // Status filter
                 if (statusFilter && order.status !== statusFilter) return false;
-
-                // Priority filter
-                if (priorityFilter && order.priority !== priorityFilter) return false;
 
                 // Date range filter
                 if (dateFrom && order.delivery_date < dateFrom) return false;
@@ -883,7 +842,6 @@
         // Clear filters
         function clearFilters() {
             document.getElementById('status-filter').value = '';
-            document.getElementById('priority-filter').value = '';
             document.getElementById('date-from').value = '';
             document.getElementById('date-to').value = '';
             document.getElementById('search-input').value = '';
@@ -920,7 +878,7 @@
                             <th>${t('orderHistory.table.deliveryDate')}</th>
                             <th>${t('orderHistory.table.guests')}</th>
                             <th>${t('orderHistory.table.status')}</th>
-                            <th>${t('orderHistory.table.priority')}</th>
+                            <th>${t('orderHistory.table.createdAt')}</th>
                             <th>${t('orderHistory.table.total')}</th>
                             <th>${t('orderHistory.table.actions')}</th>
                         </tr>
@@ -930,8 +888,8 @@
 
             pageOrders.forEach(order => {
                 const statusClass = `status-${order.status}`;
-                const priorityClass = `priority-${order.priority}`;
                 const deliveryDate = new Date(order.delivery_date).toLocaleDateString();
+                const createdDate = new Date(order.created_at).toLocaleDateString();
                 const totalFormatted = `₴${(order.total_amount || 0).toLocaleString()}`;
 
                 tableHTML += `
@@ -942,9 +900,9 @@
                             <div style="font-size: 12px; color: #666;">${order.customer_email}</div>
                         </td>
                         <td>${deliveryDate}</td>
-                        <td>${order.guests_count}</td>
+                        <td>${order.guests_count || 0}</td>
                         <td><span class="status-badge ${statusClass}">${t('orderHistory.status.' + order.status)}</span></td>
-                        <td><span class="status-badge ${priorityClass}">${t('orderHistory.priority.' + order.priority)}</span></td>
+                        <td>${createdDate}</td>
                         <td><strong>${totalFormatted}</strong></td>
                         <td>
                             <div class="action-buttons">
@@ -971,11 +929,6 @@
 
             tableContent.innerHTML = tableHTML;
         }
-
-        // Re-render dynamic table content on language change
-        document.addEventListener('i18n:languageChanged', function () {
-            try { renderOrdersTable(); } catch { }
-        });
 
         // Render pagination
         function renderPagination(totalPages) {
@@ -1036,9 +989,8 @@
                     <div>
                         <h4>${t('orderHistory.modal.orderDetails')}</h4>
                         <p><strong>${t('orderHistory.table.status')}</strong> <span class="status-badge status-${order.status}">${t('orderHistory.status.' + order.status)}</span></p>
-                        <p><strong>${t('orderHistory.table.priority')}</strong> <span class="status-badge priority-${order.priority}">${t('orderHistory.priority.' + order.priority)}</span></p>
+                        <p><strong>Created At</strong> ${new Date(order.created_at).toLocaleString()}</p>
                         <p><strong>${t('orderHistory.modal.totalAmount')}</strong> ₴${(order.total_amount || 0).toLocaleString()}</p>
-                        <p><strong>${t('orderHistory.modal.created')}</strong> ${new Date(order.created_at).toLocaleString()}</p>
                     </div>
                 </div>
                 <div style="margin-top: 20px;">
@@ -1119,7 +1071,6 @@
                 delivery_time: document.getElementById('edit-delivery-time').value,
                 guests_count: parseInt(document.getElementById('edit-guests').value || '0') || undefined,
                 status: document.getElementById('edit-status').value,
-                priority: document.getElementById('edit-priority').value,
                 total_amount: parseFloat(document.getElementById('edit-total').value || '0') || 0,
                 menu_items: document.getElementById('edit-menu-items').value,
                 notes: document.getElementById('edit-notes').value,
@@ -1224,7 +1175,6 @@
                 menu_items: document.getElementById('menu-items').value,
                 special_requirements: document.getElementById('special-requirements').value,
                 status: 'pending',
-                priority: document.getElementById('order-priority').value,
                 total_amount: Math.floor(Math.random() * 2000) + 500,
                 created_at: new Date().toISOString(),
                 notes: document.getElementById('order-notes').value
@@ -1251,7 +1201,7 @@
                         customer_address: baseNewOrder.customer_address,
                         menu_items: baseNewOrder.menu_items,
                         special_requirements: baseNewOrder.special_requirements,
-                        priority: baseNewOrder.priority,
+                        priority: baseNewOrder.priority, // This field was removed from form
                         notes: baseNewOrder.notes,
                         total_amount: baseNewOrder.total_amount
                     })
@@ -1325,7 +1275,7 @@
 
         // Generate CSV content
         function generateCSV(orders) {
-            const headers = ['ID', 'Customer Name', 'Email', 'Phone', 'Delivery Date', 'Delivery Time', 'Guests', 'Status', 'Priority', 'Total Amount', 'Created Date'];
+            const headers = ['ID', 'Customer Name', 'Email', 'Phone', 'Delivery Date', 'Delivery Time', 'Guests', 'Status', 'Created At', 'Total Amount'];
             const csvRows = [headers.join(',')];
 
             orders.forEach(order => {
@@ -1338,9 +1288,8 @@
                     order.delivery_time,
                     order.guests_count,
                     order.status,
-                    order.priority,
-                    order.total_amount,
-                    new Date(order.created_at).toLocaleDateString()
+                    new Date(order.created_at).toLocaleDateString(),
+                    order.total_amount
                 ];
                 csvRows.push(row.join(','));
             });

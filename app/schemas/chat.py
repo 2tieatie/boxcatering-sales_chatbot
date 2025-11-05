@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 class HandoverReason(str, Enum):
     """Handover reason enumeration."""
+
     LOW_CONFIDENCE = "LOW_CONFIDENCE"
     OUT_OF_SCOPE = "OUT_OF_SCOPE"
     SENSITIVE_CASE = "SENSITIVE_CASE"
@@ -17,6 +18,7 @@ class HandoverReason(str, Enum):
 
 class ChatRequest(BaseModel):
     """Chat request schema."""
+
     session_id: str
     sender: str
     message: str
@@ -25,6 +27,7 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     """Chat response schema."""
+
     response: str
     handover_to_manager: bool = False
     handover_reason: Optional[HandoverReason] = None
@@ -35,7 +38,9 @@ class ChatResponse(BaseModel):
     # Optional payload for actions, free-form to allow incremental evolution
     data: Optional[Dict[str, Any]] = None
 
+
 class SummaryRequest(BaseModel):
     """Summary request schema."""
+
     conversation_id: int
     mappedMessages: str

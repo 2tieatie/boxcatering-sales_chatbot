@@ -12,7 +12,4 @@ start_time = time.time()
 async def health_check():
     """Health check endpoint."""
     uptime = time.time() - start_time
-    return {
-        "status": "ok",
-        "uptime": f"{uptime:.2f}s"
-    }
+    return {"status": "ok", "uptime": f"{uptime:.2f}s"}

@@ -76,7 +76,9 @@ async def run_test() -> int:
                     print("[Note] Handover requested by bot.")
                 if data.get("action") == "create_order":
                     print("[Action] create_order emitted with data:")
-                    print(json.dumps(data.get("data") or {}, ensure_ascii=False, indent=2))
+                    print(
+                        json.dumps(data.get("data") or {}, ensure_ascii=False, indent=2)
+                    )
 
                 await asyncio.sleep(0.8)
     except OSError as e:
@@ -99,5 +101,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-

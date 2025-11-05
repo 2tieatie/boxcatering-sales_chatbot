@@ -31,7 +31,8 @@ async def get_stats_summary(
     total_conversations: int = db.query(func.count(Conversation.id)).scalar() or 0
 
     active_orders: int = (
-        db.query(func.count(Order.id)).filter(Order.is_processed.is_(False)).scalar() or 0
+        db.query(func.count(Order.id)).filter(Order.is_processed.is_(False)).scalar()
+        or 0
     )
 
     total_customers: int = db.query(func.count(Customer.id)).scalar() or 0
@@ -53,5 +54,3 @@ async def get_stats_summary(
         "total_customers": total_customers,
         "handovers": handovers,
     }
-
-

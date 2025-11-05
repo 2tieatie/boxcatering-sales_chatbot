@@ -114,7 +114,7 @@ class ChatbotService:
             # Add current user message
             messages.append({"role": "user", "content": chat_request.message})
 
-                                    # Functions to search and make specific actions
+            # Functions to search and make specific actions
             get_products_schema = {
                 "name": "get_products",
                 "description": (
@@ -188,7 +188,7 @@ class ChatbotService:
             request_kwargs = {
                 "model": chosen_model,
                 "messages": messages,
-                "functions": [get_date_time, get_products_schema, get_products_data],
+                "functions": [get_products_schema, get_products_data],
                 "function_call": "auto",
             }
 
@@ -298,20 +298,20 @@ class ChatbotService:
 
                     request_kwargs["messages"].append(messages)
                     response = self.client.chat.completions.create(**request_kwargs)
-                elif func_name == "get_date_time":
-                    time_results = self.get_date_time(args["query"])
-                    logger.debug(f"Time results: {time_results}")
-                    messages = {
-                        "role": "system",
-                        "content": (
-                            "Ось інформація по даті та часу для користувача:\n"
-                            f"{time_results}\n"
-                            "Сформуй відповідь для клієнта, якщо мінімальна дата свівпадає, то підтверди час, якщо ні, то сформуй пропозицію, що можливо тільки на мінімальну дату."
-                        )
-                    }
-
-                    request_kwargs["messages"].append(messages)
-                    response = self.client.chat.completions.create(**request_kwargs)
+                # elif func_name == "get_date_time":
+                #     time_results = self.get_date_time(args["query"])
+                #     logger.debug(f"Time results: {time_results}")
+                #     messages = {
+                #         "role": "system",
+                #         "content": (
+                #             "Ось інформація по даті та часу для користувача:\n"
+                #             f"{time_results}\n"
+                #             "Сформуй відповідь для клієнта, якщо мінімальна дата свівпадає, то підтверди час, якщо ні, то сформуй пропозицію, що можливо тільки на мінімальну дату."
+                #         )
+                #     }
+                #
+                #     request_kwargs["messages"].append(messages)
+                #     response = self.client.chat.completions.create(**request_kwargs)
 
 
             ai_response = (response.choices[0].message.content or "")
@@ -1296,18 +1296,6 @@ class ChatbotService:
         WORK_END = 19
         return WORK_START <= dt.hour < WORK_END
 
-    def calculate_priority(self, minutes_diff: int) -> str:
-        MIN_PREP_MINUTES = 120
-        """Визначає пріоритет доставки за кількістю хвилин до доставки"""
-        if minutes_diff > 240:
-            return "low"
-        elif 180 <= minutes_diff <= 240:
-            return "medium"
-        elif MIN_PREP_MINUTES <= minutes_diff < 180:
-            return "high"
-        else:
-            return "invalid"
-
     def validate_delivery(self, input_str: str) -> dict:
         MIN_PREP_MINUTES = 120
         """Основна функція перевірки доставки"""
@@ -1322,9 +1310,8 @@ class ChatbotService:
             }
 
         minutes_until_delivery = int((requested_dt - now).total_seconds() // 60)
-        priority = self.calculate_priority(minutes_until_delivery)
 
-        if priority == "invalid":
+        if minutes_until_delivery < 120:
             return {
                 "valid": False,
                 "reason": "Not enough time for preparation"

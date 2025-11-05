@@ -19,14 +19,16 @@ from loguru import logger
 def migrate_chatbot_config_extended():
     """Add extended fields to chatbot_configs table."""
     logger.info("🚀 Starting chatbot config extended migration...")
-    
+
     try:
         # Create database engine
         engine = create_engine(settings.database_url)
-        
+
         with engine.connect() as conn:
             # Check if columns already exist
-            result = conn.execute(text("""
+            result = conn.execute(
+                text(
+                    """
                 SELECT column_name 
                 FROM information_schema.columns 
                 WHERE table_name = 'chatbot_configs' 
@@ -36,27 +38,29 @@ def migrate_chatbot_config_extended():
                     'fallback_message', 'handover_message', 'response_timeout',
                     'conversation_logging', 'performance_analytics', 'error_reporting'
                 )
-            """))
-            
+            """
+                )
+            )
+
             existing_columns = {row[0] for row in result}
             logger.info(f"Existing extended columns: {existing_columns}")
-            
+
             # Add missing columns
             columns_to_add = [
-                ('company_name', 'VARCHAR'),
-                ('specializations', 'TEXT'),
-                ('friendly_tone', 'BOOLEAN DEFAULT TRUE'),
-                ('professional_style', 'BOOLEAN DEFAULT TRUE'),
-                ('suggestive_responses', 'BOOLEAN DEFAULT TRUE'),
-                ('manager_handover', 'BOOLEAN DEFAULT TRUE'),
-                ('fallback_message', 'TEXT'),
-                ('handover_message', 'TEXT'),
-                ('response_timeout', 'INTEGER DEFAULT 30'),
-                ('conversation_logging', 'BOOLEAN DEFAULT TRUE'),
-                ('performance_analytics', 'BOOLEAN DEFAULT TRUE'),
-                ('error_reporting', 'BOOLEAN DEFAULT TRUE')
+                ("company_name", "VARCHAR"),
+                ("specializations", "TEXT"),
+                ("friendly_tone", "BOOLEAN DEFAULT TRUE"),
+                ("professional_style", "BOOLEAN DEFAULT TRUE"),
+                ("suggestive_responses", "BOOLEAN DEFAULT TRUE"),
+                ("manager_handover", "BOOLEAN DEFAULT TRUE"),
+                ("fallback_message", "TEXT"),
+                ("handover_message", "TEXT"),
+                ("response_timeout", "INTEGER DEFAULT 30"),
+                ("conversation_logging", "BOOLEAN DEFAULT TRUE"),
+                ("performance_analytics", "BOOLEAN DEFAULT TRUE"),
+                ("error_reporting", "BOOLEAN DEFAULT TRUE"),
             ]
-            
+
             for column_name, column_type in columns_to_add:
                 if column_name not in existing_columns:
                     logger.info(f"Adding column: {column_name}")
@@ -65,23 +69,29 @@ def migrate_chatbot_config_extended():
                     logger.info(f"✅ Added column: {column_name}")
                 else:
                     logger.info(f"⏭️ Column already exists: {column_name}")
-            
+
             # Commit changes
             conn.commit()
             logger.info("✅ Migration completed successfully!")
-            
+
             # Verify the new structure
-            result = conn.execute(text("""
+            result = conn.execute(
+                text(
+                    """
                 SELECT column_name, data_type, is_nullable, column_default
                 FROM information_schema.columns 
                 WHERE table_name = 'chatbot_configs'
                 ORDER BY ordinal_position
-            """))
-            
+            """
+                )
+            )
+
             logger.info("📋 Final table structure:")
             for row in result:
-                logger.info(f"  - {row[0]}: {row[1]} (nullable: {row[2]}, default: {row[3]})")
-                
+                logger.info(
+                    f"  - {row[0]}: {row[1]} (nullable: {row[2]}, default: {row[3]})"
+                )
+
     except Exception as e:
         logger.error(f"❌ Migration failed: {e}")
         raise

@@ -9,7 +9,11 @@ from telegram import Bot
 
 from app.database import get_db
 from app.models import SystemConfig, User
-from app.schemas.system_config import SystemConfigCreate, SystemConfigUpdate, SystemConfigResponse
+from app.schemas.system_config import (
+    SystemConfigCreate,
+    SystemConfigUpdate,
+    SystemConfigResponse,
+)
 from app.dependencies import (
     require_system_admin_dependency,
     require_admin_or_system_admin_dependency,
@@ -21,10 +25,10 @@ router = APIRouter(prefix="/system-config", tags=["system-config"])
 
 @router.get("/", response_model=List[SystemConfigResponse])
 async def get_system_configs(
-    skip: int = 0, 
-    limit: int = 100, 
+    skip: int = 0,
+    limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin_dependency)
+    current_user: User = Depends(require_system_admin_dependency),
 ):
     """Get all system configurations (system admin only)."""
     configs = db.query(SystemConfig).offset(skip).limit(limit).all()
@@ -33,9 +37,9 @@ async def get_system_configs(
 
 @router.get("/{config_id}", response_model=SystemConfigResponse)
 async def get_system_config(
-    config_id: int, 
+    config_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin_dependency)
+    current_user: User = Depends(require_system_admin_dependency),
 ):
     """Get system configuration by ID (system admin only)."""
     config = db.query(SystemConfig).filter(SystemConfig.id == config_id).first()
@@ -46,9 +50,9 @@ async def get_system_config(
 
 @router.get("/key/{key}", response_model=SystemConfigResponse)
 async def get_system_config_by_key(
-    key: str, 
+    key: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin_dependency)
+    current_user: User = Depends(require_system_admin_dependency),
 ):
     """Get system configuration by key (system admin only)."""
     config = db.query(SystemConfig).filter(SystemConfig.key == key).first()
@@ -59,22 +63,24 @@ async def get_system_config_by_key(
 
 @router.post("/", response_model=SystemConfigResponse)
 async def create_system_config(
-    config_data: SystemConfigCreate, 
+    config_data: SystemConfigCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin_dependency)
+    current_user: User = Depends(require_system_admin_dependency),
 ):
     """Create new system configuration (system admin only)."""
     # Check if key already exists
-    existing_config = db.query(SystemConfig).filter(SystemConfig.key == config_data.key).first()
+    existing_config = (
+        db.query(SystemConfig).filter(SystemConfig.key == config_data.key).first()
+    )
     if existing_config:
         raise HTTPException(status_code=400, detail="Configuration key already exists")
-    
+
     # Create new config
     db_config = SystemConfig(**config_data.model_dump())
     db.add(db_config)
     db.commit()
     db.refresh(db_config)
-    
+
     return db_config
 
 
@@ -83,18 +89,18 @@ async def update_system_config(
     config_id: int,
     config_data: SystemConfigUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin_dependency)
+    current_user: User = Depends(require_system_admin_dependency),
 ):
     """Update system configuration (system admin only)."""
     config = db.query(SystemConfig).filter(SystemConfig.id == config_id).first()
     if config is None:
         raise HTTPException(status_code=404, detail="System configuration not found")
-    
+
     # Update fields
     update_data = config_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(config, field, value)
-    
+
     db.commit()
     db.refresh(config)
     return config
@@ -104,36 +110,36 @@ async def update_system_config(
 async def delete_system_config(
     config_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin_dependency)
+    current_user: User = Depends(require_system_admin_dependency),
 ):
     """Delete system configuration (system admin only)."""
     config = db.query(SystemConfig).filter(SystemConfig.id == config_id).first()
     if config is None:
         raise HTTPException(status_code=404, detail="System configuration not found")
-    
+
     db.delete(config)
     db.commit()
-    
+
     return {"message": "System configuration deleted successfully"}
 
 
 @router.get("/settings/all", response_model=Dict[str, Any])
 async def get_all_settings(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin_dependency)
+    current_user: User = Depends(require_system_admin_dependency),
 ):
     """Get all settings organized by category (system admin only)."""
     configs = db.query(SystemConfig).all()
-    
+
     # Organize settings by category
     settings = {
         "openai": {},
         "telegram": {},
         "widget": {},
         "system": {},
-        "security": {}
+        "security": {},
     }
-    
+
     for config in configs:
         if config.key.startswith("openai_"):
             settings["openai"][config.key.replace("openai_", "")] = config.value
@@ -145,8 +151,9 @@ async def get_all_settings(
             settings["system"][config.key.replace("system_", "")] = config.value
         elif config.key.startswith("security_"):
             settings["security"][config.key.replace("security_", "")] = config.value
-    
+
     return settings
+
 
 @router.get("/settings/widget", response_model=Dict[str, Any])
 async def get_all_widget_settings(
@@ -154,17 +161,18 @@ async def get_all_widget_settings(
 ):
     """Get all widget settings."""
     configs = db.query(SystemConfig).all()
-    
+
     # Organize settings by category
     settings = {
         "widget": {},
     }
-    
+
     for config in configs:
         if config.key.startswith("widget_"):
             settings["widget"][config.key.replace("widget_", "")] = config.value
-    
+
     return settings
+
 
 @router.get("/settings/public", response_model=Dict[str, Any])
 async def get_public_settings(
@@ -191,19 +199,21 @@ async def get_public_settings(
 async def save_bulk_settings(
     settings: Dict[str, Dict[str, Any]],
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin_dependency)
+    current_user: User = Depends(require_system_admin_dependency),
 ):
     """Save multiple settings at once (system admin only)."""
     results = {}
-    
+
     for category, category_settings in settings.items():
         for key, value in category_settings.items():
             if value is not None and value != "":
                 full_key = f"{category}_{key}"
-                
+
                 # Check if config exists
-                existing_config = db.query(SystemConfig).filter(SystemConfig.key == full_key).first()
-                
+                existing_config = (
+                    db.query(SystemConfig).filter(SystemConfig.key == full_key).first()
+                )
+
                 if existing_config:
                     # Update existing config
                     existing_config.value = str(value)
@@ -215,11 +225,11 @@ async def save_bulk_settings(
                         key=full_key,
                         value=str(value),
                         description=f"{category.title()} {key.replace('_', ' ').title()}",
-                        is_sensitive=is_sensitive
+                        is_sensitive=is_sensitive,
                     )
                     db.add(new_config)
                     results[full_key] = "created"
-    
+
     db.commit()
     return results
 
@@ -228,18 +238,20 @@ async def save_bulk_settings(
 async def save_openai_settings(
     settings: Dict[str, Any],
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin_dependency)
+    current_user: User = Depends(require_system_admin_dependency),
 ):
     """Save OpenAI settings (system admin only)."""
     results = {}
-    
+
     for key, value in settings.items():
         if value is not None and value != "":
             full_key = f"openai_{key}"
-            
+
             # Check if config exists
-            existing_config = db.query(SystemConfig).filter(SystemConfig.key == full_key).first()
-            
+            existing_config = (
+                db.query(SystemConfig).filter(SystemConfig.key == full_key).first()
+            )
+
             if existing_config:
                 # Update existing config
                 existing_config.value = str(value)
@@ -251,11 +263,11 @@ async def save_openai_settings(
                     key=full_key,
                     value=str(value),
                     description=f"OpenAI {key.replace('_', ' ').title()}",
-                    is_sensitive=is_sensitive
+                    is_sensitive=is_sensitive,
                 )
                 db.add(new_config)
                 results[full_key] = "created"
-    
+
     db.commit()
     return results
 
@@ -264,18 +276,20 @@ async def save_openai_settings(
 async def save_telegram_settings(
     settings: Dict[str, Any],
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin_dependency)
+    current_user: User = Depends(require_system_admin_dependency),
 ):
     """Save Telegram settings (system admin only)."""
     results = {}
-    
+
     for key, value in settings.items():
         if value is not None and value != "":
             full_key = f"telegram_{key}"
-            
+
             # Check if config exists
-            existing_config = db.query(SystemConfig).filter(SystemConfig.key == full_key).first()
-            
+            existing_config = (
+                db.query(SystemConfig).filter(SystemConfig.key == full_key).first()
+            )
+
             if existing_config:
                 # Update existing config
                 existing_config.value = str(value)
@@ -287,11 +301,11 @@ async def save_telegram_settings(
                     key=full_key,
                     value=str(value),
                     description=f"Telegram {key.replace('_', ' ').title()}",
-                    is_sensitive=is_sensitive
+                    is_sensitive=is_sensitive,
                 )
                 db.add(new_config)
                 results[full_key] = "created"
-    
+
     db.commit()
     return results
 
@@ -300,18 +314,20 @@ async def save_telegram_settings(
 async def save_system_settings(
     settings: Dict[str, Any],
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin_dependency)
+    current_user: User = Depends(require_system_admin_dependency),
 ):
     """Save system settings (system admin only)."""
     results = {}
-    
+
     for key, value in settings.items():
         if value is not None and value != "":
             full_key = f"system_{key}"
-            
+
             # Check if config exists
-            existing_config = db.query(SystemConfig).filter(SystemConfig.key == full_key).first()
-            
+            existing_config = (
+                db.query(SystemConfig).filter(SystemConfig.key == full_key).first()
+            )
+
             if existing_config:
                 # Update existing config
                 existing_config.value = str(value)
@@ -322,11 +338,11 @@ async def save_system_settings(
                     key=full_key,
                     value=str(value),
                     description=f"System {key.replace('_', ' ').title()}",
-                    is_sensitive=False
+                    is_sensitive=False,
                 )
                 db.add(new_config)
                 results[full_key] = "created"
-    
+
     db.commit()
     return results
 
@@ -335,18 +351,20 @@ async def save_system_settings(
 async def save_system_settings(
     settings: Dict[str, Any],
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin_dependency)
+    current_user: User = Depends(require_system_admin_dependency),
 ):
     """Save widget settings (system admin only)."""
     results = {}
-    
+
     for key, value in settings.items():
         if value is not None and value != "":
             full_key = f"widget_{key}"
-            
+
             # Check if config exists
-            existing_config = db.query(SystemConfig).filter(SystemConfig.key == full_key).first()
-            
+            existing_config = (
+                db.query(SystemConfig).filter(SystemConfig.key == full_key).first()
+            )
+
             if existing_config:
                 # Update existing config
                 existing_config.value = str(value)
@@ -357,11 +375,11 @@ async def save_system_settings(
                     key=full_key,
                     value=str(value),
                     description=f"System {key.replace('_', ' ').title()}",
-                    is_sensitive=False
+                    is_sensitive=False,
                 )
                 db.add(new_config)
                 results[full_key] = "created"
-    
+
     db.commit()
     return results
 
@@ -379,18 +397,25 @@ async def test_openai_settings(
     2) value stored in `system_configs` table
     3) application settings from environment
     """
+
     def _get_cfg(key: str, default: str | None = None) -> str | None:
         cfg = db.query(SystemConfig).filter(SystemConfig.key == key).first()
-        return (cfg.value if cfg else default)
+        return cfg.value if cfg else default
 
     try:
-        api_key: str | None = payload.get("api_key") or _get_cfg("openai_api_key", settings.openai_api_key)
-        model: str | None = payload.get("model") or _get_cfg("openai_model", settings.openai_model)
+        api_key: str | None = payload.get("api_key") or _get_cfg(
+            "openai_api_key", settings.openai_api_key
+        )
+        model: str | None = payload.get("model") or _get_cfg(
+            "openai_model", settings.openai_model
+        )
 
         # Optional parameters with safe tiny defaults
         try:
             temperature_raw = payload.get("temperature")
-            temperature: float | None = float(temperature_raw) if temperature_raw is not None else None
+            temperature: float | None = (
+                float(temperature_raw) if temperature_raw is not None else None
+            )
         except Exception:
             temperature = None
 
@@ -500,18 +525,20 @@ async def test_telegram_settings(
 async def save_security_settings(
     settings: Dict[str, Any],
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_system_admin_dependency)
+    current_user: User = Depends(require_system_admin_dependency),
 ):
     """Save security settings (system admin only)."""
     results = {}
-    
+
     for key, value in settings.items():
         if value is not None and value != "":
             full_key = f"security_{key}"
-            
+
             # Check if config exists
-            existing_config = db.query(SystemConfig).filter(SystemConfig.key == full_key).first()
-            
+            existing_config = (
+                db.query(SystemConfig).filter(SystemConfig.key == full_key).first()
+            )
+
             if existing_config:
                 # Update existing config
                 existing_config.value = str(value)
@@ -523,10 +550,10 @@ async def save_security_settings(
                     key=full_key,
                     value=str(value),
                     description=f"Security {key.replace('_', ' ').title()}",
-                    is_sensitive=is_sensitive
+                    is_sensitive=is_sensitive,
                 )
                 db.add(new_config)
                 results[full_key] = "created"
-    
+
     db.commit()
     return results

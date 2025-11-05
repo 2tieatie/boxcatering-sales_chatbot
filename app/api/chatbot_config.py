@@ -6,18 +6,25 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import ChatbotConfig, User
-from app.schemas.chatbot_config import ChatbotConfigCreate, ChatbotConfigUpdate, ChatbotConfigResponse
-from app.dependencies import get_current_active_user_dependency, require_admin_or_system_admin_dependency
+from app.schemas.chatbot_config import (
+    ChatbotConfigCreate,
+    ChatbotConfigUpdate,
+    ChatbotConfigResponse,
+)
+from app.dependencies import (
+    get_current_active_user_dependency,
+    require_admin_or_system_admin_dependency,
+)
 
 router = APIRouter(prefix="/chatbot-config", tags=["chatbot-config"])
 
 
 @router.get("/", response_model=List[ChatbotConfigResponse])
 async def get_chatbot_configs(
-    skip: int = 0, 
-    limit: int = 100, 
+    skip: int = 0,
+    limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_system_admin_dependency)
+    current_user: User = Depends(require_admin_or_system_admin_dependency),
 ):
     """Get list of chatbot configurations (admin and system admin only)."""
     configs = db.query(ChatbotConfig).offset(skip).limit(limit).all()
@@ -38,9 +45,7 @@ async def get_active_chatbot_config(
     if config is None:
         # Fallback to latest configuration if none is marked active
         config = (
-            db.query(ChatbotConfig)
-            .order_by(ChatbotConfig.created_at.desc())
-            .first()
+            db.query(ChatbotConfig).order_by(ChatbotConfig.created_at.desc()).first()
         )
 
     if config is None:
@@ -51,9 +56,9 @@ async def get_active_chatbot_config(
 
 @router.get("/{config_id}", response_model=ChatbotConfigResponse)
 async def get_chatbot_config(
-    config_id: int, 
+    config_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_system_admin_dependency)
+    current_user: User = Depends(require_admin_or_system_admin_dependency),
 ):
     """Get chatbot configuration by ID (admin and system admin only)."""
     config = db.query(ChatbotConfig).filter(ChatbotConfig.id == config_id).first()
@@ -64,9 +69,9 @@ async def get_chatbot_config(
 
 @router.post("/", response_model=ChatbotConfigResponse)
 async def create_chatbot_config(
-    config_data: ChatbotConfigCreate, 
+    config_data: ChatbotConfigCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_system_admin_dependency)
+    current_user: User = Depends(require_admin_or_system_admin_dependency),
 ):
     """Upsert chatbot configuration (admin and system admin only).
 
@@ -107,7 +112,10 @@ async def create_chatbot_config(
         db.refresh(db_config)
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Failed to create config due to constraint violation")
+        raise HTTPException(
+            status_code=400,
+            detail="Failed to create config due to constraint violation",
+        )
 
     return db_config
 
@@ -139,7 +147,9 @@ async def create_new_chatbot_config(
         return new_config
     except IntegrityError as exc:
         db.rollback()
-        raise HTTPException(status_code=400, detail=f"Failed to create config: {exc.__class__.__name__}")
+        raise HTTPException(
+            status_code=400, detail=f"Failed to create config: {exc.__class__.__name__}"
+        )
 
 
 @router.post("/{config_id}/clone", response_model=ChatbotConfigResponse)
@@ -198,7 +208,9 @@ async def clone_chatbot_config(
         return clone
     except IntegrityError as exc:
         db.rollback()
-        raise HTTPException(status_code=400, detail=f"Failed to clone config: {exc.__class__.__name__}")
+        raise HTTPException(
+            status_code=400, detail=f"Failed to clone config: {exc.__class__.__name__}"
+        )
 
 
 @router.put("/{config_id}", response_model=ChatbotConfigResponse)
@@ -206,22 +218,24 @@ async def update_chatbot_config(
     config_id: int,
     config_data: ChatbotConfigUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_system_admin_dependency)
+    current_user: User = Depends(require_admin_or_system_admin_dependency),
 ):
     """Update chatbot configuration (admin and system admin only)."""
     config = db.query(ChatbotConfig).filter(ChatbotConfig.id == config_id).first()
     if config is None:
         raise HTTPException(status_code=404, detail="Chatbot configuration not found")
-    
+
     # Update fields
     update_data = config_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(config, field, value)
-    
+
     # If setting this config as active, deactivate others
     if config_data.is_active:
-        db.query(ChatbotConfig).filter(ChatbotConfig.id != config_id).update({"is_active": False})
-    
+        db.query(ChatbotConfig).filter(ChatbotConfig.id != config_id).update(
+            {"is_active": False}
+        )
+
     db.commit()
     db.refresh(config)
     return config
@@ -231,23 +245,22 @@ async def update_chatbot_config(
 async def delete_chatbot_config(
     config_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_system_admin_dependency)
+    current_user: User = Depends(require_admin_or_system_admin_dependency),
 ):
     """Delete chatbot configuration (admin and system admin only)."""
     config = db.query(ChatbotConfig).filter(ChatbotConfig.id == config_id).first()
     if config is None:
         raise HTTPException(status_code=404, detail="Chatbot configuration not found")
-    
+
     # Don't allow deletion of active config if it's the only one
     if config.is_active:
         total_configs = db.query(ChatbotConfig).count()
         if total_configs == 1:
             raise HTTPException(
-                status_code=400, 
-                detail="Cannot delete the only chatbot configuration"
+                status_code=400, detail="Cannot delete the only chatbot configuration"
             )
-    
+
     db.delete(config)
     db.commit()
-    
+
     return {"message": "Chatbot configuration deleted successfully"}

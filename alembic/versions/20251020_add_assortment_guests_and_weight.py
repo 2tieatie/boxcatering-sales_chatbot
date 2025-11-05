@@ -22,7 +22,9 @@ def upgrade() -> None:
     inspector = sa.inspect(bind)
 
     try:
-        existing_columns = {c["name"] for c in inspector.get_columns("assortment_items")}
+        existing_columns = {
+            c["name"] for c in inspector.get_columns("assortment_items")
+        }
     except Exception:
         existing_columns = set()
 
@@ -39,7 +41,9 @@ def downgrade() -> None:
     inspector = sa.inspect(bind)
 
     try:
-        existing_columns = {c["name"] for c in inspector.get_columns("assortment_items")}
+        existing_columns = {
+            c["name"] for c in inspector.get_columns("assortment_items")
+        }
     except Exception:
         existing_columns = set()
 
@@ -48,5 +52,3 @@ def downgrade() -> None:
             batch_op.drop_column("weight")
         if "guests" in existing_columns:
             batch_op.drop_column("guests")
-
-

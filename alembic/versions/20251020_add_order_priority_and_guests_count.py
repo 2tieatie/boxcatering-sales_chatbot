@@ -48,5 +48,3 @@ def downgrade() -> None:
             batch_op.drop_column("guests_count")
         if "priority" in existing_columns:
             batch_op.drop_column("priority")
-
-

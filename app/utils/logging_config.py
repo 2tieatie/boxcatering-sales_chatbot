@@ -11,24 +11,24 @@ from typing import Dict, Any
 
 class LoggingConfig:
     """Centralized logging configuration."""
-    
+
     def __init__(self):
         self.logs_dir = Path("logs")
         self.logs_dir.mkdir(exist_ok=True)
-        
+
     def setup_logging(self):
         """Configure loguru sinks for different log types."""
         # Remove default handler
         logger.remove()
-        
+
         # Console logging
         logger.add(
             sys.stdout,
             level="INFO",
             format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
-            colorize=True
+            colorize=True,
         )
-        
+
         # Application log (general app events)
         logger.add(
             self.logs_dir / "app.log",
@@ -39,9 +39,9 @@ class LoggingConfig:
             backtrace=False,
             diagnose=False,
             format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} | {message}",
-            filter=lambda record: record["extra"].get("log_type", "app") == "app"
+            filter=lambda record: record["extra"].get("log_type", "app") == "app",
         )
-        
+
         # Prompt log (AI interactions)
         logger.add(
             self.logs_dir / "prompt.log",
@@ -52,9 +52,9 @@ class LoggingConfig:
             backtrace=False,
             diagnose=False,
             format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {message}",
-            filter=lambda record: record["extra"].get("log_type") == "prompt"
+            filter=lambda record: record["extra"].get("log_type") == "prompt",
         )
-        
+
         # HTTP request/response log
         logger.add(
             self.logs_dir / "http.log",
@@ -65,9 +65,9 @@ class LoggingConfig:
             backtrace=False,
             diagnose=False,
             format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {message}",
-            filter=lambda record: record["extra"].get("log_type") == "http"
+            filter=lambda record: record["extra"].get("log_type") == "http",
         )
-        
+
         # Error log (critical errors only)
         logger.add(
             self.logs_dir / "error.log",
@@ -78,11 +78,13 @@ class LoggingConfig:
             backtrace=True,
             diagnose=True,
             format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} | {message}",
-            filter=lambda record: record["level"].name == "ERROR"
+            filter=lambda record: record["level"].name == "ERROR",
         )
+
 
 # Global instance
 logging_config = LoggingConfig()
+
 
 def get_logger(log_type: str = "app"):
     """Get a logger with specific log type."""

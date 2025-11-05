@@ -21,7 +21,9 @@ def read_xlsx(path: Path):
         idx_desc = headers.index("description")
     except ValueError:
         idx_desc = -1
-    price_candidates = [i for i, h in enumerate(headers) if h in {"price", "price_uah", "ціна", "tsina"}]
+    price_candidates = [
+        i for i, h in enumerate(headers) if h in {"price", "price_uah", "ціна", "tsina"}
+    ]
     idx_price = price_candidates[0] if price_candidates else -1
     imported = 0
     skipped = 0
@@ -29,12 +31,18 @@ def read_xlsx(path: Path):
         name_cell = r[idx_name] if idx_name >= 0 else None
         price_cell = r[idx_price] if idx_price >= 0 else None
         desc_cell = r[idx_desc] if idx_desc >= 0 else None
-        name = str(name_cell.value).strip() if name_cell and name_cell.value is not None else ""
+        name = (
+            str(name_cell.value).strip()
+            if name_cell and name_cell.value is not None
+            else ""
+        )
         if not name:
             skipped += 1
             continue
         raw_price = price_cell.value if price_cell else None
-        if raw_price is None or (isinstance(raw_price, str) and not str(raw_price).strip()):
+        if raw_price is None or (
+            isinstance(raw_price, str) and not str(raw_price).strip()
+        ):
             skipped += 1
             continue
         try:
@@ -68,17 +76,25 @@ def read_csv(path: Path):
         idx_desc = headers.index("description")
     except ValueError:
         idx_desc = -1
-    price_candidates = [i for i, h in enumerate(headers) if h in {"price", "price_uah", "ціна", "tsina"}]
+    price_candidates = [
+        i for i, h in enumerate(headers) if h in {"price", "price_uah", "ціна", "tsina"}
+    ]
     idx_price = price_candidates[0] if price_candidates else -1
     imported = 0
     skipped = 0
     for row in rows[1:]:
-        name = str(row[idx_name]).strip() if idx_name >= 0 and idx_name < len(row) else ""
+        name = (
+            str(row[idx_name]).strip() if idx_name >= 0 and idx_name < len(row) else ""
+        )
         if not name:
             skipped += 1
             continue
-        raw_price_value = row[idx_price] if idx_price >= 0 and idx_price < len(row) else None
-        if raw_price_value is None or (isinstance(raw_price_value, str) and not str(raw_price_value).strip()):
+        raw_price_value = (
+            row[idx_price] if idx_price >= 0 and idx_price < len(row) else None
+        )
+        if raw_price_value is None or (
+            isinstance(raw_price_value, str) and not str(raw_price_value).strip()
+        ):
             skipped += 1
             continue
         try:
@@ -110,5 +126,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

@@ -14,13 +14,12 @@ from .prompt_log import PromptLog
 __all__ = [
     "Base",
     "User",
-    "Conversation", 
+    "Conversation",
     "Message",
     "Order",
     "Customer",
     "ChatbotConfig",
-    "SystemConfig"
-    ,
+    "SystemConfig",
     "AssortmentItem",
     "PromptLog",
 ]

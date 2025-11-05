@@ -56,16 +56,20 @@ def _write_assortment_context_markdown(db_session: Session) -> None:
         base.mkdir(parents=True, exist_ok=True)
         md_path = base / "00_assortment.md"
         rows = (
-            db_session.query(AssortmentItem)
-            .order_by(AssortmentItem.name.asc())
-            .all()
+            db_session.query(AssortmentItem).order_by(AssortmentItem.name.asc()).all()
         )
         lines = ["# Асортимент (Assortment)\n"]
         lines.append("Назва | Опис | Ціна (UAH) | Людей | Вага (кг)")
         lines.append("--- | --- | --- | --- | ---")
         for r in rows:
             name = (r.name or "").replace("|", "/").strip()
-            desc = (r.description or "").replace("|", "/").replace("\n", " ").replace("\r", " ").strip()
+            desc = (
+                (r.description or "")
+                .replace("|", "/")
+                .replace("\n", " ")
+                .replace("\r", " ")
+                .strip()
+            )
             price = f"{Decimal(r.price_uah):.2f}"
             lines.append(f"{name} | {desc} | {price} | {r.guests} | {r.weight}")
         md_path.write_text("\n".join(lines), encoding="utf-8")
@@ -81,7 +85,11 @@ def _write_assortment_context_markdown(db_session: Session) -> None:
         logger.warning(f"Failed writing assortment context markdown: {e}")
 
 
-@router.post("/upload", response_model=AssortmentUploadResult, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/upload",
+    response_model=AssortmentUploadResult,
+    status_code=status.HTTP_201_CREATED,
+)
 async def upload_assortment_excel(
     file: UploadFile = File(...),
     replace: bool = Form(True),
@@ -115,13 +123,17 @@ async def upload_assortment_excel(
             try:
                 from openpyxl import load_workbook  # type: ignore
             except Exception:
-                raise HTTPException(status_code=500, detail="Excel support missing: install openpyxl")
+                raise HTTPException(
+                    status_code=500, detail="Excel support missing: install openpyxl"
+                )
 
             try:
                 data = await file.read()
                 wb = load_workbook(BytesIO(data), data_only=True)
             except Exception as e:
-                raise HTTPException(status_code=400, detail=f"Failed to read Excel: {e}")
+                raise HTTPException(
+                    status_code=400, detail=f"Failed to read Excel: {e}"
+                )
 
             ws = wb.active
 
@@ -141,7 +153,9 @@ async def upload_assortment_excel(
                 except ValueError:
                     idx_desc = -1
                 price_candidates = [
-                    i for i, h in enumerate(headers) if h in {"price", "price_uah", "ціна", "tsina"}
+                    i
+                    for i, h in enumerate(headers)
+                    if h in {"price", "price_uah", "ціна", "tsina"}
                 ]
                 if idx_name >= 0 and price_candidates:
                     idx_price = price_candidates[0]
@@ -149,7 +163,9 @@ async def upload_assortment_excel(
                     break
 
             if header_row_index is None or idx_name < 0 or idx_price < 0:
-                raise HTTPException(status_code=400, detail="File must have 'name' and 'price' columns")
+                raise HTTPException(
+                    status_code=400, detail="File must have 'name' and 'price' columns"
+                )
 
             if replace:
                 db.query(AssortmentItem).delete()
@@ -161,13 +177,19 @@ async def upload_assortment_excel(
                     price_cell = r[idx_price]
                     desc_cell = r[idx_desc] if idx_desc >= 0 else None
 
-                    name = str(name_cell.value).strip() if name_cell and name_cell.value is not None else ""
+                    name = (
+                        str(name_cell.value).strip()
+                        if name_cell and name_cell.value is not None
+                        else ""
+                    )
                     if not name:
                         skipped += 1
                         continue
                     raw_price = price_cell.value if price_cell else None
                     price: Decimal
-                    if raw_price is None or (isinstance(raw_price, str) and not raw_price.strip()):
+                    if raw_price is None or (
+                        isinstance(raw_price, str) and not raw_price.strip()
+                    ):
                         skipped += 1
                         continue
                     try:
@@ -180,10 +202,14 @@ async def upload_assortment_excel(
                         continue
 
                     description = (
-                        str(desc_cell.value).strip() if desc_cell and desc_cell.value is not None else None
+                        str(desc_cell.value).strip()
+                        if desc_cell and desc_cell.value is not None
+                        else None
                     )
 
-                    item = AssortmentItem(name=name, description=description, price_uah=price)
+                    item = AssortmentItem(
+                        name=name, description=description, price_uah=price
+                    )
                     db.add(item)
                     imported += 1
                 except Exception as row_err:
@@ -230,12 +256,16 @@ async def upload_assortment_excel(
             except ValueError:
                 idx_desc = -1
             price_candidates = [
-                i for i, h in enumerate(headers) if h in {"price", "price_uah", "ціна", "tsina"}
+                i
+                for i, h in enumerate(headers)
+                if h in {"price", "price_uah", "ціна", "tsina"}
             ]
             idx_price = price_candidates[0] if price_candidates else -1
 
             if idx_name < 0 or idx_price < 0:
-                raise HTTPException(status_code=400, detail="File must have 'name' and 'price' columns")
+                raise HTTPException(
+                    status_code=400, detail="File must have 'name' and 'price' columns"
+                )
 
             if replace:
                 db.query(AssortmentItem).delete()
@@ -250,7 +280,10 @@ async def upload_assortment_excel(
                         continue
 
                     raw_price_value = row[idx_price] if idx_price < len(row) else None
-                    if raw_price_value is None or (isinstance(raw_price_value, str) and not str(raw_price_value).strip()):
+                    if raw_price_value is None or (
+                        isinstance(raw_price_value, str)
+                        and not str(raw_price_value).strip()
+                    ):
                         skipped += 1
                         continue
 
@@ -261,10 +294,18 @@ async def upload_assortment_excel(
                         continue
 
                     description = (
-                        str(row[idx_desc]).strip() if (idx_desc >= 0 and idx_desc < len(row) and row[idx_desc] is not None) else None
+                        str(row[idx_desc]).strip()
+                        if (
+                            idx_desc >= 0
+                            and idx_desc < len(row)
+                            and row[idx_desc] is not None
+                        )
+                        else None
                     )
 
-                    item = AssortmentItem(name=name, description=description, price_uah=price)
+                    item = AssortmentItem(
+                        name=name, description=description, price_uah=price
+                    )
                     db.add(item)
                     imported += 1
                 except Exception as row_err:
@@ -291,4 +332,3 @@ async def upload_assortment_excel(
             await file.close()
         except Exception:
             pass
-

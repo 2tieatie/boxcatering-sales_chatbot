@@ -19,7 +19,7 @@ from .logs import router as logs_router
 __all__ = [
     "chat_router",
     "auth_router",
-    "users_router", 
+    "users_router",
     "conversations_router",
     "orders_router",
     "health_router",

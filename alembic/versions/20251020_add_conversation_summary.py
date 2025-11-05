@@ -23,7 +23,9 @@ def upgrade() -> None:
 
     existing_columns = set()
     try:
-        existing_columns = {col["name"] for col in inspector.get_columns("conversations")}
+        existing_columns = {
+            col["name"] for col in inspector.get_columns("conversations")
+        }
     except Exception:
         # Table may not exist in some environments; skip safely
         existing_columns = set()
@@ -39,12 +41,12 @@ def downgrade() -> None:
     inspector = sa.inspect(bind)
 
     try:
-        existing_columns = {col["name"] for col in inspector.get_columns("conversations")}
+        existing_columns = {
+            col["name"] for col in inspector.get_columns("conversations")
+        }
     except Exception:
         existing_columns = set()
 
     if "summary" in existing_columns:
         with op.batch_alter_table("conversations") as batch_op:
             batch_op.drop_column("summary")
-
-

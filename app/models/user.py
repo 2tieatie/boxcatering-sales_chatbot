@@ -9,6 +9,7 @@ from app.database import Base
 
 class UserRole(str, Enum):
     """User roles enumeration."""
+
     SYSTEM_ADMIN = "system_admin"
     ADMIN = "admin"
     MANAGER = "manager"
@@ -16,9 +17,9 @@ class UserRole(str, Enum):
 
 class User(Base):
     """User model."""
-    
+
     __tablename__ = "users"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
@@ -27,8 +28,14 @@ class User(Base):
     role = Column(SQLEnum(UserRole), nullable=False, default=UserRole.MANAGER)
     is_active = Column(Boolean, default=True)
     preferred_language = Column(String, default="uk", nullable=False)
-    created_at = Column(DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
-    
+    created_at = Column(
+        DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=datetime.now(timezone.utc),
+        onupdate=datetime.now(timezone.utc),
+    )
+
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', role='{self.role}')>"

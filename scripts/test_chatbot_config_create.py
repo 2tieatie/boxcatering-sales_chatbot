@@ -19,55 +19,60 @@ from loguru import logger
 def test_chatbot_config_create():
     """Test creating a chatbot config with extended schema."""
     logger.info("🚀 Testing chatbot config creation with extended schema...")
-    
+
     try:
         # Create database engine
         engine = create_engine(settings.database_url)
-        
+
         with engine.connect() as conn:
             # Test data with extended fields
             test_config = {
-                'name': 'Test Extended Config',
-                'prompt': 'Hello! I am a test chatbot.',
-                'business_context': 'This is a test business context.',
-                'language': 'en',
-                'force_language': True,
-                'is_active': True,
-                'company_name': 'Test Company',
-                'specializations': 'Test specializations',
-                'friendly_tone': True,
-                'professional_style': True,
-                'suggestive_responses': True,
-                'manager_handover': True,
-                'fallback_message': 'I did not understand that.',
-                'handover_message': 'Let me connect you to a manager.',
-                'response_timeout': 45,
-                'conversation_logging': True,
-                'performance_analytics': True,
-                'error_reporting': True
+                "name": "Test Extended Config",
+                "prompt": "Hello! I am a test chatbot.",
+                "business_context": "This is a test business context.",
+                "language": "en",
+                "force_language": True,
+                "is_active": True,
+                "company_name": "Test Company",
+                "specializations": "Test specializations",
+                "friendly_tone": True,
+                "professional_style": True,
+                "suggestive_responses": True,
+                "manager_handover": True,
+                "fallback_message": "I did not understand that.",
+                "handover_message": "Let me connect you to a manager.",
+                "response_timeout": 45,
+                "conversation_logging": True,
+                "performance_analytics": True,
+                "error_reporting": True,
             }
-            
+
             # Insert test config
-            columns = ', '.join(test_config.keys())
-            placeholders = ', '.join([f':{key}' for key in test_config.keys()])
-            
+            columns = ", ".join(test_config.keys())
+            placeholders = ", ".join([f":{key}" for key in test_config.keys()])
+
             sql = f"""
                 INSERT INTO chatbot_configs ({columns})
                 VALUES ({placeholders})
                 RETURNING id
             """
-            
+
             result = conn.execute(text(sql), test_config)
             config_id = result.fetchone()[0]
             conn.commit()
-            
+
             logger.info(f"✅ Created test config with ID: {config_id}")
-            
+
             # Verify the config was created with all fields
-            result = conn.execute(text("""
+            result = conn.execute(
+                text(
+                    """
                 SELECT * FROM chatbot_configs WHERE id = :config_id
-            """), {'config_id': config_id})
-            
+            """
+                ),
+                {"config_id": config_id},
+            )
+
             row = result.fetchone()
             if row:
                 logger.info("✅ Config retrieved successfully")
@@ -78,12 +83,15 @@ def test_chatbot_config_create():
                 logger.info(f"  - Response Timeout: {row[18]}")
             else:
                 logger.error("❌ Failed to retrieve created config")
-            
+
             # Clean up - delete test config
-            conn.execute(text("DELETE FROM chatbot_configs WHERE id = :config_id"), {'config_id': config_id})
+            conn.execute(
+                text("DELETE FROM chatbot_configs WHERE id = :config_id"),
+                {"config_id": config_id},
+            )
             conn.commit()
             logger.info("✅ Test config cleaned up")
-            
+
     except Exception as e:
         logger.error(f"❌ Test failed: {e}")
         raise

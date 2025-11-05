@@ -19,14 +19,16 @@ from loguru import logger
 def migrate_chatbot_config_promts():
     """Add promts fields to chatbot_configs table."""
     logger.info("🚀 Starting chatbot config promts migration...")
-    
+
     try:
         # Create database engine
         engine = create_engine(settings.database_url)
-        
+
         with engine.connect() as conn:
             # Check if columns already exist
-            result = conn.execute(text("""
+            result = conn.execute(
+                text(
+                    """
                 SELECT column_name 
                 FROM information_schema.columns 
                 WHERE table_name = 'chatbot_configs' 
@@ -34,20 +36,22 @@ def migrate_chatbot_config_promts():
                     'language_instruction', 'persona_instruction', 'system_instruction', 
                     'order_flow_block', 'other_instruction'
                 )
-            """))
-            
+            """
+                )
+            )
+
             existing_columns = {row[0] for row in result}
             logger.info(f"Existing extended columns: {existing_columns}")
-            
+
             # Add missing columns
             columns_to_add = [
-                ('language_instruction', 'TEXT'),
-                ('persona_instruction', 'TEXT'),
-                ('system_instruction', 'TEXT'),
-                ('order_flow_block', 'TEXT'),
-                ('other_instruction', 'TEXT'),
+                ("language_instruction", "TEXT"),
+                ("persona_instruction", "TEXT"),
+                ("system_instruction", "TEXT"),
+                ("order_flow_block", "TEXT"),
+                ("other_instruction", "TEXT"),
             ]
-            
+
             for column_name, column_type in columns_to_add:
                 if column_name not in existing_columns:
                     logger.info(f"Adding column: {column_name}")
@@ -56,23 +60,29 @@ def migrate_chatbot_config_promts():
                     logger.info(f"✅ Added column: {column_name}")
                 else:
                     logger.info(f"⏭️ Column already exists: {column_name}")
-            
+
             # Commit changes
             conn.commit()
             logger.info("✅ Migration completed successfully!")
-            
+
             # Verify the new structure
-            result = conn.execute(text("""
+            result = conn.execute(
+                text(
+                    """
                 SELECT column_name, data_type, is_nullable, column_default
                 FROM information_schema.columns 
                 WHERE table_name = 'chatbot_configs'
                 ORDER BY ordinal_position
-            """))
-            
+            """
+                )
+            )
+
             logger.info("📋 Final table structure:")
             for row in result:
-                logger.info(f"  - {row[0]}: {row[1]} (nullable: {row[2]}, default: {row[3]})")
-                
+                logger.info(
+                    f"  - {row[0]}: {row[1]} (nullable: {row[2]}, default: {row[3]})"
+                )
+
     except Exception as e:
         logger.error(f"❌ Migration failed: {e}")
         raise

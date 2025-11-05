@@ -31,5 +31,3 @@ class AssortmentItem(Base):
 
     def __repr__(self) -> str:
         return f"<AssortmentItem(id={self.id}, name='{self.name}', price_uah={self.price_uah})>"
-
-

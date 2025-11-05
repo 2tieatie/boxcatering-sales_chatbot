@@ -9,26 +9,30 @@ class UnifiedLogger:
     def __init__(self):
         self.prompt_logger = get_logger("prompt")
         self.app_logger = get_logger("app")
-    
+
     def log_chat_request(self, correlation_id: str, data: Dict[str, Any]):
         # File logging
         self.prompt_logger.info(f"[{correlation_id}] CHAT_REQUEST: {data}")
-        
+
         # Console logging (for development)
-        logger.info(f"[{correlation_id}] Chat request: {data.get('user_message', '')[:50]}...")
-    
+        logger.info(
+            f"[{correlation_id}] Chat request: {data.get('user_message', '')[:50]}..."
+        )
+
     def log_chat_response(self, correlation_id: str, data: Dict[str, Any]):
         # File logging
         self.prompt_logger.info(f"[{correlation_id}] CHAT_RESPONSE: {data}")
-        
+
         # Console logging
-        logger.info(f"[{correlation_id}] Chat response: {data.get('response_length', 0)} chars")
-    
+        logger.info(
+            f"[{correlation_id}] Chat response: {data.get('response_length', 0)} chars"
+        )
+
     def log_to_database(self, correlation_id: str, data: Dict[str, Any]):
         """Log prompt data to database for querying via /prompts endpoint."""
         try:
             db = next(get_db())
-            
+
             # Map data dictionary to PromptLog fields
             db_log = PromptLog(
                 correlation_id=correlation_id,
@@ -46,13 +50,17 @@ class UnifiedLogger:
                 duration_ms=data.get("duration_ms"),
                 error=data.get("error"),
             )
-            
+
             db.add(db_log)
             db.commit()
-            
+
             # Log successful database write
-            self.app_logger.info(f"[{correlation_id}] Database log written successfully")
-            
+            self.app_logger.info(
+                f"[{correlation_id}] Database log written successfully"
+            )
+
         except Exception as e:
-            self.app_logger.warning(f"[{correlation_id}] Failed to write to database: {e}")
+            self.app_logger.warning(
+                f"[{correlation_id}] Failed to write to database: {e}"
+            )
             logger.warning(f"Failed to write to database: {e}")

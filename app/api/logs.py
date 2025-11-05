@@ -12,6 +12,7 @@ from app.dependencies import require_admin_or_system_admin_dependency
 
 router = APIRouter(prefix="/logs", tags=["logs"])
 
+
 @router.get("/prompts", response_model=List[dict])
 async def list_prompt_logs(
     conversation_id: Optional[int] = None,
@@ -76,18 +77,20 @@ async def get_prompt_log(
         "error": row.error,
     }
 
+
 from collections import deque
+
 
 @router.get("/back", response_model=List[str])
 async def get_backend_logs(
-    skip: int = 0, 
-    limit: int = 100, 
+    skip: int = 0,
+    limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin_or_system_admin_dependency)
+    current_user: User = Depends(require_admin_or_system_admin_dependency),
 ):
     """Get last N lines of logs (admin and system admin only)."""
 
-    with open('logs/prompt.log', 'r') as log_file:
+    with open("logs/prompt.log", "r") as log_file:
         # Efficiently get the last `limit` lines
         logs = list(deque((line.strip() for line in log_file), maxlen=limit))
 

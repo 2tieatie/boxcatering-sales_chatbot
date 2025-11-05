@@ -37,7 +37,11 @@ def migrate():
             conn.execute(text("ALTER TABLE orders ADD COLUMN priority TEXT"))
 
         # Ensure not null by setting default minimal value where needed
-        conn.execute(text("UPDATE orders SET priority = 'low' WHERE priority IS NULL OR priority = ''"))
+        conn.execute(
+            text(
+                "UPDATE orders SET priority = 'low' WHERE priority IS NULL OR priority = ''"
+            )
+        )
 
         conn.commit()
         logger.info("✅ Migration completed.")

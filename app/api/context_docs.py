@@ -50,7 +50,7 @@ def _get_effective_context_dir(db: Session) -> Path:
             .filter(SystemConfig.key == "system_context_docs_dir")
             .first()
         )
-        dir_value = (cfg.value if cfg and cfg.value else settings.context_docs_dir)
+        dir_value = cfg.value if cfg and cfg.value else settings.context_docs_dir
     except Exception as e:
         logger.warning(f"Failed to read context dir from DB, using default: {e}")
         dir_value = settings.context_docs_dir

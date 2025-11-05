@@ -23,9 +23,7 @@ def find_conversations_missing_customer(session) -> List[Tuple[int, int]]:
     missing_ids = {c.id for c in missing}
     # Find any order referencing those conversations
     orders: List[Order] = (
-        session.query(Order)
-        .filter(Order.conversation_id.isnot(None))
-        .all()
+        session.query(Order).filter(Order.conversation_id.isnot(None)).all()
     )
     for o in orders:
         if o.conversation_id in missing_ids and o.customer_id:
@@ -55,5 +53,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-

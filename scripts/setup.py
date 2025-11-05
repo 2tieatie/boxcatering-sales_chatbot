@@ -12,6 +12,7 @@ sys.path.insert(0, str(project_root))
 
 # Load environment variables early
 from dotenv import load_dotenv
+
 load_dotenv(project_root / ".env")
 
 from loguru import logger
@@ -31,6 +32,7 @@ def check_dependencies():
         import fastapi
         import sqlalchemy
         import pydantic
+
         logger.info("✅ Required Python packages are installed")
     except ImportError as e:
         logger.error(f"❌ Missing required package: {e}")
@@ -42,28 +44,30 @@ def check_env_file():
     """Check and create .env file if needed."""
     env_file = project_root / ".env"
     env_example = project_root / "env.example"
-    
+
     if not env_file.exists():
         if env_example.exists():
             logger.info("📝 Creating .env file from template...")
-            with open(env_example, 'r') as f:
+            with open(env_example, "r") as f:
                 env_content = f.read()
-            
+
             # Replace placeholder values with more appropriate defaults
             env_content = env_content.replace(
                 "DATABASE_URL=postgresql://user:password@localhost/boxcatering_chatbot",
-                "DATABASE_URL=postgresql://postgres:postgres@localhost/boxcatering_chatbot"
+                "DATABASE_URL=postgresql://postgres:postgres@localhost/boxcatering_chatbot",
             )
             env_content = env_content.replace(
                 "SECRET_KEY=your_secret_key_here_make_it_long_and_random",
-                "SECRET_KEY=dev_secret_key_change_in_production_very_long_random_string_here"
+                "SECRET_KEY=dev_secret_key_change_in_production_very_long_random_string_here",
             )
-            
-            with open(env_file, 'w') as f:
+
+            with open(env_file, "w") as f:
                 f.write(env_content)
-            
+
             logger.info("✅ .env file created successfully!")
-            logger.warning("⚠️  Please review and update the .env file with your actual values!")
+            logger.warning(
+                "⚠️  Please review and update the .env file with your actual values!"
+            )
         else:
             logger.error("❌ env.example file not found!")
             sys.exit(1)
@@ -76,10 +80,12 @@ def check_database():
     try:
         # Load environment variables first
         from dotenv import load_dotenv
+
         load_dotenv()
-        
+
         from app.database import engine
         from sqlalchemy import text
+
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
         logger.info("✅ Database connection successful!")
@@ -131,14 +137,14 @@ def main():
     """Main setup function."""
     logger.info("🚀 Setting up Boxcatering Chatbot...")
     logger.info("=" * 50)
-    
+
     check_python_version()
     check_dependencies()
     check_env_file()
     check_database()
     init_database()
     create_admin_user()
-    
+
     logger.info("=" * 50)
     print_next_steps()
 

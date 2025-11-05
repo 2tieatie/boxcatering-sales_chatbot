@@ -23,6 +23,7 @@ from app.api import (
     assortment_router,
     logs_router,
 )
+
 # from app.api.test_router import router as test_router
 # from app.api.chatbot_config_simple import router as chatbot_config_simple_router
 from app.config import settings
@@ -44,7 +45,7 @@ async def lifespan(app: FastAPI):
         app_logger.info("Web scraper started successfully")
     except Exception as e:
         app_logger.warning(f"Failed to start web scraper: {e}")
-    
+
     try:
         yield
     finally:
@@ -62,7 +63,7 @@ app = FastAPI(
     title="Boxcatering Chatbot API",
     description="AI-powered chatbot for boxcatering business with manager handover capabilities",
     version="0.1.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 app.add_middleware(LoggingMiddleware)
@@ -95,6 +96,7 @@ app.include_router(logs_router)
 # app.include_router(test_router)
 # app.include_router(chatbot_config_simple_router)
 
+
 @app.get("/static/auth.js")
 async def auth_js() -> FileResponse:
     """Serve auth.js with no-store caching to ensure latest client auth logic."""
@@ -104,6 +106,7 @@ async def auth_js() -> FileResponse:
     resp.headers["Pragma"] = "no-cache"
     resp.headers["Expires"] = "0"
     return resp
+
 
 @app.get("/")
 async def root():
@@ -197,6 +200,7 @@ async def chrome_devtools_probe_get() -> JSONResponse:
 
 if __name__ == "__main__":
     import uvicorn
+
     # # Configure loguru sinks
     # try:
     #     logger.add("logs/app.log", rotation="10 MB", retention="14 days", enqueue=True, backtrace=False, diagnose=False)
@@ -205,8 +209,5 @@ if __name__ == "__main__":
     #     # Logging config should not block app start
     #     pass
     uvicorn.run(
-        "app.main:app",
-        host=settings.host,
-        port=settings.port,
-        reload=settings.debug
+        "app.main:app", host=settings.host, port=settings.port, reload=settings.debug
     )

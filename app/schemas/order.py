@@ -14,6 +14,7 @@ class OrderCreate(BaseModel):
 
     Used by API and internal chat flow to create a new order.
     """
+
     customer_id: Optional[int] = None
     # When customer_id is not provided, use these to create or resolve a customer
     customer_name: Optional[str] = None
@@ -34,6 +35,7 @@ class OrderCreate(BaseModel):
 
 class OrderResponse(BaseModel):
     """Order response schema."""
+
     id: int
     order_number: str
     customer_id: int
@@ -52,13 +54,14 @@ class OrderResponse(BaseModel):
     customer: Optional[CustomerResponse] = None
     priority: Optional[str] = None
     guests_count: Optional[int] = None
-    
+
     class Config:
         from_attributes = True
 
 
 class OrderUpdate(BaseModel):
     """Order update schema."""
+
     state: Optional[OrderState] = None
     total_amount: Optional[Decimal] = None
     notes: Optional[str] = None

@@ -36,15 +36,25 @@ def migrate():
         # Add welcome_message if missing
         if "welcome_message" not in existing:
             logger.info("Adding column welcome_message TEXT ...")
-            conn.execute(text("ALTER TABLE chatbot_configs ADD COLUMN welcome_message TEXT"))
+            conn.execute(
+                text("ALTER TABLE chatbot_configs ADD COLUMN welcome_message TEXT")
+            )
 
         # Backfill from prompt if data exists
         if "prompt" in existing:
             logger.info("Backfilling welcome_message from prompt ...")
-            conn.execute(text("UPDATE chatbot_configs SET welcome_message = prompt WHERE welcome_message IS NULL OR welcome_message = ''"))
+            conn.execute(
+                text(
+                    "UPDATE chatbot_configs SET welcome_message = prompt WHERE welcome_message IS NULL OR welcome_message = ''"
+                )
+            )
 
         # Ensure not null by setting default minimal value where needed
-        conn.execute(text("UPDATE chatbot_configs SET welcome_message = 'Welcome!' WHERE welcome_message IS NULL"))
+        conn.execute(
+            text(
+                "UPDATE chatbot_configs SET welcome_message = 'Welcome!' WHERE welcome_message IS NULL"
+            )
+        )
 
         # Optionally drop old column
         try:

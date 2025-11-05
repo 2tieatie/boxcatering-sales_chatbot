@@ -16,26 +16,22 @@ if __name__ == "__main__":
         print("⚠️  Warning: .env file not found!")
         print("Please copy env.example to .env and configure your settings.")
         print()
-    
+
     # Import and run the app
     try:
         from app.main import app
         import uvicorn
-        
+
         print("🚀 Starting Boxcatering Chatbot...")
         print("📖 API Documentation: http://localhost:8000/docs")
         print("🔌 WebSocket endpoint: ws://localhost:8000/chat/ws")
         print("💚 Health check: http://localhost:8000/health")
         print()
-        
+
         uvicorn.run(
-            "app.main:app",
-            host="0.0.0.0",
-            port=8000,
-            reload=True,
-            log_level="debug"
+            "app.main:app", host="0.0.0.0", port=8000, reload=True, log_level="debug"
         )
-        
+
     except ImportError as e:
         print(f"❌ Import error: {e}")
         print("Please install dependencies: pip install -e .")

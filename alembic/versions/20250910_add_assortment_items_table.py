@@ -29,7 +29,9 @@ def upgrade() -> None:
             sa.Column("id", sa.Integer(), primary_key=True, nullable=False),
             sa.Column("name", sa.String(), nullable=False, index=True),
             sa.Column("description", sa.String(), nullable=True),
-            sa.Column("price_uah", sa.Numeric(10, 2), nullable=False, server_default="0"),
+            sa.Column(
+                "price_uah", sa.Numeric(10, 2), nullable=False, server_default="0"
+            ),
             sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
             sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
         )
@@ -42,5 +44,3 @@ def downgrade() -> None:
     existing_tables = set(inspector.get_table_names())
     if "assortment_items" in existing_tables:
         op.drop_table("assortment_items")
-
-

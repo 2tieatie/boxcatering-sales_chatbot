@@ -10,43 +10,38 @@ from app.schemas.chat import ChatResponse
 
 class TelegramService:
     """Service for sending Telegram notifications."""
-    
+
     def __init__(self):
         self.bot_token = settings.telegram_bot_token
         self.chat_id = settings.telegram_chat_id
         self.bot = None
-        
+
         if self.bot_token:
             try:
                 self.bot = Bot(token=self.bot_token)
             except Exception as e:
                 logger.error(f"Failed to initialize Telegram bot: {e}")
-    
+
     async def send_handover_notification(
-        self, 
-        session_id: str, 
-        customer_message: str, 
-        chat_response: ChatResponse
+        self, session_id: str, customer_message: str, chat_response: ChatResponse
     ) -> bool:
         """Send handover notification to Telegram."""
         if not self.bot or not self.chat_id:
             logger.warning("Telegram bot not configured")
             return False
-        
+
         try:
             message = self._format_handover_message(
                 session_id, customer_message, chat_response
             )
-            
+
             await self.bot.send_message(
-                chat_id=self.chat_id,
-                text=message,
-                parse_mode='HTML'
+                chat_id=self.chat_id, text=message, parse_mode="HTML"
             )
-            
+
             logger.info(f"Handover notification sent for session {session_id}")
             return True
-            
+
         except Exception as e:
             logger.error(f"Failed to send Telegram notification: {e}")
             return False
@@ -73,18 +68,15 @@ class TelegramService:
             await self.bot.send_message(
                 chat_id=self.chat_id,
                 text=text,
-                parse_mode='HTML',
+                parse_mode="HTML",
             )
             return True
         except Exception as e:
             logger.error(f"Failed to send Telegram error notification: {e}")
             return False
-    
+
     def _format_handover_message(
-        self, 
-        session_id: str, 
-        customer_message: str, 
-        chat_response: ChatResponse
+        self, session_id: str, customer_message: str, chat_response: ChatResponse
     ) -> str:
         """Format the handover message for Telegram."""
         return f"""

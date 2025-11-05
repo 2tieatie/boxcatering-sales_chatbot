@@ -15,7 +15,9 @@ router = APIRouter(prefix="/scrape", tags=["scrape"])
 
 
 @router.get("/status", response_model=Dict[str, Any])
-async def get_status(current_user: User = Depends(require_manager_or_higher_dependency)) -> Dict[str, Any]:
+async def get_status(
+    current_user: User = Depends(require_manager_or_higher_dependency),
+) -> Dict[str, Any]:
     s = web_scraper.status
     return {
         "running": web_scraper.is_running(),
@@ -28,8 +30,8 @@ async def get_status(current_user: User = Depends(require_manager_or_higher_depe
 
 
 @router.post("/run", response_model=Dict[str, Any])
-async def run_once(current_user: User = Depends(require_manager_or_higher_dependency)) -> Dict[str, Any]:
+async def run_once(
+    current_user: User = Depends(require_manager_or_higher_dependency),
+) -> Dict[str, Any]:
     # Trigger an immediate scrape cycle
     return await web_scraper.scrape_once()
-
-

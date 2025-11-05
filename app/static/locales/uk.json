@@ -296,6 +296,7 @@
     "orderHistory.table.priority": "Пріоритет",
     "orderHistory.table.total": "Разом",
     "orderHistory.table.actions": "Дії",
+    "orderHistory.table.createdAt": "Дата створення",
     "orderHistory.loading": "Завантаження замовлень...",
     "orderHistory.empty.title": "Замовлень не знайдено",
     "orderHistory.empty.subtitle": "Спробуйте змінити фільтри або створіть нове замовлення.",

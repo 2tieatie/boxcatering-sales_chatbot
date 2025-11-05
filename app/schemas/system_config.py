@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 class SystemConfigBase(BaseModel):
     """Base system configuration schema."""
+
     key: str
     value: str
     description: Optional[str] = None
@@ -15,11 +16,13 @@ class SystemConfigBase(BaseModel):
 
 class SystemConfigCreate(SystemConfigBase):
     """System configuration creation schema."""
+
     pass
 
 
 class SystemConfigUpdate(BaseModel):
     """System configuration update schema."""
+
     value: Optional[str] = None
     description: Optional[str] = None
     is_sensitive: Optional[bool] = None
@@ -27,6 +30,7 @@ class SystemConfigUpdate(BaseModel):
 
 class SystemConfigResponse(SystemConfigBase):
     """System configuration response schema."""
+
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None

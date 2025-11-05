@@ -37,7 +37,9 @@ def migrate():
             conn.execute(text("ALTER TABLE assortment_items ADD COLUMN guests INTEGER"))
 
         # Ensure not null by setting default minimal value where needed
-        conn.execute(text("UPDATE assortment_items SET guests = '1' WHERE guests IS NULL"))
+        conn.execute(
+            text("UPDATE assortment_items SET guests = '1' WHERE guests IS NULL")
+        )
 
         # Add welcome_message if missing
         if "weight" not in existing:
@@ -45,7 +47,9 @@ def migrate():
             conn.execute(text("ALTER TABLE assortment_items ADD COLUMN weight INTEGER"))
 
         # Ensure not null by setting default minimal value where needed
-        conn.execute(text("UPDATE assortment_items SET weight = '1' WHERE weight IS NULL"))
+        conn.execute(
+            text("UPDATE assortment_items SET weight = '1' WHERE weight IS NULL")
+        )
 
         conn.commit()
         logger.info("✅ Migration completed.")

@@ -295,6 +295,7 @@
     "orderHistory.table.priority": "Priority",
     "orderHistory.table.total": "Total",
     "orderHistory.table.actions": "Actions",
+    "orderHistory.table.createdAt": "Created at",
     "orderHistory.loading": "Loading orders...",
     "orderHistory.empty.title": "No orders found",
     "orderHistory.empty.subtitle": "Try adjusting your filters or create a new order.",

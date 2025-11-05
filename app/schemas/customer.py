@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 class CustomerCreate(BaseModel):
     """Customer creation schema."""
+
     name: str
     email: Optional[str] = None
     phone: Optional[str] = None
@@ -16,6 +17,7 @@ class CustomerCreate(BaseModel):
 
 class CustomerUpdate(BaseModel):
     """Customer update schema."""
+
     name: Optional[str] = None
     email: Optional[str] = None
     phone: Optional[str] = None
@@ -25,6 +27,7 @@ class CustomerUpdate(BaseModel):
 
 class CustomerResponse(BaseModel):
     """Customer response schema."""
+
     id: int
     name: str
     email: Optional[str] = None
@@ -33,6 +36,6 @@ class CustomerResponse(BaseModel):
     notes: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
-    
+
     class Config:
         from_attributes = True

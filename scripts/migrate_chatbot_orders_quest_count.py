@@ -37,7 +37,11 @@ def migrate():
             conn.execute(text("ALTER TABLE orders ADD COLUMN guests_count INTEGER"))
 
         # Ensure not null by setting default minimal value where needed
-        conn.execute(text("UPDATE orders SET guests_count = 1 WHERE guests_count IS NULL OR guests_count = 0"))
+        conn.execute(
+            text(
+                "UPDATE orders SET guests_count = 1 WHERE guests_count IS NULL OR guests_count = 0"
+            )
+        )
 
         conn.commit()
         logger.info("✅ Migration completed.")

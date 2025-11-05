@@ -9,6 +9,7 @@ from app.models.conversation import HandoverState
 
 class ConversationResponse(BaseModel):
     """Conversation response schema."""
+
     id: int
     session_id: str
     customer_id: Optional[int] = None
@@ -19,13 +20,14 @@ class ConversationResponse(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime] = None
     summary: Optional[str] = None
-    
+
     class Config:
         from_attributes = True
 
 
 class ConversationUpdate(BaseModel):
     """Conversation update schema."""
+
     assigned_to: Optional[int] = None
     handover_state: Optional[HandoverState] = None
     handover_reason: Optional[str] = None

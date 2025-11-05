@@ -114,5 +114,3 @@ async def delete_customer(
     db.delete(customer)
     db.commit()
     return {"message": "Customer deleted successfully"}
-
-

@@ -37,7 +37,9 @@ def migrate():
             conn.execute(text("ALTER TABLE conversations ADD COLUMN summary TEXT"))
 
         # Ensure not null by setting default minimal value where needed
-        conn.execute(text("UPDATE conversations SET summary = '' WHERE summary IS NULL"))
+        conn.execute(
+            text("UPDATE conversations SET summary = '' WHERE summary IS NULL")
+        )
 
         conn.commit()
         logger.info("✅ Migration completed.")

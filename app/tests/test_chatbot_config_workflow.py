@@ -40,11 +40,15 @@ def test_client() -> Generator[TestClient, None, None]:
             db.close()
 
     # Simple user surrogate
-    fake_user = types.SimpleNamespace(id=1, username="admin", role="admin", is_active=True)
+    fake_user = types.SimpleNamespace(
+        id=1, username="admin", role="admin", is_active=True
+    )
 
     # Dependency overrides
     app.dependency_overrides[real_get_db] = get_db_override
-    app.dependency_overrides[require_admin_or_system_admin_dependency] = lambda: fake_user
+    app.dependency_overrides[require_admin_or_system_admin_dependency] = (
+        lambda: fake_user
+    )
     app.dependency_overrides[get_current_active_user_dependency] = lambda: fake_user
 
     client = TestClient(app)
@@ -115,7 +119,9 @@ def test_put_update_non_active_does_not_change_active(test_client: TestClient):
     assert resp3.json()["chatbot_name"] == "Marichka"
 
 
-def test_chat_websocket_uses_active_config_by_default(test_client: TestClient, monkeypatch):
+def test_chat_websocket_uses_active_config_by_default(
+    test_client: TestClient, monkeypatch
+):
     # Identify active id
     resp = test_client.get("/chatbot-config/active")
     active_id = resp.json()["id"]
@@ -123,7 +129,18 @@ def test_chat_websocket_uses_active_config_by_default(test_client: TestClient, m
     # Monkeypatch ChatbotService.process_message to echo selected config id
     from app.api import chat as chat_api
 
-    async def fake_process_message(*, chat_request, language, force_language, model, temperature, max_tokens, debug, config, conversation_history):
+    async def fake_process_message(
+        *,
+        chat_request,
+        language,
+        force_language,
+        model,
+        temperature,
+        max_tokens,
+        debug,
+        config,
+        conversation_history,
+    ):
         selected = (config or {}).get("id")
         return ChatResponse(response=str(selected or "none"), handover_to_manager=False)
 

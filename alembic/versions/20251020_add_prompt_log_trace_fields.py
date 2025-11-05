@@ -28,11 +28,17 @@ def upgrade() -> None:
 
     with op.batch_alter_table("prompt_logs") as batch_op:
         if "system_prompt_preview" not in existing_columns:
-            batch_op.add_column(sa.Column("system_prompt_preview", sa.Text(), nullable=True))
+            batch_op.add_column(
+                sa.Column("system_prompt_preview", sa.Text(), nullable=True)
+            )
         if "system_prompt_length" not in existing_columns:
-            batch_op.add_column(sa.Column("system_prompt_length", sa.Integer(), nullable=True))
+            batch_op.add_column(
+                sa.Column("system_prompt_length", sa.Integer(), nullable=True)
+            )
         if "prompt_trace_json" not in existing_columns:
-            batch_op.add_column(sa.Column("prompt_trace_json", sa.Text(), nullable=True))
+            batch_op.add_column(
+                sa.Column("prompt_trace_json", sa.Text(), nullable=True)
+            )
 
 
 def downgrade() -> None:

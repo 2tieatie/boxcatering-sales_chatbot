@@ -29,5 +29,3 @@ class AssortmentUploadResult(BaseModel):
     imported: int
     skipped: int
     errors: Optional[List[str]] = None
-
-

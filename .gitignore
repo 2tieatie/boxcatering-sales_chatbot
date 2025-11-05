@@ -218,3 +218,6 @@ TODO.md
 CHANGELOG.md
 boxcatering_*.md
 boxcatering_*.png
+/test.py
+/Docker/postgres_data/
+/my_prompt.txt
