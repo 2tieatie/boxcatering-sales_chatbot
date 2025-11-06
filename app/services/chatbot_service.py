@@ -118,10 +118,10 @@ class ChatbotService:
             get_products_schema = {
                 "name": "get_products",
                 "description": (
-                    "Повертає список товарів з асортименту, що відповідають запиту користувача. "
-                    "Використовується для пошуку страв, закусок, боксів, інгредієнтів, категорій."
-                    "Не використовуй для уточнення даних по вказаному товару, вартості, вазі, кількості людей."
-                    "Формуй промт тільки із категорій чи інгредієнтів, або слово 'набір, бокс'"
+                    "Returns a list of products from the assortment that match the user's query. "
+                    "Used for searching dishes, drinks, snacks, boxes, ingredients, or categories. "
+                    "Do NOT use this function to clarify details about a specific product, its price, weight, or serving count. "
+                    "Form the query only based on categories, ingredients, or general terms like 'set' or 'box'."
                 ),
                 "parameters": {
                     "type": "object",
@@ -129,7 +129,9 @@ class ChatbotService:
                         "query": {
                             "type": "string",
                             "description": (
-                                "Запит користувача на пошук, пораду, рекомендацію, наприклад 'салати', 'круасани', 'вегетаріанське', 'чи є такі в наявності', 'гарячі закуски', 'страви', 'порекомендуй', 'будь які страви', 'всі страви','порадити бокси'"
+                                "User's request for product search, advice, or recommendation. "
+                                "Examples: 'salads', 'croissants', 'vegetarian', 'available now', "
+                                "'hot snacks', 'dishes', 'recommend', 'any dishes', 'all dishes', 'suggest boxes'."
                             )
                         }
                     },
@@ -140,8 +142,9 @@ class ChatbotService:
             get_products_data = {
                 "name": "get_products_data",
                 "description": (
-                    "Повертає вартість всіх вказаних користувачем товарів із розрахунком на їх кількість"
-                    "Формуй промт тільки по назвам товарів та сумуй вартість із опису, або мета поля 'вартість'"
+                    "Returns the total cost of all products mentioned by the user, "
+                    "calculated based on their quantity. "
+                    "Form the prompt using only product names and summarize prices using description data or the 'price' metadata field."
                 ),
                 "parameters": {
                     "type": "object",
@@ -149,11 +152,11 @@ class ChatbotService:
                         "query": {
                             "type": "string",
                             "description": (
-                                "Запит користувача на вартість, кількість товарів для осіб"
-                                "Формуй промт тільки по назвам товарів та сумуй вартість із опису, або мета поля 'вартість'"
-                                "Повертай конкретну інформацію по товару яку хоче дізнатися користувач"
-                                "Не повертай перелік товарів, або описи про товари що не вказав користувач"
-                                "Ключові слова: сьогодні, завтра, на дату, годині, часу"
+                                "User's request for price or quantity details of specific products. "
+                                "Form the query using only product names and return price information from descriptions or metadata. "
+                                "Return specific information only about the products explicitly mentioned by the user. "
+                                "Do NOT return lists of unrelated products or general descriptions. "
+                                "May also include temporal context keywords like 'today', 'tomorrow', 'on [date]', 'at [hour]'."
                             )
                         }
                     },

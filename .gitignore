@@ -221,3 +221,4 @@ boxcatering_*.png
 /test.py
 /Docker/postgres_data/
 /my_prompt.txt
+/prev_prompt
