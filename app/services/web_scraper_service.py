@@ -26,7 +26,7 @@ from haystack_integrations.document_stores.qdrant import QdrantDocumentStore
 from loguru import logger
 from pydantic import BaseModel
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.models import Filter, FilterSelector, FieldCondition, MatchAny
+from qdrant_client.http.models import Filter, FilterSelector, FieldCondition, MatchAny, PayloadSchemaType
 from qdrant_client.models import VectorParams, Distance, PointStruct, PointIdsList
 from sqlalchemy.orm import Session
 
@@ -169,8 +169,11 @@ class WebScraperService:
                 logger.info("WebScraperService: no products fetched, skipping")
                 return {"skipped": True, "reason": "no_products"}
             db = next(get_db())
+            logger.info("WebScraperService: fetched products")
             await update_assortment_site(products, db=db)
+            logger.info("WebScraperService: updated assortment site")
             await update_vector_store_data(db=db)
+            logger.info("WebScraperService: updated qdrant store")
             try:
                 from app.api.chat import chatbot_service
                 chatbot_service._context_docs_cache.clear()
