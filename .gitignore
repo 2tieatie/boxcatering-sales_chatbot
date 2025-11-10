@@ -222,3 +222,4 @@ boxcatering_*.png
 /Docker/postgres_data/
 /my_prompt.txt
 /prev_prompt
+/app/services/agent_context_documents/

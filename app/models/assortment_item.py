@@ -22,6 +22,11 @@ class AssortmentItem(Base):
     price_uah = Column(Numeric(10, 2), nullable=False, default=0)
     guests = Column(Integer, nullable=True)
     weight = Column(Numeric(10, 2), nullable=True, default=1)
+    print_label = Column(String, nullable=True)
+    slug = Column(String, nullable=True)
+    img = Column(String, nullable=True)
+    type = Column(String, nullable=True)
+    category = Column(String, nullable=True)
     created_at = Column(
         DateTime(timezone=True), default=datetime.utcnow, nullable=False
     )

@@ -13,6 +13,10 @@ class AssortmentItemResponse(BaseModel):
     id: int
     name: str
     description: Optional[str] = None
+    print_label: Optional[str] = None
+    slug: Optional[str] = None
+    img: Optional[str] = None
+    type: Optional[str] = None
     price_uah: Decimal
     guests: Optional[int] = None
     weight: Optional[Decimal] = None

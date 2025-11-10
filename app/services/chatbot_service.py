@@ -20,6 +20,7 @@ from app.models.assortment_item import AssortmentItem
 from app.schemas.chat import ChatRequest, ChatResponse, HandoverReason
 from app.database import get_db
 from app.models.prompt_log import PromptLog
+from app.services.tools.geocoding import get_delivery_price
 from app.utils.logging_config import get_logger
 from app.services.unified_logger import UnifiedLogger
 
@@ -164,6 +165,27 @@ class ChatbotService:
                 }
             }
 
+            get_delivery_price_tool= {
+              "name": "get_delivery_price_tool",
+              "description": "Determines whether delivery is available to the specified address and returns calculated delivery cost based on geocoding and delivery zone polygons. The function resolves the address using Google and/or Nominatim geocoding providers, checks confidence of the detected coordinates, identifies whether the point falls inside any delivery polygon, applies delivery cost rules including free-delivery thresholds, and returns the final delivery price and address metadata.",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "description": "Full address provided by the user in format: [Місто], вул. [Вулиця], [Будинок] (e.g., 'Одеса, вул. Шевченка, 1') OR by destination in format: [Місто], [Destination] (e.g. 'Київ, Ocean Plaza', 'Київ, Метро Вокзальна'). Used for geocoding and zone detection."
+                  },
+                  "subtotal": {
+                    "type": ["number"],
+                    "description": "Order subtotal used to determine free delivery eligibility. ALWAYS INPUT THIS PARAMETER IF ORDER PREPARED OTHER WAYS PASS 0!!"
+                  },
+                },
+                "required": ["query"]
+              }
+            }
+
+
+
             get_date_time = {
                 "name": "get_date_time",
                 "description": (
@@ -191,7 +213,7 @@ class ChatbotService:
             request_kwargs = {
                 "model": chosen_model,
                 "messages": messages,
-                "functions": [get_products_schema, get_products_data],
+                "functions": [get_products_schema, get_products_data, get_delivery_price_tool],
                 "function_call": "auto",
             }
 
@@ -301,20 +323,17 @@ class ChatbotService:
 
                     request_kwargs["messages"].append(messages)
                     response = self.client.chat.completions.create(**request_kwargs)
-                # elif func_name == "get_date_time":
-                #     time_results = self.get_date_time(args["query"])
-                #     logger.debug(f"Time results: {time_results}")
-                #     messages = {
-                #         "role": "system",
-                #         "content": (
-                #             "Ось інформація по даті та часу для користувача:\n"
-                #             f"{time_results}\n"
-                #             "Сформуй відповідь для клієнта, якщо мінімальна дата свівпадає, то підтверди час, якщо ні, то сформуй пропозицію, що можливо тільки на мінімальну дату."
-                #         )
-                #     }
-                #
-                #     request_kwargs["messages"].append(messages)
-                #     response = self.client.chat.completions.create(**request_kwargs)
+                elif func_name == "get_delivery_price_tool":
+                    delivery_data = get_delivery_price(args.get("query"), args.get("subtotal"))
+                    delivery_text = json.dumps(delivery_data, ensure_ascii=False)
+                    messages = {
+                        "role": "system",
+                        "content": (
+                            f"response from get_delivery_price_tool: {delivery_text}"
+                        )
+                    }
+                    request_kwargs["messages"].append(messages)
+                    response = self.client.chat.completions.create(**request_kwargs)
 
 
             ai_response = (response.choices[0].message.content or "")
@@ -1155,28 +1174,6 @@ class ChatbotService:
         
     def get_products(self, query: str):
         try:
-            # logger.info(f"query {query}")
-            # Get all products  
-            db = next(get_db())
-            products = db.query(AssortmentItem).all()
-            # logger.info(f"Found {products}")
-            documents = []
-            for product in products:
-                content = f"[ID:{product.id}] {product.name}. {product.description}. {product.price_uah} гривень. {product.weight} грам. На {product.guests} гостей/осіб."
-                meta = {
-                    "id": product.id,
-                    "guests": product.guests,
-                    "price": product.price_uah,
-                    "weight": product.weight
-                }
-                doc = Document(content=content, meta=meta)
-                documents.append(doc)
-
-            document_embedder = OpenAIDocumentEmbedder(api_key=Secret.from_token(self.openai_api_key))
-            documents_with_embeddings = document_embedder.run(documents)['documents']
-            self.document_store.write_documents(documents_with_embeddings, policy=DuplicatePolicy.OVERWRITE)
-
-            # Search for similar products
             query_pipeline = Pipeline()
             query_pipeline.add_component("text_embedder", OpenAITextEmbedder(api_key=Secret.from_token(self.openai_api_key)))
             query_pipeline.add_component("retriever", QdrantEmbeddingRetriever(document_store=self.document_store))
@@ -1215,26 +1212,6 @@ class ChatbotService:
         
     def get_products_data(self, query: str):
         try:
-            # logger.info(f"query {query}")
-            # Get all products  
-            db = next(get_db())
-            products = db.query(AssortmentItem).all()
-            # logger.info(f"Found {products}")
-            documents = []
-            for product in products:
-                content = f"[ID:{product.id}] {product.name}. {product.description}. {product.price_uah} гривень. {product.weight} грам. На {product.guests} гостей/осіб."
-                meta = {
-                    "id": product.id,
-                    "guests": product.guests,
-                    "price": product.price_uah,
-                    "weight": product.weight
-                }
-                doc = Document(content=content, meta=meta)
-                documents.append(doc)
-
-            document_embedder = OpenAIDocumentEmbedder(api_key=Secret.from_token(self.openai_api_key))
-            documents_with_embeddings = document_embedder.run(documents)['documents']
-            self.document_store.write_documents(documents_with_embeddings, policy=DuplicatePolicy.OVERWRITE)
 
             # Search for similar products
             query_pipeline = Pipeline()

@@ -112,7 +112,8 @@
                 <p data-i18n="assortment.subtitle">Manage products offered to customers. Upload from Excel.</p>
             </div>
 
-            <div class="card" style="margin-bottom: 20px">
+            <div class="card" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
                 <div class="card-header" data-i18n="assortment.uploadTitle">Upload Excel</div>
                 <div class="card-body">
                     <form id="upload-form" class="upload-row">
@@ -126,6 +127,11 @@
                     <div id="upload-result" class="muted" style="margin-top: 8px"></div>
                 </div>
             </div>
+
+            <div>
+                <button id="runScraping" class="btn btn-primary" data-i18n="assortment.scrapeBtn">Scrape</button>
+            </div>
+        </div>
 
             <div class="table-container">
                 <div class="table-header">
@@ -230,6 +236,31 @@
                 }
             }
 
+            async function handleScrape(e) {
+                e.preventDefault();
+                const out = document.getElementById("upload-result");
+                const token = Auth.getToken();
+                out.textContent = window.I18N && I18N.t ? I18N.t("assortment.scraping") : "Scraping...";
+                try {
+                    const res = await fetch("/scrape/run", {
+                        method: "POST",
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                    if (!res.ok) {
+                        const txt = await res.text();
+                        out.textContent = window.I18N && I18N.t ? I18N.t("assortment.scrapingError") : "Scraping failed";
+                        console.error(txt);
+                    } else {
+                        const data = await res.json();
+                        out.textContent = (window.I18N && I18N.t ? I18N.t("assortment.scrapingOk") : "Scraping OK");
+                        const items = await fetchAssortment();
+                        renderTable(items);
+                    }
+                } catch (err) {
+                    out.textContent = window.I18N && I18N.t ? I18N.t("assortment.scrapingError") : "Upload failed";
+                }
+            }
+
             (function init() {
                 // Initialize i18n like other pages
                 (async function initI18N() {
@@ -259,6 +290,8 @@
                 fetchAssortment()
                     .then(renderTable)
                     .catch(function () {});
+                const scrapingBtn = document.getElementById("runScraping")
+                scrapingBtn.addEventListener("click", handleScrape)
             })();
         </script>
     </body>
