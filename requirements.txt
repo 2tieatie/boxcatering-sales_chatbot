@@ -21,6 +21,7 @@ email-validator==2.3.0
 et_xmlfile==2.0.0
 fastapi==0.121.0
 filetype==1.2.0
+git-filter-repo==2.47.0
 grpcio==1.76.0
 h11==0.16.0
 h2==4.3.0
