@@ -33,7 +33,8 @@ dependencies = [
     "haystack-ai>=2.17.1",
     "qdrant-haystack>=9.2.0",
     "qdrant-client>=1.6.0",
-    "nltk>=3.9.1"
+    "nltk>=3.9.1",
+    "cachetools>=6.2.1"
 ]
 
 [project.optional-dependencies]
