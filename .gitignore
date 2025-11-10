@@ -223,3 +223,4 @@ boxcatering_*.png
 /my_prompt.txt
 /prev_prompt
 /app/services/agent_context_documents/
+.idea/
