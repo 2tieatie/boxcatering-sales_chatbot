@@ -26,7 +26,7 @@ from haystack_integrations.document_stores.qdrant import QdrantDocumentStore
 from loguru import logger
 from pydantic import BaseModel
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.models import Filter
+from qdrant_client.http.models import Filter, FilterSelector, FieldCondition, MatchAny
 from qdrant_client.models import VectorParams, Distance, PointStruct, PointIdsList
 from sqlalchemy.orm import Session
 
@@ -549,12 +549,20 @@ async def update_vector_store_data(db: "Session") -> None:
             to_upsert_docs.append(Document(id=doc_id, content=content, meta=meta))
 
     ids_to_delete = [pid for pid in existing_payloads.keys() if pid not in wanted_ids]
-    for batch in _iter_batches(ids_to_delete, BATCH_SIZE):
-        await asyncio.to_thread(
-            ds._client.delete,
-            collection_name=ds.index,
-            points_selector=PointIdsList(points=batch),
-        )
+    await asyncio.to_thread(
+        ds._client.delete,
+        collection_name=ds.index,
+        points_selector=FilterSelector(
+            filter=Filter(
+                must=[
+                    FieldCondition(
+                        key="id",
+                        match=MatchAny(any=ids_to_delete),
+                    )
+                ]
+            )
+        ),
+    )
 
     if to_upsert_docs:
         embedder = OpenAIDocumentEmbedder(api_key=Secret.from_token(settings.openai_api_key))
