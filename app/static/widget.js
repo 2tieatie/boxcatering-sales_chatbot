@@ -255,16 +255,15 @@ function loadWidget() {
 async function initI18N() {
     try {
         const token = localStorage.getItem("access_token");
-        const meRes = await fetch(homeLink + "/users/me", {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        // const meRes = await fetch(homeLink + "/users/me", {
+        //     headers: token ? { Authorization: `Bearer ${token}` } : {},
+        // });
         const storedLang = localStorage.getItem("ui_language");
         let lang = storedLang || "uk";
-        if (!storedLang && meRes && meRes.ok) {
-            const me = await meRes.json();
-            lang = me.preferred_language || lang;
-        }
-        console.log(111);
+        // if (!storedLang && meRes && meRes.ok) {
+        //     const me = await meRes.json();
+        //     lang = me.preferred_language || lang;
+        // }
 
         if (window.I18N && I18N.setLanguage) {
             await I18N.setLanguage(lang);
@@ -273,7 +272,6 @@ async function initI18N() {
 
         try {
             const input = document.getElementById("chat-input");
-            console.log(222);
 
             if (input && window.I18N && I18N.t) {
                 input.placeholder = I18N.t("chatTest.input.label");
@@ -288,7 +286,6 @@ async function initI18N() {
     } catch (e) {
         console.log(e);
 
-        console.log(333);
     }
 }
 
