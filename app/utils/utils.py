@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
+
 def format_kyiv_timestamp(ts: str) -> str:
     try:
         dt = datetime.fromisoformat(ts)

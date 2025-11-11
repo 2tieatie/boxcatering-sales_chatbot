@@ -165,7 +165,7 @@ class ChatbotService:
                 }
             }
 
-            get_delivery_price_tool= {
+            get_delivery_price_tool = {
               "name": "get_delivery_price_tool",
               "description": "Determines whether delivery is available to the specified address and returns calculated delivery cost based on geocoding and delivery zone polygons. The function resolves the address using Google and/or Nominatim geocoding providers, checks confidence of the detected coordinates, identifies whether the point falls inside any delivery polygon, applies delivery cost rules including free-delivery thresholds, and returns the final delivery price and address metadata.",
               "parameters": {
@@ -203,9 +203,9 @@ class ChatbotService:
                                 "Формуй 'query' у форматі ISO 'HH:MM' та кількість днів => 'сьогодні = 0, завтра = 1, після завтра = 2' => приклад '10:00, 2'"
                             )
                         }
-                    }
+                    },
+                    "required": ["query"]
                 },
-                "required": ["query"]
             }
 
             # Create the chat completion
@@ -334,7 +334,21 @@ class ChatbotService:
                     }
                     request_kwargs["messages"].append(messages)
                     response = self.client.chat.completions.create(**request_kwargs)
+                elif func_name == "get_date_time":
+                    time_results = self.get_date_time(args["query"])
+                    print(f"{args['query']=}, {time_results=}")
+                    logger.debug(f"Time results: {time_results}")
+                    messages = {
+                        "role": "system",
+                        "content": (
+                            "Ось інформація по даті та часу для користувача:\n"
+                            f"{time_results}\n"
+                            "Сформуй відповідь для клієнта, якщо мінімальна дата свівпадає, то підтверди час, якщо ні, то сформуй пропозицію, що можливо тільки на мінімальну дату."
+                        )
+                    }
 
+                    request_kwargs["messages"].append(messages)
+                    response = self.client.chat.completions.create(**request_kwargs)
 
             ai_response = (response.choices[0].message.content or "")
             # logger.debug(f"AI response: {ai_response}")
@@ -733,7 +747,7 @@ class ChatbotService:
                     "delivery_time": "<optional time>",
                     "notes": "<optional notes>",
                     "currency": "UAH",
-                    "guests_count": <optional number of guests>
+                    "guests_count": <optional number of guests>,
                     "priority": "<optional priority>"
                 }}
             }}
@@ -1264,6 +1278,7 @@ class ChatbotService:
 
     def parse_input(self, input_str: str) -> datetime:
         """Парсить строку 'HH:MM, D' у datetime з сьогоднішньою датою + D днів"""
+
         time_part, days_part = input_str.strip().split(', ')
         hour, minute = map(int, time_part.split(':'))
         days_to_add = int(days_part)
@@ -1300,7 +1315,12 @@ class ChatbotService:
         return {
             "valid": True,
             "approved_time": requested_dt.strftime("%H:%M"),
-            "approved_date": requested_dt.strftime("%d-%B-%Y"),
+            "approved_date": requested_dt.strftime("%d-%m-%Y"),
             # "priority": priority
         }
-    
+
+
+if __name__ == "__main__":
+    cs = ChatbotService()
+    res = cs.get_date_time("2025-11-12 10:00")
+    print(res)

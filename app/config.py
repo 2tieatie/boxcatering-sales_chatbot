@@ -7,9 +7,8 @@ from dotenv import load_dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
-load_dotenv(
+load_dotenv()
 
-)
 
 class Settings(BaseSettings):
     """Application settings."""
@@ -62,6 +61,7 @@ class Settings(BaseSettings):
 
 # Lazy loading of settings - only load when accessed
 _settings = None
+
 
 def get_settings() -> Settings:
     """Get settings instance, loading from environment if needed."""

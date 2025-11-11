@@ -9,12 +9,15 @@ cache = TTLCache(maxsize=1024, ttl=86400)
 
 COUNTRY_BIAS: str = os.getenv("DELIVERY_COUNTRY_BIAS", "UA")
 LANGUAGE: str = os.getenv("DELIVERY_LANGUAGE", "uk")
-GOOGLE_MAPS_API_KEY: Optional[str] = os.getenv("GOOGLE_MAPS_API_KEY", "AIzaSyD7MfLNeZ8TvhFpfWgFouJpA2ATtNsGewQ")
+GOOGLE_MAPS_API_KEY: Optional[str] = os.getenv(
+    "GOOGLE_MAPS_API_KEY", "AIzaSyD7MfLNeZ8TvhFpfWgFouJpA2ATtNsGewQ"
+)
 USER_AGENT: str = os.getenv("DELIVERY_HTTP_UA", "BoxCatering-DeliveryBot/1.0")
 HTTP_TIMEOUT_S: float = float(os.getenv("DELIVERY_HTTP_TIMEOUT", "10"))
 HTTP_RETRIES: int = int(os.getenv("DELIVERY_HTTP_RETRIES", "3"))
 HTTP_BACKOFF: float = float(os.getenv("DELIVERY_HTTP_BACKOFF", "0.4"))
 NOMINATIM_EMAIL: Optional[str] = os.getenv("NOMINATIM_EMAIL")
+
 
 def make_session() -> requests.Session:
     s = requests.Session()
@@ -33,9 +36,11 @@ def make_session() -> requests.Session:
 def is_finite(x: Any) -> bool:
     try:
         from math import isfinite
+
         return isfinite(float(x))
     except Exception:
         return False
+
 
 def require(cond: bool, msg: str) -> None:
     if not cond:
@@ -46,7 +51,10 @@ def require(cond: bool, msg: str) -> None:
 def get_delivery_zones() -> List[Dict[str, Any]]:
     data: List[Dict[str, Any]] = []
     for i in range(1, 3):
-        r = make_session().get(f"https://back.box-catering.ua/api/cities/{i}/delivery-zones", timeout=HTTP_TIMEOUT_S)
+        r = make_session().get(
+            f"https://back.box-catering.ua/api/cities/{i}/delivery-zones",
+            timeout=HTTP_TIMEOUT_S,
+        )
         r.raise_for_status()
         zones = r.json()
         require(isinstance(zones, list) and zones, "Empty delivery zones response.")
@@ -57,7 +65,12 @@ def get_delivery_zones() -> List[Dict[str, Any]]:
 def geocode_google(query: str) -> Optional[Dict[str, Any]]:
     require(GOOGLE_MAPS_API_KEY, "GOOGLE_MAPS_API_KEY is not set.")
     url = "https://maps.googleapis.com/maps/api/geocode/json"
-    params = {"address": query, "key": GOOGLE_MAPS_API_KEY, "language": LANGUAGE, "components": f"country:{COUNTRY_BIAS}"}
+    params = {
+        "address": query,
+        "key": GOOGLE_MAPS_API_KEY,
+        "language": LANGUAGE,
+        "components": f"country:{COUNTRY_BIAS}",
+    }
     r = make_session().get(url, params=params, timeout=HTTP_TIMEOUT_S)
     r.raise_for_status()
     payload = r.json()
@@ -84,11 +97,13 @@ def geocode_google(query: str) -> Optional[Dict[str, Any]]:
 
     types = best.get("types", []) or []
     conf = (
-        0.95 if "street_address" in types else
-        0.90 if ("premise" in types or "subpremise" in types) else
-        0.80 if "route" in types else
-        0.60 if "locality" in types else
-        0.50
+        0.95
+        if "street_address" in types
+        else (
+            0.90
+            if ("premise" in types or "subpremise" in types)
+            else 0.80 if "route" in types else 0.60 if "locality" in types else 0.50
+        )
     )
 
     return {
@@ -108,8 +123,16 @@ def geocode_nominatim(query: str) -> Optional[Dict[str, Any]]:
     if NOMINATIM_EMAIL:
         headers["From"] = NOMINATIM_EMAIL
 
-    params = {"q": query, "format": "json", "addressdetails": 1, "limit": 1, "countrycodes": COUNTRY_BIAS.lower()}
-    r = make_session().get(url, params=params, headers=headers, timeout=HTTP_TIMEOUT_S + 2)
+    params = {
+        "q": query,
+        "format": "json",
+        "addressdetails": 1,
+        "limit": 1,
+        "countrycodes": COUNTRY_BIAS.lower(),
+    }
+    r = make_session().get(
+        url, params=params, headers=headers, timeout=HTTP_TIMEOUT_S + 2
+    )
     r.raise_for_status()
     data = r.json()
 
@@ -124,10 +147,13 @@ def geocode_nominatim(query: str) -> Optional[Dict[str, Any]]:
 
     cls = f"{best.get('class') or ''}:{best.get('type') or ''}"
     conf = (
-        0.90 if ("building" in cls or "house" in cls) else
-        0.80 if "highway" in cls else
-        0.60 if any(x in cls for x in ("city", "town", "village")) else
-        0.50
+        0.90
+        if ("building" in cls or "house" in cls)
+        else (
+            0.80
+            if "highway" in cls
+            else 0.60 if any(x in cls for x in ("city", "town", "village")) else 0.50
+        )
     )
 
     return {
@@ -141,13 +167,19 @@ def geocode_nominatim(query: str) -> Optional[Dict[str, Any]]:
     }
 
 
-def geocode(query: str, providers: Sequence[str] = ("google", "nominatim")) -> Dict[str, Any]:
+def geocode(
+    query: str, providers: Sequence[str] = ("google", "nominatim")
+) -> Dict[str, Any]:
     require(isinstance(query, str) and query.strip(), "Empty address query.")
     last_err: Optional[Exception] = None
 
     for p in providers:
         try:
-            res = geocode_google(query) if p == "google" else geocode_nominatim(query) if p == "nominatim" else None
+            res = (
+                geocode_google(query)
+                if p == "google"
+                else geocode_nominatim(query) if p == "nominatim" else None
+            )
             if res:
                 return res
         except Exception as e:
@@ -157,13 +189,19 @@ def geocode(query: str, providers: Sequence[str] = ("google", "nominatim")) -> D
     raise ValueError(f"Failed to geocode address: {last_err or 'Unknown error'}")
 
 
-def point_on_segment(p: Dict[str, float], a: Dict[str, float], b: Dict[str, float], eps: float = 1e-9) -> bool:
-    cross = (p["lat"] - a["lat"]) * (b["lng"] - a["lng"]) - (p["lng"] - a["lng"]) * (b["lat"] - a["lat"])
+def point_on_segment(
+    p: Dict[str, float], a: Dict[str, float], b: Dict[str, float], eps: float = 1e-9
+) -> bool:
+    cross = (p["lat"] - a["lat"]) * (b["lng"] - a["lng"]) - (p["lng"] - a["lng"]) * (
+        b["lat"] - a["lat"]
+    )
     if abs(cross) > eps:
         return False
     mnx, mxx = (a["lng"], b["lng"]) if a["lng"] <= b["lng"] else (b["lng"], a["lng"])
     mny, mxy = (a["lat"], b["lat"]) if a["lat"] <= b["lat"] else (b["lat"], a["lat"])
-    return (mnx - eps) <= p["lng"] <= (mxx + eps) and (mny - eps) <= p["lat"] <= (mxy + eps)
+    return (mnx - eps) <= p["lng"] <= (mxx + eps) and (mny - eps) <= p["lat"] <= (
+        mxy + eps
+    )
 
 
 def bbox_of_polygon(poly: List[Dict[str, float]]) -> Tuple[float, float, float, float]:
@@ -203,7 +241,12 @@ def get_delivery_by_point(
 ) -> Dict[str, Any]:
 
     require(isinstance(zones, list) and zones, "Delivery zones list is empty.")
-    require(point is not None and is_finite(point.get("lat")) and is_finite(point.get("lng")), "Invalid coordinates.")
+    require(
+        point is not None
+        and is_finite(point.get("lat"))
+        and is_finite(point.get("lng")),
+        "Invalid coordinates.",
+    )
 
     hits: List[Tuple[Dict[str, Any], Any]] = []
 
@@ -216,7 +259,10 @@ def get_delivery_by_point(
             min_lat, min_lng, max_lat, max_lng = bbox_of_polygon(coords)
             lat, lng = point["lat"], point["lng"]
 
-            if not (min_lat - 1e-9 <= lat <= max_lat + 1e-9 and min_lng - 1e-9 <= lng <= max_lng + 1e-9):
+            if not (
+                min_lat - 1e-9 <= lat <= max_lat + 1e-9
+                and min_lng - 1e-9 <= lng <= max_lng + 1e-9
+            ):
                 continue
 
             if point_in_polygon(point, coords):
@@ -262,13 +308,23 @@ def get_delivery_price(
 
     geo = geocode(query, providers=providers)
 
-    require(is_finite(geo.get("lat")) and is_finite(geo.get("lng")), "Failed to read coordinates.")
+    require(
+        is_finite(geo.get("lat")) and is_finite(geo.get("lng")),
+        "Failed to read coordinates.",
+    )
 
     point = {"lat": float(geo["lat"]), "lng": float(geo["lng"])}
     zones_data = get_delivery_zones()
 
     delivery = get_delivery_by_point(zones_data, point, subtotal=subtotal)
-
+    print({
+        "address": {
+            "query": query,
+            "formatted": geo.get("formatted"),
+            "confidence": geo.get("confidence"),
+        },
+        "delivery": delivery,
+    })
     return {
         "address": {
             "query": query,
@@ -282,8 +338,8 @@ def get_delivery_price(
 if __name__ == "__main__":
     try:
         result = get_delivery_price(
-            query="Київ, Соборна 72",
-            subtotal=30100,
+            query="Крюківщина, вул. Парникова 18",
+            subtotal=3095,
         )
         print(json.dumps(result, ensure_ascii=False, indent=2))
     except Exception as e:

@@ -61,7 +61,10 @@ def _load_existing_columns(conn: Connection) -> Dict[str, Dict[str, Optional[str
         # Build a human-ish normalized type label for comparison
         if r.data_type == "numeric" and r.numeric_precision is not None:
             typ = f"numeric({r.numeric_precision},{r.numeric_scale})"
-        elif r.data_type in ("character varying", "varchar") and r.character_maximum_length:
+        elif (
+            r.data_type in ("character varying", "varchar")
+            and r.character_maximum_length
+        ):
             typ = f"varchar({r.character_maximum_length})"
         elif r.data_type == "timestamp with time zone":
             typ = "timestamp with time zone"
@@ -105,6 +108,7 @@ def _default_literal(col: Column) -> Optional[str]:
         return f"'{d}'"
     # Date/time defaults like datetime.utcnow — выполним через NOW()
     from datetime import datetime
+
     if callable(d):
         # если это datetime.utcnow и тип — дата/время
         if col.type.__class__.__name__.lower().startswith("datetime"):
@@ -127,13 +131,17 @@ def _fallback_literal_for_type(col: Column) -> Optional[str]:
     return None
 
 
-def _safe_widen_type_sql(col_name: str, model_type_sql: str, existing_type_sql: str) -> Optional[str]:
+def _safe_widen_type_sql(
+    col_name: str, model_type_sql: str, existing_type_sql: str
+) -> Optional[str]:
     """
     Return ALTER TYPE SQL if we recognize a safe widening.
     Example: int4 -> numeric(10,2) for 'weight'
     """
     # integer -> numeric(precision,scale)
-    if existing_type_sql in ("int4", "integer") and model_type_sql.startswith("numeric"):
+    if existing_type_sql in ("int4", "integer") and model_type_sql.startswith(
+        "numeric"
+    ):
         return f'ALTER TABLE "{TABLE_NAME}" ALTER COLUMN "{col_name}" TYPE {model_type_sql} USING "{col_name}"::{model_type_sql};'
 
     # varchar(n) -> text
@@ -188,11 +196,15 @@ def migrate():
                 else:
                     logger.info(f'   Filling NULLs in "{name}" with {literal}')
                     conn.execute(
-                        text(f'UPDATE "{TABLE_NAME}" SET "{name}" = {literal} WHERE "{name}" IS NULL;')
+                        text(
+                            f'UPDATE "{TABLE_NAME}" SET "{name}" = {literal} WHERE "{name}" IS NULL;'
+                        )
                     )
                     logger.info(f'   Setting NOT NULL on "{name}"')
                     conn.execute(
-                        text(f'ALTER TABLE "{TABLE_NAME}" ALTER COLUMN "{name}" SET NOT NULL;')
+                        text(
+                            f'ALTER TABLE "{TABLE_NAME}" ALTER COLUMN "{name}" SET NOT NULL;'
+                        )
                     )
 
         # 3) Безопасные изменения типа (widening)
@@ -210,7 +222,9 @@ def migrate():
             if have != want:
                 widen_sql = _safe_widen_type_sql("weight", want, have)
                 if widen_sql:
-                    logger.info(f'🔧 Altering type (explicit): "weight" {have} -> {want}')
+                    logger.info(
+                        f'🔧 Altering type (explicit): "weight" {have} -> {want}'
+                    )
                     conn.execute(text(widen_sql))
 
         conn.commit()

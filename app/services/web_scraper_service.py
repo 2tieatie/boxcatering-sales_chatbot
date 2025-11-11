@@ -26,7 +26,13 @@ from haystack_integrations.document_stores.qdrant import QdrantDocumentStore
 from loguru import logger
 from pydantic import BaseModel
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.models import Filter, FilterSelector, FieldCondition, MatchAny, PayloadSchemaType
+from qdrant_client.http.models import (
+    Filter,
+    FilterSelector,
+    FieldCondition,
+    MatchAny,
+    PayloadSchemaType,
+)
 from qdrant_client.models import VectorParams, Distance, PointStruct, PointIdsList
 from sqlalchemy.orm import Session
 
@@ -159,7 +165,9 @@ class WebScraperService:
                     s = str(enabled_raw).strip().lower()
                     enabled = s in {"1", "true", "yes", "on"}
                 if not enabled:
-                    logger.debug("WebScraperService: disabled via system_scrape_enabled; skipping")
+                    logger.debug(
+                        "WebScraperService: disabled via system_scrape_enabled; skipping"
+                    )
                     return {"skipped": True, "reason": "disabled"}
                 base_dir = _safe_context_base_dir(db)
                 target_dir = base_dir
@@ -176,6 +184,7 @@ class WebScraperService:
             logger.info("WebScraperService: updated qdrant store")
             try:
                 from app.api.chat import chatbot_service
+
                 chatbot_service._context_docs_cache.clear()
             except Exception as clear_err:
                 logger.debug(f"Could not clear chatbot context cache: {clear_err}")
@@ -213,7 +222,12 @@ def _split_categories(value: Optional[str]) -> List[str]:
     return out
 
 
-async def _fetch_json(client: httpx.AsyncClient, url: str, params: Optional[Dict[str, Any]] = None, attempts: int = 3) -> Optional[Dict[str, Any] | List[Any]]:
+async def _fetch_json(
+    client: httpx.AsyncClient,
+    url: str,
+    params: Optional[Dict[str, Any]] = None,
+    attempts: int = 3,
+) -> Optional[Dict[str, Any] | List[Any]]:
     for i in range(attempts):
         try:
             resp = await client.get(url, params=params, timeout=15.0)
@@ -233,13 +247,21 @@ async def get_categories(client: httpx.AsyncClient) -> List[Category]:
     out: List[Category] = []
     for raw in data:
         try:
-            out.append(Category(id=int(raw.get("id", 0)), title=str(raw.get("title", "")).strip(), slug=str(raw.get("slug", "")).strip()))
+            out.append(
+                Category(
+                    id=int(raw.get("id", 0)),
+                    title=str(raw.get("title", "")).strip(),
+                    slug=str(raw.get("slug", "")).strip(),
+                )
+            )
         except Exception:
             continue
     return [c for c in out if c.id and c.title and c.slug]
 
 
-async def get_products_by_category_slug(client: httpx.AsyncClient, slug: str) -> List[Dict[str, Any]]:
+async def get_products_by_category_slug(
+    client: httpx.AsyncClient, slug: str
+) -> List[Dict[str, Any]]:
     result: List[Dict[str, Any]] = []
     page = 1
     base = f"https://back.box-catering.ua/api/cities/1/categories/{slug}/products"
@@ -258,7 +280,9 @@ async def get_products_by_category_slug(client: httpx.AsyncClient, slug: str) ->
 
 
 async def _fetch_boxcatering_products() -> List[Dict[str, Any]]:
-    async with httpx.AsyncClient(headers={"User-Agent": "BoxCatering-Script"}) as client:
+    async with httpx.AsyncClient(
+        headers={"User-Agent": "BoxCatering-Script"}
+    ) as client:
         categories = await get_categories(client)
         if not categories:
             return []
@@ -352,14 +376,33 @@ async def update_assortment_site(products: List[Dict[str, Any]], db: Session) ->
         keep_ids: Set[int] = set()
 
         for k, pr in wanted.items():
-            name = _norm_str(pr.get("title")) or _norm_str(pr.get("name")) or "Без назви"
+            name = (
+                _norm_str(pr.get("title")) or _norm_str(pr.get("name")) or "Без назви"
+            )
             description = _norm_str(pr.get("description"))
-            price = _to_decimal(pr.get("price") or pr.get("price_uah") or pr.get("priceUAH") or pr.get("priceUah") or pr.get("amount"))
-            guests = int(pr.get("people_amount") or 0) if str(pr.get("people_amount") or "").isdigit() else None
-            weight = _to_decimal(pr.get("weight") or pr.get("mass") or pr.get("grams") or 0)
+            price = _to_decimal(
+                pr.get("price")
+                or pr.get("price_uah")
+                or pr.get("priceUAH")
+                or pr.get("priceUah")
+                or pr.get("amount")
+            )
+            guests = (
+                int(pr.get("people_amount") or 0)
+                if str(pr.get("people_amount") or "").isdigit()
+                else None
+            )
+            weight = _to_decimal(
+                pr.get("weight") or pr.get("mass") or pr.get("grams") or 0
+            )
             print_label = _norm_str(pr.get("print_label") or pr.get("label"))
             slug = _norm_str(pr.get("slug") or _slugify(name))
-            img = _norm_str(pr.get("img") or pr.get("image") or pr.get("photo") or pr.get("thumbnail"))
+            img = _norm_str(
+                pr.get("img")
+                or pr.get("image")
+                or pr.get("photo")
+                or pr.get("thumbnail")
+            )
             type_ = _norm_str(pr.get("type") or pr.get("product_type"))
             category = _norm_str(pr.get("category"))
 
@@ -431,7 +474,9 @@ async def update_assortment_site(products: List[Dict[str, Any]], db: Session) ->
 
         try:
             if ids_to_delete:
-                db.query(AssortmentItem).filter(AssortmentItem.id.in_(ids_to_delete)).delete(synchronize_session=False)
+                db.query(AssortmentItem).filter(
+                    AssortmentItem.id.in_(ids_to_delete)
+                ).delete(synchronize_session=False)
             if to_update:
                 db.bulk_update_mappings(AssortmentItem, to_update)
             if to_insert:
@@ -463,7 +508,6 @@ async def update_assortment_site(products: List[Dict[str, Any]], db: Session) ->
         return False
 
 
-
 def _product_to_content_and_meta(p: "AssortmentItem") -> Tuple[str, Dict[str, Any]]:
     content = (
         f"[ID:{p.id}] {p.category or ''}. {p.type or ''}. {p.name or ''}. "
@@ -481,6 +525,7 @@ def _product_to_content_and_meta(p: "AssortmentItem") -> Tuple[str, Dict[str, An
     }
     return content, meta
 
+
 def _fingerprint(content: str, meta: Dict[str, Any]) -> str:
     payload = {
         "content": content,
@@ -488,6 +533,7 @@ def _fingerprint(content: str, meta: Dict[str, Any]) -> str:
     }
     raw = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
 
 def _iter_batches(items: Iterable[Any], size: int) -> Iterable[List[Any]]:
     batch: List[Any] = []
@@ -499,7 +545,10 @@ def _iter_batches(items: Iterable[Any], size: int) -> Iterable[List[Any]]:
     if batch:
         yield batch
 
-async def _ensure_collection(client: AsyncQdrantClient, collection: str = "products") -> None:
+
+async def _ensure_collection(
+    client: AsyncQdrantClient, collection: str = "products"
+) -> None:
     try:
         await client.get_collection(collection)
     except Exception:
@@ -507,6 +556,7 @@ async def _ensure_collection(client: AsyncQdrantClient, collection: str = "produ
             collection,
             vectors_config=VectorParams(size=1536, distance=Distance.COSINE),
         )
+
 
 async def _fetch_all_payloads(ds: QdrantDocumentStore) -> Dict[str, Dict[str, Any]]:
     existing: Dict[str, Dict[str, Any]] = {}
@@ -526,12 +576,14 @@ async def _fetch_all_payloads(ds: QdrantDocumentStore) -> Dict[str, Dict[str, An
             break
     return existing
 
+
 async def update_vector_store_data(db: "Session") -> None:
     BATCH_SIZE = 128
     ds = QdrantDocumentStore(
         url="https://0a87a722-2e15-4fc0-aa39-5c99fc2866ca.us-west-1-0.aws.cloud.qdrant.io:6333",
         api_key=Secret.from_token(
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.DI_UrA1AMY62uHlhTsWxIwhsdtyGU0KU2oiwY5e43Vc"),
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.DI_UrA1AMY62uHlhTsWxIwhsdtyGU0KU2oiwY5e43Vc"
+        ),
         index="products",
         embedding_dim=1536,
         recreate_index=False,
@@ -568,7 +620,9 @@ async def update_vector_store_data(db: "Session") -> None:
     )
 
     if to_upsert_docs:
-        embedder = OpenAIDocumentEmbedder(api_key=Secret.from_token(settings.openai_api_key))
+        embedder = OpenAIDocumentEmbedder(
+            api_key=Secret.from_token(settings.openai_api_key)
+        )
         embedded_all: List[Document] = []
         for batch in _iter_batches(to_upsert_docs, 25):
             res = await embedder.run_async(batch)
@@ -579,6 +633,8 @@ async def update_vector_store_data(db: "Session") -> None:
         except Exception as e:
             print(e)
             print(traceback.format_exc())
+
+
 if __name__ == "__main__":
     try:
         loop = asyncio.get_event_loop()

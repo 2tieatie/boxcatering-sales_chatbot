@@ -302,6 +302,7 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 )
 
             # If AI requested an actionable task, execute it before replying
+            print(f"{chat_response=}")
             try:
                 if chat_response.action == "create_order" and isinstance(
                     chat_response.data, dict
@@ -346,7 +347,6 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                     normalized_delivery_date = parse_delivery_date(
                         payload.get("delivery_date")
                     )
-
                     # Coerce/validate fields accepted by OrderCreate
                     order_create = OrderCreate(
                         customer_id=(
