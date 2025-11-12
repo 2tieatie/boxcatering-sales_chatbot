@@ -7,3 +7,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "app.main:app", host=settings.host, port=settings.port, reload=settings.debug
     )
+# python3 ./scripts/migrate_assortment.py
+#
+# sudo docker exec -it chatbot python ./scripts/migrate_assortment.py

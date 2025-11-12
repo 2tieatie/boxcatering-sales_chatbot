@@ -17,7 +17,6 @@ from dataclasses import dataclass
 from datetime import datetime, timezone, UTC
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from tkinter import Menu
 from typing import Any, Dict, List, Optional, Set, Tuple, Iterable
 from haystack import Document
 import httpx
