@@ -482,7 +482,6 @@ function connectWebSocket() {
 
     if (location.host in ["0.0.0.0", "localhost"]) {
       url = `${protocol}://${location.host}/chat/ws${location.search || ""}`;
-    } else {
     }
     setStatus("chatTest.status.connectingToAI", "connecting");
 

@@ -148,7 +148,7 @@ class WebScraperService:
         # print(ds._client.get_collections())
         # result = ds._client.delete(
         #     collection_name=ds.index,
-        #     points_selector=Filter(must=[]),  # вместо {"filter": {}}
+        #     points_selector=Filter(must=[]),
         # )
         # print(result)
         # print(ds._client.count(collection_name="products"))
@@ -509,11 +509,30 @@ async def update_assortment_site(products: List[Dict[str, Any]], db: Session) ->
 
 
 def _product_to_content_and_meta(p: "AssortmentItem") -> Tuple[str, Dict[str, Any]]:
-    content = (
-        f"[ID:{p.id}] {p.category or ''}. {p.type or ''}. {p.name or ''}. "
-        f"{(p.description or '').strip()} {(p.print_label or '').strip()}. "
-        f"{p.price_uah} гривень. {p.weight} грам. На {p.guests} гостей/осіб."
-    ).strip()
+    parts = [f"[ID:{p.id}]"]
+
+    if p.category:
+        parts.append(f"Категорія: {p.category}.")
+    if p.type:
+        parts.append(f"Розмір: {p.type}.")
+    if p.name:
+        parts.append(f"Назва: {p.name}.")
+    if p.description or p.print_label:
+        desc = (p.description or "").strip()
+        label = (p.print_label or "").strip()
+        combined = f"Опис: {desc}" if desc else ""
+        if label:
+            combined += f"\nСклад: {label}."
+        if combined:
+            parts.append(combined)
+    if p.price_uah:
+        parts.append(f"Ціна: {p.price_uah} гривень.")
+    if p.weight:
+        parts.append(f"Вага: {p.weight} грам.")
+    if p.guests:
+        parts.append(f"На {p.guests} гостей/осіб.")
+
+    content = "\n".join(parts)
     meta: Dict[str, Any] = {
         "id": int(p.id),
         "guests": int(p.guests) if p.guests is not None else None,
