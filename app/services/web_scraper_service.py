@@ -137,23 +137,23 @@ class WebScraperService:
 
     async def scrape_once(self) -> Dict[str, Any]:
 
-        # ds = QdrantDocumentStore(
-        #     url="https://0a87a722-2e15-4fc0-aa39-5c99fc2866ca.us-west-1-0.aws.cloud.qdrant.io:6333",
-        #     api_key=Secret.from_token("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.DI_UrA1AMY62uHlhTsWxIwhsdtyGU0KU2oiwY5e43Vc"),
-        #     index="products",
-        #     embedding_dim=1536,
-        #     recreate_index=False
-        # )
-        # ds._initialize_client()
-        # print(ds._client.get_collections())
+        ds = QdrantDocumentStore(
+            url="https://0a87a722-2e15-4fc0-aa39-5c99fc2866ca.us-west-1-0.aws.cloud.qdrant.io:6333",
+            api_key=Secret.from_token("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.DI_UrA1AMY62uHlhTsWxIwhsdtyGU0KU2oiwY5e43Vc"),
+            index="products",
+            embedding_dim=1536,
+            recreate_index=False
+        )
+        ds._initialize_client()
+        print(ds._client.get_collections())
         # result = ds._client.delete(
         #     collection_name=ds.index,
         #     points_selector=Filter(must=[]),
         # )
         # print(result)
-        # print(ds._client.count(collection_name="products"))
-        # res = await _fetch_all_payloads(ds)
-        # print(res)
+        print(ds._client.count(collection_name="products"))
+        res = await _fetch_all_payloads(ds)
+        print(res)
         self.status.running = True
         self.status.last_error = None
         try:

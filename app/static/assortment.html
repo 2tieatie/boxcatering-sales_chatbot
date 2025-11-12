@@ -142,6 +142,9 @@
                         <tr>
                             <th data-i18n="assortment.columns.name">Item Name</th>
                             <th data-i18n="assortment.columns.description">Description</th>
+                            <th data-i18n="assortment.columns.type">Type</th>
+                            <th data-i18n="assortment.columns.category">Category</th>
+                            <th data-i18n="assortment.columns.composition">Composition</th>
                             <th data-i18n="assortment.columns.price">Price (UAH)</th>
                             <th data-i18n="assortment.columns.guests">Guests</th>
                             <th data-i18n="assortment.columns.weight">Weight (g)</th>
@@ -170,6 +173,7 @@
             }
 
             function renderTable(items) {
+              console.log(items)
                 const tbody = document.querySelector("#assortment-table tbody");
                 if (!tbody) return;
                 tbody.innerHTML = "";
@@ -179,6 +183,12 @@
                     tdName.textContent = item.name || "";
                     const tdDesc = document.createElement("td");
                     tdDesc.textContent = item.description || "";
+                    const tdType = document.createElement("td");
+                    tdType.textContent = item.type || "";
+                    const tdCategory = document.createElement("td");
+                    tdCategory.textContent = item.category || "";
+                    const tdComposition = document.createElement("td");
+                    tdComposition.textContent = item.print_label || "";
                     const tdPrice = document.createElement("td");
                     try {
                         const n = Number(item.price_uah);
@@ -197,6 +207,9 @@
                     }
                     tr.appendChild(tdName);
                     tr.appendChild(tdDesc);
+                    tr.appendChild(tdType);
+                    tr.appendChild(tdCategory);
+                    tr.appendChild(tdComposition);
                     tr.appendChild(tdPrice);
                     tr.appendChild(tdGuests);
                     tr.appendChild(tdWeight);
