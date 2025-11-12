@@ -10,12 +10,14 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import pprint
 import re
 import traceback
 from dataclasses import dataclass
 from datetime import datetime, timezone, UTC
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from tkinter import Menu
 from typing import Any, Dict, List, Optional, Set, Tuple, Iterable
 from haystack import Document
 import httpx
@@ -137,23 +139,24 @@ class WebScraperService:
 
     async def scrape_once(self) -> Dict[str, Any]:
 
-        ds = QdrantDocumentStore(
-            url="https://0a87a722-2e15-4fc0-aa39-5c99fc2866ca.us-west-1-0.aws.cloud.qdrant.io:6333",
-            api_key=Secret.from_token("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.DI_UrA1AMY62uHlhTsWxIwhsdtyGU0KU2oiwY5e43Vc"),
-            index="products",
-            embedding_dim=1536,
-            recreate_index=False
-        )
-        ds._initialize_client()
-        print(ds._client.get_collections())
+        # ds = QdrantDocumentStore(
+        #     url="https://0a87a722-2e15-4fc0-aa39-5c99fc2866ca.us-west-1-0.aws.cloud.qdrant.io:6333",
+        #     api_key=Secret.from_token("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.DI_UrA1AMY62uHlhTsWxIwhsdtyGU0KU2oiwY5e43Vc"),
+        #     index="products",
+        #     embedding_dim=1536,
+        #     recreate_index=False
+        # )
+        # ds._initialize_client()
+        # print(ds._client.get_collections())
         # result = ds._client.delete(
         #     collection_name=ds.index,
         #     points_selector=Filter(must=[]),
         # )
         # print(result)
-        print(ds._client.count(collection_name="products"))
-        res = await _fetch_all_payloads(ds)
-        print(res)
+        # print(ds._client.count(collection_name="products"))
+        # res = await _fetch_all_payloads(ds)
+        # print(res)
+        # return res
         self.status.running = True
         self.status.last_error = None
         try:
@@ -208,6 +211,9 @@ class Category(BaseModel):
     title: str
     slug: str
 
+class Menu(BaseModel):
+    id: int
+    title: str
 
 def _split_categories(value: Optional[str]) -> List[str]:
     if not value:
@@ -257,6 +263,56 @@ async def get_categories(client: httpx.AsyncClient) -> List[Category]:
         except Exception:
             continue
     return [c for c in out if c.id and c.title and c.slug]
+
+async def get_menus(client: httpx.AsyncClient, city_id: int = 1) -> List[Menu]:
+    base = f"https://back.box-catering.ua/api/cities/{city_id}/products"
+    data = await _fetch_json(client, base)
+    if not isinstance(data, dict):
+        return []
+    menus = data.get("filters", {}).get("menus", [])
+    return [Menu(id=menu.get("id"), title=menu.get("title")) for menu in menus]
+
+async def get_products_by_menu_id(
+    client: httpx.AsyncClient, menu_id: int, city_id: int = 1
+) -> List[Dict[str, Any]]:
+    result: List[Dict[str, Any]] = []
+    page = 1
+    base = f"https://back.box-catering.ua/api/cities/{city_id}/products"
+    while True:
+        data = await _fetch_json(client, base, params={"menu[]": menu_id, "page": page})
+        if not isinstance(data, dict):
+            break
+        products = data.get("products")
+        if not isinstance(products, list) or not products:
+            break
+        for p in products:
+            if isinstance(p, dict):
+                result.append(p)
+        page += 1
+    return result
+
+async def get_pairs_product_id_menu(
+    client: httpx.AsyncClient,
+    concurrency: int = 10,
+) -> Dict[int, str]:
+    menus = await get_menus(client)
+    sem = asyncio.Semaphore(concurrency)
+
+    async def fetch(menu) -> List[Tuple[int, str]]:
+        async with sem:
+            products = await get_products_by_menu_id(client, menu.id)
+            return [(p["id"], menu.title) for p in products if "id" in p]
+
+    batches = await asyncio.gather(*(fetch(m) for m in menus))
+    result: Dict[int, List[str]] = {}
+
+    for pairs in batches:
+        for pid, title in pairs:
+            result.setdefault(pid, [])
+            if title not in result[pid]:
+                result[pid].append(title)
+
+    return {pid: ", ".join(titles) for pid, titles in result.items()}
 
 
 async def get_products_by_category_slug(
@@ -312,7 +368,14 @@ async def _fetch_boxcatering_products() -> List[Dict[str, Any]]:
                         if c not in merged_cats:
                             merged_cats.append(c)
                     merged["category"] = ", ".join(merged_cats) if merged_cats else None
+        pairs = await get_pairs_product_id_menu(client)
         items = list(products_by_id.values())
+        for i in items:
+            menu = pairs.get(i['id'])
+            if menu:
+                i["menu"] = menu
+            else:
+                i["menu"] = ""
         return items
 
 
@@ -405,7 +468,7 @@ async def update_assortment_site(products: List[Dict[str, Any]], db: Session) ->
             )
             type_ = _norm_str(pr.get("type") or pr.get("product_type"))
             category = _norm_str(pr.get("category"))
-
+            menu = _norm_str(pr.get("menu"))
             if k in existing_by_key:
                 row = existing_by_key[k]
                 keep_ids.add(row.id)
@@ -431,6 +494,8 @@ async def update_assortment_site(products: List[Dict[str, Any]], db: Session) ->
                     changed = True
                 if (row.category or "") != (category or ""):
                     changed = True
+                if (row.menu or "") != (menu or ""):
+                    changed = True
 
                 if changed:
                     to_update.append(
@@ -446,6 +511,7 @@ async def update_assortment_site(products: List[Dict[str, Any]], db: Session) ->
                             "img": img,
                             "type": type_,
                             "category": category,
+                            "menu": menu,
                             "updated_at": datetime.now(UTC),
                         }
                     )
@@ -462,6 +528,7 @@ async def update_assortment_site(products: List[Dict[str, Any]], db: Session) ->
                         "img": img,
                         "type": type_,
                         "category": category,
+                        "menu": menu,
                         "created_at": datetime.now(UTC),
                         "updated_at": datetime.now(UTC),
                     }
@@ -513,6 +580,8 @@ def _product_to_content_and_meta(p: "AssortmentItem") -> Tuple[str, Dict[str, An
 
     if p.category:
         parts.append(f"Категорія: {p.category}.")
+    if p.menu:
+        parts.append(f"Меню: {p.menu}.")
     if p.type:
         parts.append(f"Розмір: {p.type}.")
     if p.name:
@@ -654,10 +723,14 @@ async def update_vector_store_data(db: "Session") -> None:
             print(traceback.format_exc())
 
 
+
+
 if __name__ == "__main__":
     try:
         loop = asyncio.get_event_loop()
         result = loop.run_until_complete(web_scraper.scrape_once())
+        # result = loop.run_until_complete(main())
         print(result)
     except Exception:
+        print(traceback.format_exc())
         print({"ok": False})

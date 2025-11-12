@@ -27,6 +27,7 @@ class AssortmentItem(Base):
     img = Column(String, nullable=True)
     type = Column(String, nullable=True)
     category = Column(String, nullable=True)
+    menu = Column(String, nullable=True)
     created_at = Column(
         DateTime(timezone=True), default=datetime.utcnow, nullable=False
     )

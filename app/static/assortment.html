@@ -142,6 +142,7 @@
                         <tr>
                             <th data-i18n="assortment.columns.name">Item Name</th>
                             <th data-i18n="assortment.columns.description">Description</th>
+                            <th data-i18n="assortment.columns.menu">Menu</th>
                             <th data-i18n="assortment.columns.type">Type</th>
                             <th data-i18n="assortment.columns.category">Category</th>
                             <th data-i18n="assortment.columns.composition">Composition</th>
@@ -181,6 +182,8 @@
                     const tr = document.createElement("tr");
                     const tdName = document.createElement("td");
                     tdName.textContent = item.name || "";
+                    const tdMenu = document.createElement("td");
+                    tdMenu.textContent = item.menu || "";
                     const tdDesc = document.createElement("td");
                     tdDesc.textContent = item.description || "";
                     const tdType = document.createElement("td");
@@ -207,6 +210,7 @@
                     }
                     tr.appendChild(tdName);
                     tr.appendChild(tdDesc);
+                    tr.appendChild(tdMenu)
                     tr.appendChild(tdType);
                     tr.appendChild(tdCategory);
                     tr.appendChild(tdComposition);

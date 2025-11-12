@@ -13,6 +13,7 @@ class AssortmentItemResponse(BaseModel):
     id: int
     name: str
     description: Optional[str] = None
+    menu: Optional[str] = None
     print_label: Optional[str] = None
     category: Optional[str] = None
     slug: Optional[str] = None

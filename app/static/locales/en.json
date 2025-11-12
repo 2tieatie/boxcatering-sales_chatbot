@@ -424,6 +424,7 @@
     "assortment.tableTitle": "Assortment Items",
     "assortment.columns.name": "Item Name",
     "assortment.columns.description": "Description",
+    "assortment.columns.menu": "Menu",
     "assortment.columns.type": "Type",
     "assortment.columns.category": "Category",
     "assortment.columns.composition": "Composition",
