@@ -287,6 +287,8 @@ class ChatbotService:
                     product_results = self.get_products(args["query"])
                     # logger.debug(f"Found products: {product_results}")
                     product_text = "\n".join(f"- {name}" for name in product_results)
+                    logger.debug(f"get_products({args.get("query")=}): {product_text}")
+
                     # logger.debug(f"Product text: {product_text}")
                     if product_text: 
                         messages = {
@@ -312,6 +314,8 @@ class ChatbotService:
                 elif func_name == "get_products_data":
                     product_results = self.get_products(args["query"])
                     product_text = "\n".join(f"- {name}" for name in product_results)
+                    logger.debug(f"get_products_data({args.get("query")=}): {product_text}")
+
                     messages = {
                         "role": "system",
                         "content": (
@@ -326,6 +330,8 @@ class ChatbotService:
                 elif func_name == "get_delivery_price_tool":
                     delivery_data = get_delivery_price(args.get("query"), args.get("subtotal"))
                     delivery_text = json.dumps(delivery_data, ensure_ascii=False)
+                    logger.debug(f"get_delivery_price_tool({args.get("query")=}): {delivery_text}")
+
                     messages = {
                         "role": "system",
                         "content": (
@@ -1322,5 +1328,6 @@ class ChatbotService:
 
 if __name__ == "__main__":
     cs = ChatbotService()
-    res = cs.get_date_time("2025-11-12 10:00")
+    # res = cs.get_date_time("2025-11-12 10:00")
+    res = cs.get_products(query="Меню: Холодні закуски")
     print(res)
