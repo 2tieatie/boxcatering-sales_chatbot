@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: demo_chatbot_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    networks:
+      - demo-chatbot
+  chatbot:
+    image: demo-chatbot:latest
+    container_name: demo_chatbot
+    ports:
+      - "8001:8000"
+    depends_on:
+      - postgres
+    environment:
+      - DB_NAME=${POSTGRES_DB}
+      - DB_HOST=${DB_HOST}
+      - DATABASE_URL=${DATABASE_URL}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+    networks:
+      - demo-chatbot
+    volumes:
+      - ./.env:/app/.env
+
+networks:
+  demo-chatbot:
