@@ -1,35 +1,41 @@
 # Conversational Improvements for Boxcatering Chatbot
 
 ## Overview
+
 This document outlines the enhancements made to make the chatbot more conversational, human-like, and memory-aware.
 
 ## Key Improvements Made
 
 ### 1. Enhanced Persona & Personality
+
 - **Name**: The bot now has a distinct identity as "Oksana"
 - **Personality**: Friendly, professional, passionate about catering
 - **Communication Style**: Natural, warm, and engaging
 - **Emojis**: Strategic use of emojis (1-2 per message) to add personality
 
 ### 2. Conversation Memory
+
 - **History Retrieval**: Added `get_conversation_history()` method to fetch previous messages
 - **Context Injection**: Last 10 messages are included in AI context
 - **Memory Management**: Automatic trimming to prevent token overflow
 - **No Repetition**: Bot remembers what it has already asked/discussed
 
 ### 3. Natural Language Instructions
+
 - **Before**: Rigid, technical instructions
 - **After**: Conversational, human-like guidance
 - **Language**: More natural Ukrainian/English phrasing
 - **Tone**: Warm and welcoming instead of formal
 
 ### 4. Enhanced Conversational Style
+
 - **Transitions**: Natural flow between topics
 - **Interest**: Shows genuine interest in customer needs
 - **References**: References previous conversation details
 - **Questions**: Asks clarifying questions naturally, not in bulk
 
 ### 5. Improved System Prompt Structure
+
 - **Greeting**: Friendly introduction with name and emoji
 - **Goals**: Clear, bullet-pointed objectives
 - **Style Guidelines**: Specific conversational behaviors
@@ -38,6 +44,7 @@ This document outlines the enhancements made to make the chatbot more conversati
 ## Technical Implementation
 
 ### New Method: `get_conversation_history()`
+
 ```python
 def get_conversation_history(self, conversation_id: int, db_session) -> list:
     """Retrieve conversation history for context."""
@@ -46,11 +53,13 @@ def get_conversation_history(self, conversation_id: int, db_session) -> list:
 ```
 
 ### Enhanced `process_message()` Method
+
 - Added `conversation_history` parameter
 - Builds message array with system prompt + history + current message
 - Maintains conversation context throughout the chat
 
 ### Updated Chat API
+
 - Retrieves conversation history before processing
 - Passes history to chatbot service
 - Maintains conversation continuity
@@ -58,6 +67,7 @@ def get_conversation_history(self, conversation_id: int, db_session) -> list:
 ## Example Conversation Flow
 
 **Before (Robotic)**:
+
 ```
 User: Привіт!
 Bot: ВАЖЛИВО: Ви ОБОВ'ЯЗКОВО повинні відповідати ТІЛЬКИ українською мовою. Чим можу допомогти?
@@ -70,6 +80,7 @@ Bot: Дякую, Олексій. Як ваші ціни? (repeats question)
 ```
 
 **After (Natural)**:
+
 ```
 User: Привіт!
 Bot: Привіт! Я Оксана, ваша персональна асистентка з кейтерингу. 😊 Чим можу допомогти?
@@ -92,6 +103,7 @@ Bot: Чудово, Олексій! 🎉 Для корпоративу у нас 
 ## Configuration Options
 
 The improvements work with existing chatbot configuration:
+
 - `friendly_tone`: Controls warmth level
 - `professional_style`: Balances casual vs formal
 - `suggestive_responses`: Enables helpful suggestions
@@ -100,6 +112,7 @@ The improvements work with existing chatbot configuration:
 ## Testing
 
 Run the test script to see improvements in action:
+
 ```bash
 python test_conversational_improvements.py
 ```

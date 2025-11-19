@@ -139,11 +139,11 @@ class WebScraperService:
     async def scrape_once(self) -> Dict[str, Any]:
 
         # ds = QdrantDocumentStore(
-        #     url="https://0a87a722-2e15-4fc0-aa39-5c99fc2866ca.us-west-1-0.aws.cloud.qdrant.io:6333",
-        #     api_key=Secret.from_token("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.DI_UrA1AMY62uHlhTsWxIwhsdtyGU0KU2oiwY5e43Vc"),
-        #     index="products",
-        #     embedding_dim=1536,
-        #     recreate_index=False
+        # url="https://0a87a722-2e15-4fc0-aa39-5c99fc2866ca.us-west-1-0.aws.cloud.qdrant.io:6333",
+        # api_key=Secret.from_token("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.DI_UrA1AMY62uHlhTsWxIwhsdtyGU0KU2oiwY5e43Vc"),
+        # index="products",
+        # embedding_dim=1536,
+        # recreate_index=False
         # )
         # ds._initialize_client()
         # print(ds._client.get_collections())
@@ -155,9 +155,8 @@ class WebScraperService:
         # print(ds._client.count(collection_name="products"))
         # res = await _fetch_all_payloads(ds)
         # print(res)
-        # return res
-        self.status.running = True
-        self.status.last_error = None
+        # self.status.running = True
+        # self.status.last_error = None
         try:
             with SessionLocal() as db:
                 cfg = {c.key: c.value for c in db.query(SystemConfig).all()}
@@ -210,9 +209,11 @@ class Category(BaseModel):
     title: str
     slug: str
 
+
 class Menu(BaseModel):
     id: int
     title: str
+
 
 def _split_categories(value: Optional[str]) -> List[str]:
     if not value:
@@ -263,6 +264,7 @@ async def get_categories(client: httpx.AsyncClient) -> List[Category]:
             continue
     return [c for c in out if c.id and c.title and c.slug]
 
+
 async def get_menus(client: httpx.AsyncClient, city_id: int = 1) -> List[Menu]:
     base = f"https://back.box-catering.ua/api/cities/{city_id}/products"
     data = await _fetch_json(client, base)
@@ -270,6 +272,7 @@ async def get_menus(client: httpx.AsyncClient, city_id: int = 1) -> List[Menu]:
         return []
     menus = data.get("filters", {}).get("menus", [])
     return [Menu(id=menu.get("id"), title=menu.get("title")) for menu in menus]
+
 
 async def get_products_by_menu_id(
     client: httpx.AsyncClient, menu_id: int, city_id: int = 1
@@ -289,6 +292,7 @@ async def get_products_by_menu_id(
                 result.append(p)
         page += 1
     return result
+
 
 async def get_pairs_product_id_menu(
     client: httpx.AsyncClient,
@@ -370,7 +374,7 @@ async def _fetch_boxcatering_products() -> List[Dict[str, Any]]:
         pairs = await get_pairs_product_id_menu(client)
         items = list(products_by_id.values())
         for i in items:
-            menu = pairs.get(i['id'])
+            menu = pairs.get(i["id"])
             if menu:
                 i["menu"] = menu
             else:
@@ -720,8 +724,6 @@ async def update_vector_store_data(db: "Session") -> None:
         except Exception as e:
             print(e)
             print(traceback.format_exc())
-
-
 
 
 if __name__ == "__main__":

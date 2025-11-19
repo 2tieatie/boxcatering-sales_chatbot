@@ -7,6 +7,7 @@ This document summarizes the implementation of role-based access control (RBAC) 
 The system implements three distinct user roles with a clear hierarchy:
 
 ### 1. System Administrator (`system_admin`)
+
 - **Level**: 3 (Highest)
 - **Access**: Full system access
 - **Capabilities**:
@@ -17,6 +18,7 @@ The system implements three distinct user roles with a clear hierarchy:
   - Can manage users with any role
 
 ### 2. Administrator (`admin`)
+
 - **Level**: 2 (Middle)
 - **Access**: Administrative access with restrictions
 - **Capabilities**:
@@ -27,6 +29,7 @@ The system implements three distinct user roles with a clear hierarchy:
   - All manager capabilities
 
 ### 3. Manager (`manager`)
+
 - **Level**: 1 (Lowest)
 - **Access**: Operational access
 - **Capabilities**:
@@ -41,17 +44,20 @@ The system implements three distinct user roles with a clear hierarchy:
 ## API Endpoint Access Control
 
 ### System Configuration (`/system-config/*`)
+
 - **Access**: System administrators only
 - **Operations**: Full CRUD operations
 - **Purpose**: Management of system parameters and sensitive configuration
 
 ### Chatbot Configuration (`/chatbot-config/*`)
+
 - **Access**: Administrators and system administrators
 - **Operations**: Full CRUD operations
 - **Special Endpoints**:
   - `/chatbot-config/active` - All authenticated users can view active configuration
 
 ### User Management (`/users/*`)
+
 - **Access Control**:
   - **List users**: Administrators and system administrators only
   - **View user**: Self, or administrators/system administrators
@@ -60,6 +66,7 @@ The system implements three distinct user roles with a clear hierarchy:
   - **Delete user**: Administrators and system administrators (cannot delete self)
 
 ### Conversations (`/conversations/*`)
+
 - **Access Control**:
   - **View conversations**: All authenticated users
   - **Update conversations**: Role-based restrictions
@@ -69,6 +76,7 @@ The system implements three distinct user roles with a clear hierarchy:
   - **Resolve conversation**: Managers only (assigned conversations)
 
 ### Orders (`/orders/*`)
+
 - **Access Control**:
   - **View orders**: All authenticated users
   - **Update orders**: Role-based restrictions
@@ -77,22 +85,26 @@ The system implements three distinct user roles with a clear hierarchy:
   - **Mark processed**: Managers only
 
 ### Chat (`/chat/ws`)
+
 - **Access**: WebSocket endpoint (no role restrictions)
 - **Purpose**: Customer interaction with chatbot
 
 ## Role Hierarchy Enforcement
 
 ### User Creation Restrictions
+
 - **System administrators** can create users with any role
 - **Administrators** can create managers and other administrators, but not system administrators
 - **Managers** cannot create users
 
 ### User Management Restrictions
+
 - **System administrators** can manage any user
 - **Administrators** can manage managers and other administrators, but not system administrators
 - **Managers** cannot manage other users
 
 ### Role Promotion Restrictions
+
 - **Administrators** cannot promote users to system administrator role
 - **Administrators** cannot modify system administrator accounts
 - **System administrators** have no restrictions
@@ -100,19 +112,24 @@ The system implements three distinct user roles with a clear hierarchy:
 ## Implementation Details
 
 ### Role Service (`app/services/role_service.py`)
+
 Centralized service providing:
+
 - Role validation methods
 - Permission checking utilities
 - Role hierarchy management
 - Access control helper functions
 
 ### API Dependencies
+
 Each protected endpoint uses appropriate role dependencies:
+
 - `require_system_admin()` - System administrator only
 - `require_admin_or_system_admin()` - Administrator or system administrator
 - `require_manager_or_higher()` - Manager, administrator, or system administrator
 
 ### Security Features
+
 - JWT-based authentication
 - Role-based endpoint protection
 - Hierarchical permission enforcement
@@ -122,15 +139,18 @@ Each protected endpoint uses appropriate role dependencies:
 ## Compliance with Requirements
 
 ✅ **System Administrator Requirements**:
+
 - Full CRUD access to system configuration parameters
 - Full administrative rights
 
 ✅ **Administrator Requirements**:
+
 - User management and role assignment
 - Chatbot configuration management
 - Manager-level capabilities
 
 ✅ **Manager Requirements**:
+
 - Chatbot testing access
 - Conversation history viewing (read-only)
 - Order viewing and processing status updates

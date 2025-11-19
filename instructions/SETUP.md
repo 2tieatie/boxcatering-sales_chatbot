@@ -13,17 +13,20 @@ This guide will help you set up and run the Boxcatering Chatbot application loca
 ### 1. Install PostgreSQL
 
 **Windows:**
+
 - Download from [PostgreSQL official website](https://www.postgresql.org/download/windows/)
 - Install with default settings
 - Remember the password you set for the `postgres` user
 
 **macOS:**
+
 ```bash
 brew install postgresql
 brew services start postgresql
 ```
 
 **Linux (Ubuntu/Debian):**
+
 ```bash
 sudo apt update
 sudo apt install postgresql postgresql-contrib
@@ -34,6 +37,7 @@ sudo systemctl enable postgresql
 ### 2. Create Database
 
 **Option A: Using the provided script**
+
 ```bash
 # Connect to PostgreSQL as superuser
 sudo -u postgres psql
@@ -46,6 +50,7 @@ sudo -u postgres psql
 ```
 
 **Option B: Manual creation**
+
 ```bash
 # Connect to PostgreSQL
 sudo -u postgres psql
@@ -60,6 +65,7 @@ CREATE DATABASE boxcatering_chatbot;
 ## 🐍 Python Environment Setup
 
 ### 1. Install Dependencies
+
 ```bash
 # Install required packages
 pip install -r requirements.txt
@@ -69,6 +75,7 @@ uv sync
 ```
 
 ### 2. Environment Configuration
+
 ```bash
 # Copy environment template
 cp env.example .env
@@ -80,11 +87,13 @@ cp env.example .env
 ## 🚀 Quick Setup (Recommended)
 
 Run the automated setup script:
+
 ```bash
 python scripts/setup.py
 ```
 
 This script will:
+
 - ✅ Check Python version
 - ✅ Verify dependencies
 - ✅ Create/update .env file
@@ -105,14 +114,17 @@ After running the setup script, you can login with:
 ## 🏃‍♂️ Running the Application
 
 ### 1. Start the FastAPI server
+
 ```bash
 python -m app.main
 ```
 
 ### 2. Access the application
+
 Open your browser and go to: `http://localhost:8000`
 
 ### 3. Login
+
 Use the credentials above to access the system configuration page and other features.
 
 ## 🛠️ Manual Setup Steps
@@ -120,16 +132,19 @@ Use the credentials above to access the system configuration page and other feat
 If you prefer to set up manually:
 
 ### 1. Initialize Database
+
 ```bash
 python scripts/init_db.py
 ```
 
 ### 2. Create Admin User
+
 ```bash
 python scripts/create_admin.py
 ```
 
 ### 3. Start Application
+
 ```bash
 python -m app.main
 ```
@@ -137,17 +152,20 @@ python -m app.main
 ## 🔧 Troubleshooting
 
 ### Database Connection Issues
+
 - Ensure PostgreSQL is running
 - Check database credentials in `.env`
 - Verify database `boxcatering_chatbot` exists
 - Test connection: `psql -h localhost -U postgres -d boxcatering_chatbot`
 
 ### Python Package Issues
+
 - Update pip: `pip install --upgrade pip`
 - Install packages individually if needed
 - Check Python version compatibility
 
 ### Port Already in Use
+
 - Change port in `.env` file
 - Kill process using port 8000: `lsof -ti:8000 | xargs kill -9`
 
@@ -173,6 +191,7 @@ Once logged in as the system administrator:
 ## 📞 Support
 
 If you encounter issues:
+
 1. Check the troubleshooting section above
 2. Review error logs in the terminal
 3. Ensure all prerequisites are met

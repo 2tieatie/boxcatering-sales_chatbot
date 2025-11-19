@@ -17,3 +17,10 @@ if __name__ == "__main__":
 # sudo docker compose -f ../boxcatering-sales_chatbot/Docker/docker-compose.yml up -d postgres
 # sudo docker exec -it chatbot python ./scripts/migrate_assortment.py
 # sudo docker logs chatbot -f
+
+# sudo docker compose -f Docker/demo.yml -p demo up -d --build
+# sudo docker exec -it demo_chatbot python ./scripts/migrate_assortment.py
+# sudo docker exec -it demo_chatbot python ./scripts/init_db.py
+
+# git fetch --all
+# git reset --hard origin/16.10-misha

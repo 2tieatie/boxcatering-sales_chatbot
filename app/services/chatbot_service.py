@@ -1,3 +1,5 @@
+import asyncio
+import pprint
 from datetime import date, datetime, timedelta
 import re
 import json
@@ -8,57 +10,249 @@ import time
 import uuid
 
 from pathlib import Path
-from typing import Optional, Dict, Any
-
-from fastapi import HTTPException
+from typing import Optional, Dict, Any, List
+from langchain_qdrant import QdrantVectorStore
+from langchain.tools import tool
+from langchain_core.messages import (
+    SystemMessage,
+    AIMessage,
+    HumanMessage,
+    ToolMessage,
+    BaseMessage,
+)
+from langchain_core.tools import BaseTool, StructuredTool
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from openai import OpenAI
 from loguru import logger
+from pydantic import BaseModel, Field
+from qdrant_client import QdrantClient
 
 from app.config import settings
-from app.models.assortment_item import AssortmentItem
-# from app.models.backend_log import BackendLog
 from app.schemas.chat import ChatRequest, ChatResponse, HandoverReason
-from app.database import get_db
-from app.models.prompt_log import PromptLog
-from app.services.tools.geocoding import get_delivery_price
-from app.utils.logging_config import get_logger
+from app.services.prompts.assortement_agent import assortment_system_message
+from app.services.prompts.delivery_agent import delivery_agent_system
+from app.services.prompts.main_agent import main_agent_system
+from app.services.prompts.validation_agent import validation_system_message
+from app.services.tools.geocoding import get_delivery_price_tool
+from app.services.tools.products import get_products_tool
 from app.services.unified_logger import UnifiedLogger
-
-from haystack.components.embedders import OpenAITextEmbedder, OpenAIDocumentEmbedder
-from haystack import Document
-from haystack import Pipeline
 from haystack.utils import Secret
 from haystack_integrations.document_stores.qdrant import QdrantDocumentStore
-from haystack_integrations.components.retrievers.qdrant import QdrantEmbeddingRetriever
-from haystack.document_stores.types import DuplicatePolicy
+
+
+def _model_supports_temperature(model_name: str) -> bool:
+    unsupported = {"gpt-5", "gpt-5-mini", "gpt-5-nano"}
+    return model_name not in unsupported
+
+
+class Agent:
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        system_message: str,
+        tools: List[BaseTool] | None = None,
+        enable_memory: bool = True,
+        temperature: float = 0.7,
+        model: str = "gpt-5",
+    ):
+        self.name = name
+        self.description = description
+        self.tools: List[BaseTool] = tools or []
+        self.enable_memory = enable_memory
+        self.memory: List[BaseMessage] = []
+        self.model = ChatOpenAI(
+            model=model,
+            temperature=temperature if _model_supports_temperature(model) else None,
+            api_key=settings.openai_api_key,
+            # reasoning={"enable": False},
+            reasoning={
+                "effort": "low",
+                "summary": None,
+            },
+        )
+        self.model.bind_tools(self.tools)
+        self.system_message = system_message
+
+    async def run_tool(self, tool_name: str, **kwargs: Any) -> Any:
+        if tool_name not in [t.name for t in self.tools]:
+            raise PermissionError(
+                f"Agent '{self.name}' is not allowed to call tool '{tool_name}'"
+            )
+        logger.info(f"[{self.name}] → tool call: {tool_name} | payload={kwargs}")
+        for t in self.tools:
+            if t.name == tool_name:
+                if hasattr(t, "ainvoke"):
+                    result = await t.ainvoke(kwargs)
+                else:
+                    result = await asyncio.to_thread(t.invoke, **kwargs)
+                return result
+        raise ValueError(f"Unknown tool '{tool_name}'")
+
+    def build_messages(self, query: str) -> List[BaseMessage]:
+        messages: List[BaseMessage] = [SystemMessage(content=self.system_message)]
+
+        if self.enable_memory and self.memory:
+            messages.extend(self.memory)
+
+        messages.append(HumanMessage(content=query))
+        return messages
+
+    async def execute(self, query_or_messages: List[BaseMessage] | str) -> Any:
+        if isinstance(query_or_messages, str):
+            messages: List[BaseMessage] = self.build_messages(query_or_messages)
+        else:
+            messages = list(query_or_messages)
+            system_messages = list(
+                filter(lambda m: isinstance(m, SystemMessage), messages)
+            )
+            if not system_messages:
+                messages = [SystemMessage(content=self.system_message), *messages]
+        if self.enable_memory:
+            self.memory = list(messages)
+        # logger.info(f"[{self.name}] {self.memory=}")
+        last_tool_results: Dict[str, Any] = {}
+
+        while True:
+            logger.info(f"[{self.name}] executing, messages_count={len(messages)}")
+
+            bound_model = self.model.bind_tools(self.tools)
+            msg = await bound_model.ainvoke(messages)
+
+            logger.info(f"[{self.name}] msg: {msg}")
+            tool_calls = msg.tool_calls
+            logger.info(f"[{self.name}] tool_calls: {tool_calls}")
+
+            messages.append(msg)
+
+            if tool_calls:
+
+                async def execute_single_tool(call):
+                    args = call["args"]
+                    if isinstance(args, str):
+                        try:
+                            payload = json.loads(args)
+                        except Exception:
+                            payload = {}
+                    else:
+                        payload = args
+
+                    tool_name = call["name"]
+                    tool_call_id = call["id"]
+
+                    result = await self.run_tool(tool_name, **payload)
+                    last_tool_results[tool_call_id] = result
+
+                    try:
+                        content = json.dumps(result, ensure_ascii=False)
+                    except TypeError:
+                        content = str(result)
+
+                    tool_message = ToolMessage(
+                        content=content,
+                        name=tool_name,
+                        tool_call_id=tool_call_id,
+                    )
+                    return tool_message
+
+                tool_messages = await asyncio.gather(
+                    *[execute_single_tool(call) for call in tool_calls]
+                )
+
+                logger.info(f"[{self.name}] tool_messages: {tool_messages}")
+
+                messages.extend(tool_messages)
+
+                if self.enable_memory:
+                    self.memory = list(messages)
+
+                continue
+
+            if self.enable_memory:
+                self.memory = list(messages)
+
+            if isinstance(msg.content, list):
+                return list(
+                    filter(lambda m: m.get("type") != "reasoning", msg.content)
+                )[0]["text"]
+            return msg.content
+
+    def as_tool(self) -> BaseTool:
+        class AgentInput(BaseModel):
+            query: str = Field(
+                ..., description="The task that this agent should solve end-to-end."
+            )
+
+        async def _entry(query: str) -> Any:
+            logger.info(f"[{self.name}] entrypoint tool → execute")
+            return await self.execute(query)
+
+        return StructuredTool(
+            name=self.name,
+            description=self.description,
+            args_schema=AgentInput,
+            coroutine=_entry,
+        )
+
+
+def get_main_agent() -> Agent:
+    assortment_agent = Agent(
+        "assortment_agent",
+        description="Specialized menu agent. Identifies event format (buffet/coffee-break/cocktail; banquet→escalate), collects guest_count + event_duration.",
+        system_message=assortment_system_message,
+        enable_memory=True,
+        tools=[get_products_tool],
+    )
+
+    delivery_agent = Agent(
+        "delivery_agent",
+        description="Delivery time validation specialist. Informs customer of working hours (09:00-19:00, 7 days/week). Collects desired delivery date (handles relative: сьогодні/завтра, explicit: DD.MM) + exact time. Normalizes input to YYYY-MM-DD and HH:MM format. Calls get_date_time(query) returning {valid, approved_time, approved_date, reason_if_invalid}. Enforces: working window 09:00-19:00, 2h lead time for TODAY only (tomorrow+ no lead check). NO autocompletion or nearest-time suggestions. Accepts/rejects exactly as requested.",
+        system_message=delivery_agent_system,
+        tools=[get_delivery_price_tool],
+        enable_memory=True,
+    )
+    validation_agent = Agent(
+        "validation_agent",
+        description="Contact data validation specialist. Validates customer_name (2-40 chars, letters only, Cyrillic/Latin OK) and customer_phone (0XXXXXXXXX/380XXXXXXXXX/+380XXXXXXXXX). Strict rules, no flexibility. Returns: customer_name, customer_phone (normalized).",
+        system_message=validation_system_message,
+        tools=[],
+        enable_memory=True,
+    )
+
+    validation_agent_tool = validation_agent.as_tool()
+    delivery_agent_tool = delivery_agent.as_tool()
+    assortment_agent_tool = assortment_agent.as_tool()
+
+    main_agent = Agent(
+        "top_agent",
+        description="",
+        system_message=main_agent_system,
+        tools=[validation_agent_tool, delivery_agent_tool, assortment_agent_tool],
+        enable_memory=True,
+    )
+    return main_agent
 
 
 class ChatbotService:
-    """Service for handling chatbot interactions."""
-    
     def __init__(self):
-        # Get API key from environment or use a placeholder
         api_key = settings.openai_api_key
-        # model = settings.openai_model
         model = "gpt-4o mini"
-        
+
         self.client = OpenAI(api_key=api_key)
         self.model = model
-        # Cache combined context by cache key (absolute_dir|max_chars)
         self._context_docs_cache: Dict[str, str] = {}
-        # Initialize Qdrant document store
         self.document_store = QdrantDocumentStore(
             url="https://0a87a722-2e15-4fc0-aa39-5c99fc2866ca.us-west-1-0.aws.cloud.qdrant.io:6333",
-            api_key=Secret.from_token("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.DI_UrA1AMY62uHlhTsWxIwhsdtyGU0KU2oiwY5e43Vc"),
+            api_key=Secret.from_token(
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.DI_UrA1AMY62uHlhTsWxIwhsdtyGU0KU2oiwY5e43Vc"
+            ),
             index="products",
             embedding_dim=1536,
-            recreate_index=False
+            recreate_index=False,
         )
         self.openai_api_key = api_key
-        # self.prompt_logger = get_logger("prompt")
-        # self.app_logger = get_logger("app")
         self.unified_logger = UnifiedLogger()
-    
+
     async def process_message(
         self,
         chat_request: ChatRequest,
@@ -71,362 +265,81 @@ class ChatbotService:
         config: Optional[Dict[str, Any]] = None,
         conversation_history: Optional[list] = None,
     ) -> ChatResponse:
-        """Process a chat message and return response."""
         try:
             start_time = time.perf_counter()
 
-            # Generate correlation ID for this request
             correlation_id = str(uuid.uuid4())[:8]
 
-            # Log incoming request using UnifiedLogger
-            self.unified_logger.log_chat_request(correlation_id, {
-                "user_message": chat_request.message,
-                "language": language,
-                "model": model or self.model,
-                "conversation_history_length": len(conversation_history) if conversation_history else 0
-            })
+            self.unified_logger.log_chat_request(
+                correlation_id,
+                {
+                    "user_message": chat_request.message,
+                    "language": language,
+                    "model": model or self.model,
+                    "conversation_history_length": (
+                        len(conversation_history) if conversation_history else 0
+                    ),
+                },
+            )
 
-            # Build the system prompt with language settings and context docs
-            system_prompt = self._build_system_prompt(language, force_language, config)
-            # system_prompt, prompt_trace = self._build_system_prompt_with_trace(language, force_language, config)
-            # Compute a short hash to identify system prompts without logging full content
-            system_prompt_hash = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()[:16]
-            
-             # Log system prompt details using UnifiedLogger
-            # self.unified_logger.prompt_logger.info(
-            #     f"[{correlation_id}] SYSTEM_PROMPT: {system_prompt} | hash={system_prompt_hash} | "
-            #     f"length={len(system_prompt)} | "
-            #     f"components={json.dumps({k: v['len'] if isinstance(v, dict) and 'len' in v else v.get('count', 0) \
-            #         if isinstance(v, dict) else 0 for k, v in prompt_trace['components'].items()})}"
-            # )
-            
-            # Build conversation messages with history
-            messages = [{"role": "system", "content": system_prompt}]
-            
-            # Add conversation history if provided
+            messages = []
             if conversation_history:
-                for msg in conversation_history[-20:]:  # Keep last 20 messages for context
+                for msg in conversation_history[-13:]:
                     if isinstance(msg, dict) and "role" in msg and "content" in msg:
-                        messages.append({
-                            "role": msg["role"],
-                            "content": msg["content"]
-                        })
-            
-            # Add current user message
-            messages.append({"role": "user", "content": chat_request.message})
+                        if msg["role"] == "assistant":
+                            messages.append(AIMessage(content=msg["content"]))
+                        elif msg["role"] == "user":
+                            messages.append(HumanMessage(content=msg["content"]))
 
-            # Functions to search and make specific actions
-            get_products_schema = {
-                "name": "get_products",
-                "description": (
-                    "Returns a list of products from the assortment that match the user's query. "
-                    "Used for searching dishes, drinks, snacks, boxes, ingredients, or categories. "
-                    "Do NOT use this function to clarify details about a specific product, its price, weight, or serving count. "
-                    "Form the query only based on categories, ingredients, or general terms like 'set' or 'box'."
-                ),
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": (
-                                "User's request for product search, advice, or recommendation. "
-                                "Examples: 'salads', 'croissants', 'vegetarian', 'available now', "
-                                "'hot snacks', 'dishes', 'recommend', 'any dishes', 'all dishes', 'suggest boxes'."
-                            )
-                        }
-                    },
-                    "required": ["query"]
-                }
-            }
+            messages.append(HumanMessage(content=chat_request.message))
 
-            get_products_data = {
-                "name": "get_products_data",
-                "description": (
-                    "Returns the total cost of all products mentioned by the user, "
-                    "calculated based on their quantity. "
-                    "Form the prompt using only product names and summarize prices using description data or the 'price' metadata field."
-                ),
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": (
-                                "User's request for price or quantity details of specific products. "
-                                "Form the query using only product names and return price information from descriptions or metadata. "
-                                "Return specific information only about the products explicitly mentioned by the user. "
-                                "Do NOT return lists of unrelated products or general descriptions. "
-                                "May also include temporal context keywords like 'today', 'tomorrow', 'on [date]', 'at [hour]'."
-                            )
-                        }
-                    },
-                    "required": ["query"]
-                }
-            }
-
-            get_delivery_price_tool = {
-              "name": "get_delivery_price_tool",
-              "description": "Determines whether delivery is available to the specified address and returns calculated delivery cost based on geocoding and delivery zone polygons. The function resolves the address using Google and/or Nominatim geocoding providers, checks confidence of the detected coordinates, identifies whether the point falls inside any delivery polygon, applies delivery cost rules including free-delivery thresholds, and returns the final delivery price and address metadata.",
-              "parameters": {
-                "type": "object",
-                "properties": {
-                  "query": {
-                    "type": "string",
-                    "description": "Full address provided by the user in format: [Місто], вул. [Вулиця], [Будинок] (e.g., 'Одеса, вул. Шевченка, 1') OR by destination in format: [Місто], [Destination] (e.g. 'Київ, Ocean Plaza', 'Київ, Метро Вокзальна'). Used for geocoding and zone detection."
-                  },
-                  "subtotal": {
-                    "type": ["number"],
-                    "description": "Order subtotal used to determine free delivery eligibility. ALWAYS INPUT THIS PARAMETER IF ORDER PREPARED OTHER WAYS PASS 0!!"
-                  },
-                },
-                "required": ["query"]
-              }
-            }
-
-
-
-            get_date_time = {
-                "name": "get_date_time",
-                "description": (
-                    "Повертає мінімально можливу для замовлення дату та час"
-                ),
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": (
-                                "Запит користувача про час та дату, коли він хоче замовити"
-                                "Запит користувача про дата чи час"
-                                "Запит або бажання користувача доставити на вказану дату та час"
-                                "Формуй 'query' у форматі ISO 'HH:MM' та кількість днів => 'сьогодні = 0, завтра = 1, після завтра = 2' => приклад '10:00, 2'"
-                            )
-                        }
-                    },
-                    "required": ["query"]
-                },
-            }
-
-            # Create the chat completion
-            chosen_model = model or self.model
-            request_kwargs = {
-                "model": chosen_model,
-                "messages": messages,
-                "functions": [get_products_schema, get_products_data, get_delivery_price_tool],
-                "function_call": "auto",
-            }
-
-            # Respect model capabilities: only send temperature if supported
-            if self._model_supports_temperature(chosen_model):
-                request_kwargs["temperature"] = (
-                    temperature if temperature is not None else getattr(settings, "openai_temperature", 0.7)
-                )
-
-            # Use correct parameter name for token limit based on model
-            # token_limit = max_tokens if max_tokens is not None else getattr(settings, "openai_max_tokens", 500)
-            # if self._model_requires_max_completion_tokens(chosen_model):
-            #     request_kwargs["max_completion_tokens"] = token_limit
-            # else:
-            #     request_kwargs["max_tokens"] = token_limit
-
-            try:
-                response = self.client.chat.completions.create(**request_kwargs)
-            except Exception as api_error:
-                error_text = str(api_error)
-                default_model = self.model
-                # If selected model is unavailable, retry once with default model
-                if (
-                    ("model_not_found" in error_text or "does not exist" in error_text)
-                    and chosen_model != default_model
-                ):
-                    logger.warning(
-                        f"Model '{chosen_model}' unavailable. Falling back to default model '{default_model}'."
-                    )
-
-                    fallback_kwargs = {
-                        "model": default_model,
-                        "messages": request_kwargs["messages"],
-                    }
-                    # Only include temperature if supported by fallback model
-                    if self._model_supports_temperature(default_model):
-                        fallback_kwargs["temperature"] = request_kwargs.get("temperature")
-                    # Token limit parameter per fallback model
-                    # token_limit = (
-                    #     request_kwargs.get("max_tokens")
-                    #     or request_kwargs.get("max_completion_tokens")
-                    #     or getattr(settings, "openai_max_tokens", 500)
-                    # )
-                    # if self._model_requires_max_completion_tokens(default_model):
-                    #     fallback_kwargs["max_completion_tokens"] = token_limit
-                    # else:
-                    #     fallback_kwargs["max_tokens"] = token_limit
-
-                    response = self.client.chat.completions.create(**fallback_kwargs)
-                    if debug:
-                        request_kwargs = fallback_kwargs
-                else:
-                    raise
-            
-            # Log API request details using UnifiedLogger
-            self.unified_logger.prompt_logger.info(
-                f"[{correlation_id}] OPENAI_REQUEST: model={request_kwargs.get('model')} | "
-                f"temperature={request_kwargs.get('temperature')} | "
-                # f"max_tokens={request_kwargs.get('max_tokens') or request_kwargs.get('max_completion_tokens')} | "
-                f"messages_count={len(request_kwargs['messages'])}"
-            )
-
-            # Extract the response
-            message = response.choices[0].message
-            # Check for function_call
-            if message.function_call:
-                func_name = message.function_call.name
-                args = json.loads(message.function_call.arguments)
-                if func_name == "get_products":
-                    # logger.debug(f"Function call: {func_name} with args: {args}")
-                    product_results = self.get_products(args["query"])
-                    # logger.debug(f"Found products: {product_results}")
-                    product_text = "\n".join(f"- {name}" for name in product_results)
-                    logger.debug(f"get_products({args.get("query")=}): {product_text}")
-
-                    # logger.debug(f"Product text: {product_text}")
-                    if product_text: 
-                        messages = {
-                            "role": "system",
-                            "content": (
-                                "Ось перелік товарів, які відповідають запиту користувача:\n"
-                                f"{product_text}\n"
-                                "Сформуй відповідь для клієнта, поясни, чому ці варіанти підходять, Запропонуй наступні кроки (наприклад, уточнити кількість, дату доставки тощо)."
-                            )
-                        }
-                    else:
-                        messages = {
-                            "role": "system",
-                            "content": (
-                                "Сформуй відповідь для клієнта, поясни що не знайдено варіантів по його запиту. Запропонуй уточнити якімь конкретні деталі, побажання, що подобається."
-                            )
-                        }
-
-                    request_kwargs["messages"].append(messages)
-                    # request_kwargs["messages"] = messages
-
-                    response = self.client.chat.completions.create(**request_kwargs)
-                elif func_name == "get_products_data":
-                    product_results = self.get_products(args["query"])
-                    product_text = "\n".join(f"- {name}" for name in product_results)
-                    logger.debug(f"get_products_data({args.get("query")=}): {product_text}")
-
-                    messages = {
-                        "role": "system",
-                        "content": (
-                            "Ось інформація по товарам для користувача:\n"
-                            f"{product_text}\n"
-                            "Сформуй відповідь для клієнта, із вказанням даних які хоче дізнатися користувач (наприклад: ціна, скільки потрібно боксів на кількість осіб, тощо)."
-                        )
-                    }
-
-                    request_kwargs["messages"].append(messages)
-                    response = self.client.chat.completions.create(**request_kwargs)
-                elif func_name == "get_delivery_price_tool":
-                    delivery_data = get_delivery_price(args.get("query"), args.get("subtotal"))
-                    delivery_text = json.dumps(delivery_data, ensure_ascii=False)
-                    logger.debug(f"get_delivery_price_tool({args.get("query")=}): {delivery_text}")
-
-                    messages = {
-                        "role": "system",
-                        "content": (
-                            f"response from get_delivery_price_tool: {delivery_text}"
-                        )
-                    }
-                    request_kwargs["messages"].append(messages)
-                    response = self.client.chat.completions.create(**request_kwargs)
-                elif func_name == "get_date_time":
-                    time_results = self.get_date_time(args["query"])
-                    print(f"{args['query']=}, {time_results=}")
-                    logger.debug(f"Time results: {time_results}")
-                    messages = {
-                        "role": "system",
-                        "content": (
-                            "Ось інформація по даті та часу для користувача:\n"
-                            f"{time_results}\n"
-                            "Сформуй відповідь для клієнта, якщо мінімальна дата свівпадає, то підтверди час, якщо ні, то сформуй пропозицію, що можливо тільки на мінімальну дату."
-                        )
-                    }
-
-                    request_kwargs["messages"].append(messages)
-                    response = self.client.chat.completions.create(**request_kwargs)
-
-            ai_response = (response.choices[0].message.content or "")
-            # logger.debug(f"AI response: {ai_response}")
-            # logger.debug(f"Response: {response}")
-            # logger.debug(f"Function call: {response.choices[0].message.function_call}")
-
-            # Parse the response to check for handover
+            agent = get_main_agent()
+            ai_response = await agent.execute(messages)
             parsed_response = self._parse_ai_response(ai_response)
-            # logger.debug(f"Parsed response: {parsed_response}")
-
-            # Backend safety net: never return empty customer-visible text
             user_text = (parsed_response.get("response") or ai_response or "").strip()
-            # logger.debug(f"User text: {user_text}")
             needs_handover = bool(parsed_response.get("handover_to_manager", False))
-            # logger.debug(f"Needs handover: {needs_handover}")
             handover_reason = parsed_response.get("handover_reason")
-            # logger.debug(f"Handover reason: {handover_reason}")
             handover_desc = parsed_response.get("handover_reason_description")
-            # logger.debug(f"Handover description: {handover_desc}")
             summary = parsed_response.get("debug", {}).get("summary")
-            # logger.debug(f"Conversation summary: {summary}")
-
-            # Messages from configuration or localized defaults
-            default_fallback = (
-                (config or {}).get("fallback_message")
-                or (
-                    "Перепрошую, я не зовсім зрозуміла. Будь ласка, перефразуйте, я залюбки допоможу."
-                    # if language == "uk"
-                    # else "I apologize, I didn't quite understand. Could you please rephrase? I'm happy to help."
-                )
+            default_fallback = (config or {}).get("fallback_message") or (
+                "Перепрошую, я не зовсім зрозуміла. Будь ласка, перефразуйте, я залюбки допоможу."
             )
-            default_handover_msg = (
-                (config or {}).get("handover_message")
-                or (
-                    "Вибачте, я не маю потрібної інформації. Передаю запит менеджеру."
-                    # if language == "uk"
-                    # else "I'm sorry, I don't have the required information. Let me forward your request to the manager."
-                )
+            default_handover_msg = (config or {}).get("handover_message") or (
+                "Вибачте, я не маю потрібної інформації. Передаю запит менеджеру."
             )
 
             if not user_text:
-                # If model responded with empty text, force a graceful handover
                 allow_handover = bool((config or {}).get("manager_handover", True))
                 if allow_handover:
                     return ChatResponse(
                         response=default_handover_msg,
                         handover_to_manager=True,
                         handover_reason=HandoverReason.OUT_OF_SCOPE,
-                        handover_reason_description=(handover_desc or "Model returned empty response"),
+                        handover_reason_description=(
+                            handover_desc or "Model returned empty response"
+                        ),
                         summary=summary,
                         debug=(
                             {
-                                "model": request_kwargs.get("model"),
-                                "temperature": request_kwargs.get("temperature"),
-                                # "max_tokens": request_kwargs.get("max_tokens") or request_kwargs.get("max_completion_tokens"),
+                                "model": model or self.model,
+                                "temperature": temperature,
                                 "reason": "empty_text_fallback",
                             }
                             if debug
                             else None
                         ),
                     )
-                # If handover disabled, use fallback message without handover
                 return ChatResponse(
                     response=default_fallback,
                     handover_to_manager=False,
                     handover_reason=None,
-                    handover_reason_description=(handover_desc or "Model returned empty response"),
+                    handover_reason_description=(
+                        handover_desc or "Model returned empty response"
+                    ),
                     debug=(
                         {
-                            "model": request_kwargs.get("model"),
-                            "temperature": request_kwargs.get("temperature"),
-                            # "max_tokens": request_kwargs.get("max_tokens") or request_kwargs.get("max_completion_tokens"),
+                            "model": model or self.model,
+                            "temperature": temperature,
                             "reason": "empty_text_no_handover",
                         }
                         if debug
@@ -434,7 +347,6 @@ class ChatbotService:
                     ),
                 )
 
-            # If handover requested but without a message, include an apology
             if needs_handover and not (parsed_response.get("response") or "").strip():
                 user_text = default_handover_msg
                 if not handover_reason:
@@ -442,13 +354,13 @@ class ChatbotService:
                 if not handover_desc:
                     handover_desc = "Handover requested without a user message"
 
-            # Respect manager_handover flag
-            if needs_handover and not bool((config or {}).get("manager_handover", True)):
+            if needs_handover and not bool(
+                (config or {}).get("manager_handover", True)
+            ):
                 needs_handover = False
                 if not user_text:
                     user_text = default_fallback
 
-            # Prepare optional action/data if model requested structured action (e.g., create order)
             action = None
             data = None
             try:
@@ -457,7 +369,6 @@ class ChatbotService:
                     payload = parsed_response.get("data")
                     if action and isinstance(payload, dict):
                         data = payload
-                    # Backward-compat alias: allow { create_order: {...} }
                     if not action and "create_order" in parsed_response:
                         action = "create_order"
                         maybe_payload = parsed_response.get("create_order")
@@ -467,7 +378,6 @@ class ChatbotService:
                 action = None
                 data = None
 
-            # Validate create_order payload and request missing details step-by-step
             if action == "create_order":
                 try:
                     valid, missing_fields = self._is_valid_order_payload(data)
@@ -481,11 +391,9 @@ class ChatbotService:
                     ]
 
                 if not valid:
-                    # Ask only for the missing details, preserving language
                     user_text = self._compose_missing_order_details_prompt(
                         language=language, missing_fields=missing_fields
                     )
-                    # Do not emit action until all required fields are present
                     action = None
                     data = None
 
@@ -498,9 +406,8 @@ class ChatbotService:
                 data=data,
                 debug=(
                     {
-                        "model": request_kwargs.get("model"),
-                        "temperature": request_kwargs.get("temperature"),
-                        # "max_tokens": request_kwargs.get("max_tokens") or request_kwargs.get("max_completion_tokens"),
+                        "model": model or self.model,
+                        "temperature": temperature,
                         "handover": needs_handover,
                         **({"action": action} if action else {}),
                     }
@@ -509,534 +416,75 @@ class ChatbotService:
                 ),
             )
 
-            # Log OpenAI response using UnifiedLogger
             duration_ms = int((time.perf_counter() - start_time) * 1000)
-            self.unified_logger.prompt_logger.info(
-                f"[{correlation_id}] OPENAI_RESPONSE: {ai_response} | full_response={response} | response_length={len(ai_response)} | "
-                f"duration={duration_ms}ms | "
-                f"function_call={response.choices[0].message.function_call if response.choices[0].message.function_call else 'none'}"
+            self.unified_logger.log_chat_response(
+                correlation_id,
+                {
+                    "parsed_response": parsed_response,
+                    "response": user_text,
+                    "response_length": len(user_text),
+                    "handover": needs_handover,
+                    "handover_reason": handover_reason,
+                    "handover_reason_description": handover_desc,
+                    "conversation_summary": summary,
+                    "action": action,
+                    "total_duration": duration_ms,
+                },
             )
-            
-            # Log final response using UnifiedLogger
-            self.unified_logger.log_chat_response(correlation_id, {
-                "parsed_response": parsed_response,
-                "response": user_text,
-                "response_length": len(user_text),
-                "handover": needs_handover,
-                "handover_reason": handover_reason,
-                "handover_reason_description": handover_desc,
-                "conversation_summary": summary,
-                "action": action,
-                "total_duration": duration_ms
-            })
 
-            # Write DB prompt log using UnifiedLogger
             try:
                 duration_ms = int((time.perf_counter() - start_time) * 1000)
-                
-                # Prepare data for database logging
+
                 log_data = {
-                    "user_id": None,  # Could be extracted from request context if available
-                    "conversation_id": None,  # Could be extracted from request context if available
+                    "user_id": None,
+                    "conversation_id": None,
                     "config_id": config.get("id") if isinstance(config, dict) else None,
-                    "model": request_kwargs.get("model"),
-                    "system_prompt_hash": system_prompt_hash,
-                    "system_prompt_preview": system_prompt[:2000] if len(system_prompt) > 2000 else system_prompt,
-                    "system_prompt_length": len(system_prompt),
-                    # "prompt_trace_json": json.dumps(prompt_trace, ensure_ascii=False)[:4000] if prompt_trace else None,
+                    "model": model or self.model,
                     "user_message": chat_request.message,
-                    "request_json": json.dumps({k: v for k, v in request_kwargs.items() if k != "messages"}, ensure_ascii=False)[:4000],
-                    "response_json": json.dumps({
-                        "content": ai_response,
-                        "function_call": getattr(response.choices[0].message, "function_call", None)
-                    }, ensure_ascii=False)[:4000],
+                    "response_json": json.dumps(
+                        {
+                            "content": ai_response,
+                        },
+                        ensure_ascii=False,
+                    )[:4000],
                     "duration_ms": duration_ms,
                     "error": None,
                 }
-                
-                # Log to database using UnifiedLogger
+
                 self.unified_logger.log_to_database(correlation_id, log_data)
-                
+
             except Exception as log_err:
-                self.unified_logger.app_logger.warning(f"[{correlation_id}] Failed to write prompt log: {log_err}")
+                self.unified_logger.app_logger.warning(
+                    f"[{correlation_id}] Failed to write prompt log: {log_err}"
+                )
                 logger.warning(f"Failed to write prompt log: {log_err}")
 
             return chat_result
-            
+
         except Exception as e:
-            self.unified_logger.app_logger.error(f"[{correlation_id}] CHAT_ERROR: {str(e)}")
+            self.unified_logger.app_logger.error(
+                f"[{correlation_id}] CHAT_ERROR: {str(e)}"
+            )
             logger.error(f"Error processing message: {e}")
-            
-            # Return a fallback response
+
             return ChatResponse(
-                response=("Перепрошую, але в мене виникли технічні проблеми. Будь ласка, спробуйте пізніше." 
-                        #   if language == "uk" 
-                        #   else "I apologize, but I'm experiencing technical difficulties. Please try again later."
-                          ),
+                response=(
+                    "Перепрошую, але в мене виникли технічні проблеми. Будь ласка, спробуйте пізніше."
+                ),
                 handover_to_manager=True,
                 handover_reason=HandoverReason.TECH_OR_FINANCIAL_LIMITATION,
-                handover_reason_description="Technical error in AI service"
+                handover_reason_description="Technical error in AI service",
             )
-    
-    def _build_system_prompt(
-        self,
-        language: str = "uk",
-        force_language: bool = True,
-        config: Optional[Dict[str, Any]] = None,
-    ) -> str:
-        system_instruction = (config or {}).get("system_instruction")
 
-        return f"""
-        {system_instruction}
-        """
-    
-    def _build_system_prompt_with_trace(
-        self,
-        language: str = "uk",
-        force_language: bool = True,
-        config: Optional[Dict[str, Any]] = None,
-    ) -> tuple[str, dict]:
-        company_name = (config or {}).get("company_name")
-        business_context = (config or {}).get("business_context")
-        specializations = (config or {}).get("specializations")
-        friendly_tone = bool((config or {}).get("friendly_tone", True))
-        professional_style = bool((config or {}).get("professional_style", True))
-        suggestive_responses = bool((config or {}).get("suggestive_responses", True))
-        manager_handover = bool((config or {}).get("manager_handover", True))
-        language_instruction = (config or {}).get("language_instruction")
-        persona_instruction = (config or {}).get("persona_instruction")
-        system_instruction = (config or {}).get("system_instruction")
-        order_flow_block = (config or {}).get("order_flow_block")
-        other_instruction = (config or {}).get("other_instruction")
-
-        context_lines = []
-        if company_name:
-            context_lines.append(f"Company: {company_name}")
-        if business_context:
-            context_lines.append(f"Business Context: {business_context}")
-        if specializations:
-            context_lines.append(f"Specializations: {specializations}")
-
-        # Enhanced conversational style instructions
-        style_lines = []
-        if language == "uk":
-            if friendly_tone:
-                style_lines.append("Спілкуйтеся тепло та дружньо, як з близькою людиною.")
-            if professional_style:
-                style_lines.append("Залишайтеся професійною, але не формальною. Будьте природною та живою.")
-            if suggestive_responses:
-                style_lines.append(
-                    "Коли це доречно, пропонуйте 1-3 короткі наступні кроки або варіанти клієнту. "
-                    "Завжди пояснюйте, чому саме ці варіанти підходять."
-                )
-            style_lines.extend([
-                "Використовуйте природні переходи між темами та питаннями.",
-                "Показуйте справжній інтерес до потреб клієнта.",
-                "Якщо клієнт згадував щось раніше, посилайтеся на це в розмові.",
-                "Задавайте уточнюючі питання, але не надто багато одночасно.",
-                "Використовуйте емодзі помірно (1-2 на повідомлення), щоб зробити розмову живішою."
-            ])
-        else:
-            if friendly_tone:
-                style_lines.append("Communicate warmly and friendly, like with a close person.")
-            if professional_style:
-                style_lines.append("Stay professional but not formal. Be natural and lively.")
-            if suggestive_responses:
-                style_lines.append(
-                    "When appropriate, suggest 1-3 short next steps or options to the customer. "
-                    "Always explain why these options are suitable."
-                )
-            style_lines.extend([
-                "Use natural transitions between topics and questions.",
-                "Show genuine interest in the customer's needs.",
-                "If the customer mentioned something earlier, refer to it in the conversation.",
-                "Ask clarifying questions, but not too many at once.",
-                "Use emojis moderately (1-2 per message) to make conversations livelier."
-            ])
-
-        handover_block = ""
-        
-        if manager_handover:
-            handover_block = """
-        If you encounter any of the following situations, you should request a handover to a human manager.
-        Assign a reason code to the handover:
-        
-        - "LOW_CONFIDENCE" - You're not confident in your answer
-        - "OUT_OF_SCOPE" - The request is outside your scope (you don't have the information)
-        - "SENSITIVE_CASE" - Sensitive cases like complaints or VIP customers
-        - "TECH_OR_FINANCIAL_LIMITATION" - Technical or financial limitations
-        - "USER_REQUEST_MANAGER" - Customer directly requests to speak with a manager
-        
-        When requesting handover, respond in this JSON format:
-        
-        {
-            "response": "Your response to the customer",
-            "handover_to_manager": true,
-            "handover_reason": "<REASON_CODE>",
-            "handover_reason_description": "Brief description of why handover is needed"
-            "summary": "Summary of the conversation"
-        }
-
-        Important:
-        - Only the value of "response" will be shown to the customer.
-        - The other JSON fields are used internally to notify a manager (e.g., via Telegram) and will not be visible to the customer.
-        - Craft "response" as a short, polite message informing the customer that a manager will take over soon. Do not include the JSON itself or technical details in "response".
-        - Keep any sensitive or operational details in the JSON fields, not in the "response" text.
-            """
-        else:
-            handover_block = """
-        Do not request a handover to a human manager. Provide your best, most helpful answer directly to the customer.
-            """
-
-        # context_docs_block = self._get_context_block(config)
-        # examples_block = self._get_examples_block(config)
-        context_docs_block = ""
-        examples_block = ""
-
-        prompt = f"""
-            You are a helpful AI assistant for a catering business.
-            {language_instruction}
-            {persona_instruction}
-            {system_instruction}
-
-            {('\n'.join(context_lines)) if context_lines else ''}
-
-            Your goal is to make customers' ordering experience as convenient and pleasant as possible:
-            • Answer questions about menus, prices, and services
-            • Help customers place orders step by step
-            • Share information about discounts and special offers
-            • Handle any customer service inquiries
-
-            {order_flow_block}
-
-            {('Стиль спілкування на основі реальних розмов із клієнтами:' if language == 'uk' else 
-            'Conversation style inspired by real customer calls:')}
-            {('• Починайте з ввічливого вітання і короткого запитання, чим можете допомогти.' if language == 'uk' else 
-            '• Start with a polite greeting and a short offer to help.')}
-            {('• Уточнюйте місто, дату/інтервал доставки та терміновість.' if language == 'uk' else 
-            '• Confirm city, delivery date/time window, and urgency.')}
-            {('• Пропонуйте 1–3 релевантні варіанти (набори/бокси) і допоміжні позиції (келихи, тарілки, прибори).' if language == 'uk' else 
-            '• Offer 1–3 relevant menu sets and helpful add-ons (cups, plates, utensils).')}
-            {('• Пояснюйте логіку поради просто і коротко.' if language == 'uk' else 
-            '• Explain recommendations briefly and clearly.')}
-            {('• Тактовно повідомляйте про доставку/самовивіз і можливі знижки/умови.' if language == 'uk' else 
-            '• Mention delivery/pickup and any fees/discounts tactfully.')}
-            {('• Не ставте забагато питань одночасно — рухайтеся крок за кроком.' if language == 'uk' else 
-            '• Avoid asking too many questions at once; proceed step by step.')}
-            {('• Підсумовуйте домовленості коротко перед оформленням.' if language == 'uk' else 
-            '• Summarize agreements briefly before finalizing.')}
-
-            {'\n'.join(style_lines)}
-
-            {handover_block}
-
-            When and only when the customer clearly wants to place an order and all
-            required details are collected (menu_items, delivery_date, customer_name,
-            customer_phone, customer_address), IMMEDIATELY emit ONLY a JSON object with
-            `create_order` action. Do NOT include any additional text outside the JSON.
-            The customer-visible confirmation message must be inside the JSON as the
-            value of the "response" field (e.g., UA: "Все супер, дякуємо за замовлення! Менеджер зв'яжеться з вами.").
-            Do not ask for an extra confirmation if the user already provided all required details.
-            Use this format exactly:
-
-            {{
-                "response": "<your short confirmation to the user in {language}>",
-                "action": "create_order",
-                "data": {{
-                    "customer_name": "<name>",
-                    "customer_phone": "<phone>",
-                    "customer_email": "<optional email>",
-                    "customer_address": "<address>",
-                    "menu_items": "<menu items>",
-                    "total_amount": <number>,
-                    "delivery_date": "<date in ISO format YYYY-MM-DD>",
-                    "delivery_time": "<optional time>",
-                    "notes": "<optional notes>",
-                    "currency": "UAH",
-                    "guests_count": <optional number of guests>,
-                    "priority": "<optional priority>"
-                }}
-            }}
-
-            If some required details are missing, ask a concise follow-up question for the
-            missing details instead of emitting the action. As soon as all required fields
-            are present, emit ONLY the `create_order` action JSON as above and nothing else.
-
-            {context_docs_block}
-
-            {examples_block}
-
-            {other_instruction}
-
-            Otherwise, respond normally with just your message to the customer.
-        """.strip()
-
-        trace = {
-            "language": language,
-            "force_language": force_language,
-            "components": {
-                "language_instruction": {
-                    "included": bool(language_instruction), "len": len(language_instruction or ""), "content": language_instruction
-                },
-                "persona_instruction": {
-                    "included": bool(persona_instruction), "len": len(persona_instruction or ""), "content": persona_instruction
-                },
-                "system_instruction": {
-                    "included": bool(system_instruction), "len": len(system_instruction or ""), "content": system_instruction
-                },
-                "order_flow_block": {
-                    "included": bool(order_flow_block), "len": len(order_flow_block or ""), "content": order_flow_block
-                },
-                "other_instruction": {
-                    "included": bool(other_instruction), "len": len(other_instruction or ""), "content": other_instruction
-                },
-                "context_lines": {"count": len(context_lines), "content": context_lines},
-                "style_lines": {"count": len(style_lines), "content": style_lines},
-                "handover_block": {"included": True, "len": len(handover_block)},
-                "context_docs_block": {"included": bool(context_docs_block), "len": len(context_docs_block)},
-                "examples_block": {"included": bool(examples_block), "len": len(examples_block)},
-            }
-        }
-
-        self.unified_logger.prompt_logger.debug(
-            f"[_build_system_prompt_with_trace] Prompt components: { {k: v['len'] if isinstance(v, dict) and 'len' in v else v.get('count', 0) 
-            if isinstance(v, dict) else 0 for k, v in trace['components'].items()} }"
-        )
-        self.unified_logger.prompt_logger.debug(
-            f"[_build_system_prompt_with_trace] System prompt len={len(prompt)} hash={hashlib.sha256(prompt.encode('utf-8')).hexdigest()[:16]}"
-        )
-
-        return prompt, trace
-
-
-    def _get_context_block(self, config: Optional[Dict[str, Any]] = None) -> str:
-        """Return a formatted context block built from local documents.
-
-        Reads and caches files from the directory configured by
-        settings or per-request overrides in `config` when enabled.
-        Content is trimmed to the provided max chars to keep prompts
-        within reasonable limits.
-        """
-        try:
-            enabled_override = None
-            if config is not None:
-                enabled_override = config.get("context_docs_enabled")
-            enabled = (
-                bool(enabled_override)
-                if enabled_override is not None
-                else bool(getattr(settings, "context_docs_enabled", True))
-            )
-            if not enabled:
-                return ""
-
-            dir_override = (config or {}).get("context_docs_dir") if config else None
-            max_chars_override = (config or {}).get("context_docs_max_chars") if config else None
-
-            docs_dir = Path(dir_override or getattr(settings, "context_docs_dir", "agent_context_documents"))
-            if not docs_dir.is_absolute():
-                docs_dir = Path.cwd() / docs_dir
-
-            try:
-                max_chars = int(max_chars_override) if max_chars_override is not None else int(getattr(settings, "context_docs_max_chars", 4000))
-            except Exception:
-                max_chars = int(getattr(settings, "context_docs_max_chars", 4000))
-
-            cache_key = f"{str(docs_dir)}|{max_chars}"
-            combined = self._context_docs_cache.get(cache_key)
-            if combined is None:
-                combined = self._load_context_documents(docs_dir, max_chars)
-                # Cache even empty string so we don't keep hitting disk
-                self._context_docs_cache[cache_key] = combined
-
-            if not combined:
-                return ""
-            return (
-                "Use the following Business Knowledge Base when answering. "
-                "Prefer it over assumptions. If the information is not in the "
-                "knowledge base, answer politely based on your general knowledge "
-                "and indicate limitations when appropriate.\n\n"
-                "[Business Knowledge Base]\n" + combined
-            )
-        except Exception as e:
-            logger.warning(f"Failed to build context block: {e}")
-            return ""
-
-    def _load_context_documents(self, docs_dir: Path, max_chars: int) -> str:
-        """Load context documents from disk and return a combined string.
-
-        Returns an empty string on error or when no documents are found.
-        Supports `.md`, `.txt`, `.pdf`, `.docx`, `.csv`. Files are concatenated
-        in name-sorted order.
-        """
-        try:
-            if not docs_dir.exists() or not docs_dir.is_dir():
-                logger.info(f"Context docs directory not found: {docs_dir}")
-                return ""
-
-            # parts: list[str] = []
-            parts: list[dict] = []
-            for path in sorted(docs_dir.rglob("*")):
-                if "00_assortment.md" in str(path):
-                    continue
-
-                if not path.is_file():
-                    continue
-                ext = path.suffix.lower()
-                if ext not in {".md", ".txt", ".pdf", ".docx", ".csv"}:
-                    continue
-                try:
-                    text = ""
-                    if ext in {".md", ".txt"}:
-                        text = path.read_text(encoding="utf-8")
-                    elif ext == ".pdf":
-                        try:
-                            # Prefer PyPDF2 if available
-                            import PyPDF2  # type: ignore
-
-                            with path.open("rb") as f:
-                                reader = PyPDF2.PdfReader(f)
-                                buf: list[str] = []
-                                for page in reader.pages:
-                                    try:
-                                        buf.append(page.extract_text() or "")
-                                    except Exception:
-                                        pass
-                                text = "\n".join([t.strip() for t in buf if t and t.strip()])
-                        except Exception as pdf_err:
-                            logger.warning(f"Failed to parse PDF {path}: {pdf_err}")
-                            text = ""
-                    elif ext == ".docx":
-                        try:
-                            # python-docx
-                            from docx import Document  # type: ignore
-
-                            doc = Document(str(path))
-                            paras = [p.text for p in doc.paragraphs if p.text and p.text.strip()]
-                            text = "\n".join(paras)
-                        except Exception as docx_err:
-                            logger.warning(f"Failed to parse DOCX {path}: {docx_err}")
-                            text = ""
-                    elif ext == ".csv":
-                        try:
-                            with path.open("r", encoding="utf-8", newline="") as f:
-                                reader = csv.reader(f)
-                                rows: list[str] = []
-                                for row in reader:
-                                    try:
-                                        rows.append(", ".join([col.strip() for col in row if col is not None]))
-                                    except Exception:
-                                        pass
-                                text = "\n".join(rows)
-                        except Exception as csv_err:
-                            logger.warning(f"Failed to parse CSV {path}: {csv_err}")
-                            text = ""
-
-                    if text.strip():
-                        # Add a lightweight header with the filename for model context
-                        parts.append(f"## {path.stem}\n\n{text.strip()}\n")
-                except Exception as read_err:
-                    logger.warning(f"Failed to read context file {path}: {read_err}")
-
-            combined = "\n\n".join(parts).strip()
-            if not combined:
-                return ""
-
-            if max_chars and len(combined) > max_chars:
-                combined = combined[:max_chars]
-            return combined
-        except Exception as e:
-            logger.warning(f"Failed loading context documents: {e}")
-            return ""
-        
-    def _get_examples_block(self, config: Optional[Dict[str, Any]] = None) -> str:
-        """Return a formatted examples block built from transcript files.
-        Loads files that look like conversational transcripts (e.g.,
-        boxcatering-chat_example-*.txt) and provides them as style samples.
-        Timestamps like (0:01) are stripped to reduce noise.
-        """
-        try:
-            enabled_override = None
-            if config is not None:
-                enabled_override = config.get("context_docs_enabled")
-            enabled = (
-                bool(enabled_override)
-                if enabled_override is not None
-                else bool(getattr(settings, "context_docs_enabled", True))
-            )
-            if not enabled:
-                return ""
-
-            dir_override = (config or {}).get("context_docs_dir") if config else None
-            docs_dir = Path(dir_override or getattr(settings, "context_docs_dir", "agent_context_documents"))
-            if not docs_dir.is_absolute():
-                docs_dir = Path.cwd() / docs_dir
-
-            cache_key = f"{str(docs_dir)}#examples"
-            combined = self._context_docs_cache.get(cache_key)
-            if combined is None:
-                combined = self._load_transcript_examples(docs_dir)
-                self._context_docs_cache[cache_key] = combined
-
-            if not combined:
-                return ""
-
-            return (
-                "Use the following real call snippets ONLY as tone and structure examples. "
-                "Do not copy specific facts (names, addresses, prices) and do not output "
-                "timestamps. Paraphrase in your own words while preserving the style.\n\n"
-                "[Conversation Style Examples]\n" + combined
-            )
-        except Exception as e:
-            logger.warning(f"Failed to build examples block: {e}")
-            return ""
-
-    def _load_transcript_examples(self, docs_dir: Path) -> str:
-        """Load transcript example files and return a combined, cleaned string."""
-        try:
-            if not docs_dir.exists() or not docs_dir.is_dir():
-                return ""
-
-            example_files: list[Path] = []
-            for path in sorted(docs_dir.rglob("*.txt")):
-                name = path.name.lower()
-                if name.startswith("boxcatering-chat_example-") or name.startswith("boxcatering-chat_example_") or \
-                    name.startswith("boxcatering-chat_example"):
-                    example_files.append(path)
-
-            if not example_files:
-                return ""
-
-            parts: list[str] = []
-            timestamp_pattern = re.compile(r"\(\d{1,2}:\d{2}\)")
-            for path in example_files:
-                try:
-                    text = path.read_text(encoding="utf-8")
-                    # Remove inline timestamps and collapse extra whitespace
-                    text = timestamp_pattern.sub("", text)
-                    cleaned = "\n".join([line.strip() for line in text.splitlines() if line.strip()])
-                    if cleaned:
-                        parts.append(f"## {path.stem}\n\n{cleaned}\n")
-                except Exception as read_err:
-                    logger.warning(f"Failed to read transcript example {path}: {read_err}")
-
-            combined = "\n\n".join(parts).strip()
-            return combined
-        except Exception as e:
-            logger.warning(f"Failed loading transcript examples: {e}")
-            return ""
-
+    def _build_system_prompt(*args, **kwargs): ...
 
     def _parse_ai_response(self, response: str) -> dict:
-        """Parse AI response to extract handover information."""
-        # 1) Try strict JSON parse when response starts with a JSON object
         try:
             if response.strip().startswith("{"):
                 return json.loads(response)
         except Exception:
             pass
 
-        # 2) Try to find a JSON object appended to the end of a natural language message
-        #    Heuristic: scan for candidate '{' positions and attempt json.loads from there
         try:
             text = response or ""
             brace_positions: list[int] = [i for i, ch in enumerate(text) if ch == "{"]
@@ -1046,7 +494,6 @@ class ChatbotService:
                     continue
                 try:
                     parsed = json.loads(candidate)
-                    # If parsed looks like our structured format, return it
                     if isinstance(parsed, dict) and (
                         "action" in parsed
                         or "handover_to_manager" in parsed
@@ -1058,7 +505,6 @@ class ChatbotService:
         except Exception:
             pass
 
-        # 3) Fallback: return plain text as customer-visible response
         return {"response": response, "handover_to_manager": False}
 
     def _is_valid_order_payload(self, data: Optional[dict]) -> tuple[bool, list[str]]:
@@ -1153,23 +599,10 @@ class ChatbotService:
                 + f" and {parts[-1]}."
             )
 
-    def _model_supports_temperature(self, model_name: str) -> bool:
-        """Return True if temperature is supported for the given model."""
-
-        unsupported = {"gpt-5", "gpt-5-mini", "gpt-5-nano"}
-        return model_name not in unsupported
-
-    def _model_requires_max_completion_tokens(self, model_name: str) -> bool:
-        """Return True if the model expects 'max_completion_tokens' instead of 'max_tokens'."""
-        # Based on error message and current assumptions for GPT-5 family
-        return model_name.startswith("gpt-5")
-    
     def get_conversation_history(self, conversation_id: int, db_session) -> list:
-        """Retrieve conversation history for context."""
         try:
             from app.models.message import Message, MessageSender
-            
-            # Get last 20 messages from the conversation
+
             messages = (
                 db_session.query(Message)
                 .filter(Message.chat_id == conversation_id)
@@ -1177,157 +610,41 @@ class ChatbotService:
                 .limit(20)
                 .all()
             )
-            
-            # Convert to OpenAI format and reverse to chronological order
+
             history = []
             for msg in reversed(messages):
                 role = "user" if msg.sender == MessageSender.USER else "assistant"
-                history.append({
-                    "role": role,
-                    "content": msg.text
-                })
-            
+                history.append({"role": role, "content": msg.text})
+
             return history
         except Exception as e:
             logger.warning(f"Failed to retrieve conversation history: {e}")
             return []
-        
-    def get_products(self, query: str):
-        try:
-            query_pipeline = Pipeline()
-            query_pipeline.add_component("text_embedder", OpenAITextEmbedder(api_key=Secret.from_token(self.openai_api_key)))
-            query_pipeline.add_component("retriever", QdrantEmbeddingRetriever(document_store=self.document_store))
-            query_pipeline.connect("text_embedder.embedding", "retriever.query_embedding")
 
-            results = query_pipeline.run({
-                "text_embedder":{"text": query},
-                "retriever": {
-                    "top_k": 10,
-                    "score_threshold": 0.7 # 0 => 1
-                }
-            })
 
-            # logger.debug(f"Results: {results}")
+async def main() -> None:
+    assortment_agent = Agent(
+        "assortment_agent",
+        description="Specialized menu agent. Identifies event format (buffet/coffee-break/cocktail; banquet→escalate), collects guest_count + event_duration.",
+        system_message=assortment_system_message,
+        enable_memory=True,
+        tools=[get_products_tool],
+    )
+    messages = [
+        HumanMessage(
+            content="Дитяче свято, 10 осіб, тривалість 3 години",
+            additional_kwargs={},
+            response_metadata={},
+        )
+    ]
 
-            result_documents = []
-            for doc in results["retriever"]["documents"]:
-                result_documents.append(doc.content)
-
-            # logger.debug(f"Result documents: {result_documents}")
-            if len(result_documents) == 0:
-                results = query_pipeline.run({
-                    "text_embedder":{"text": "смак, бокс, подія, набір"},
-                    "retriever": {
-                        "top_k": 10,
-                        "score_threshold": 0 # 0 => 1
-                    }
-                })
-                for doc_alt in results["retriever"]["documents"]:
-                    result_documents.append(doc_alt.content)
-                
-            return result_documents
-        except Exception as e:
-            logger.warning(f"Failed to retrieve products: {e}")
-            return []
-        
-    def get_products_data(self, query: str):
-        try:
-
-            # Search for similar products
-            query_pipeline = Pipeline()
-            query_pipeline.add_component("text_embedder", OpenAITextEmbedder(api_key=Secret.from_token(self.openai_api_key)))
-            query_pipeline.add_component("retriever", QdrantEmbeddingRetriever(document_store=self.document_store))
-            query_pipeline.connect("text_embedder.embedding", "retriever.query_embedding")
-
-            results = query_pipeline.run({
-                "text_embedder":{"text": query},
-                "retriever": {
-                    "top_k": len(query.split(",")),
-                    "score_threshold": 1 # 0 => 1
-                }
-            })
-
-            # logger.debug(f"Results: {results}")
-
-            result_documents = []
-            for doc in results["retriever"]["documents"]:
-                result_documents.append(doc.content)
-
-            if len(result_documents) == 0:
-                results = query_pipeline.run({
-                "text_embedder":{"text": query},
-                    "retriever": {
-                        "score_threshold": 0 # 0 => 1
-                    }
-                })
-                for doc_alt in results["retriever"]["documents"]:
-                    result_documents.append(doc_alt.content)
-                
-            return result_documents
-        except Exception as e:
-            logger.warning(f"Failed to retrieve products: {e}")
-            return []
-
-    def get_date_time(self, query: str):
-        try:
-            logger.info(f"query {query}")
-            result = self.validate_delivery(query)
-            logger.info(f"result {result}")
-            return result
-        except Exception as e:
-            logger.warning(f"Failed to get date and time: {e}")
-            return ""
-        
-    # WORK_START = 9
-    # WORK_END = 19
-    # MIN_PREP_MINUTES = 120  # Мінімум 2 години
-
-    def parse_input(self, input_str: str) -> datetime:
-        """Парсить строку 'HH:MM, D' у datetime з сьогоднішньою датою + D днів"""
-
-        time_part, days_part = input_str.strip().split(', ')
-        hour, minute = map(int, time_part.split(':'))
-        days_to_add = int(days_part)
-        base_date = datetime.now() + timedelta(days=days_to_add)
-        return base_date.replace(hour=hour, minute=minute, second=0, microsecond=0)
-
-    def is_within_working_hours(self, dt: datetime) -> bool:
-        """Перевіряє чи час доставки в межах робочих годин"""
-        WORK_START = 9
-        WORK_END = 19
-        return WORK_START <= dt.hour < WORK_END
-
-    def validate_delivery(self, input_str: str) -> dict:
-        MIN_PREP_MINUTES = 120
-        """Основна функція перевірки доставки"""
-        now = datetime.now()
-        requested_dt = self.parse_input(input_str)
-        min_ready_dt = now + timedelta(minutes=MIN_PREP_MINUTES)
-
-        if requested_dt < min_ready_dt or not self.is_within_working_hours(requested_dt):
-            return {
-                "valid": False,
-                "reason": "Requested time is too early or outside working hours"
-            }
-
-        minutes_until_delivery = int((requested_dt - now).total_seconds() // 60)
-
-        if minutes_until_delivery < 120:
-            return {
-                "valid": False,
-                "reason": "Not enough time for preparation"
-            }
-
-        return {
-            "valid": True,
-            "approved_time": requested_dt.strftime("%H:%M"),
-            "approved_date": requested_dt.strftime("%d-%m-%Y"),
-            # "priority": priority
-        }
+    resp = await assortment_agent.execute(messages)
+    print(resp)
+    # gp = get_products_tool.coroutine
+    # result = await gp("ланчі")
+    # print(result)
 
 
 if __name__ == "__main__":
-    cs = ChatbotService()
-    # res = cs.get_date_time("2025-11-12 10:00")
-    res = cs.get_products(query="Меню: Холодні закуски")
-    print(res)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())

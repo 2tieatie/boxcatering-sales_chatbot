@@ -203,26 +203,7 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 debug=debug_enabled,
                 config=(
                     {
-                        # "company_name": selected_config.company_name,
-                        # "business_context": selected_config.business_context,
-                        # "specializations": selected_config.specializations,
-                        # "friendly_tone": selected_config.friendly_tone,
-                        # "professional_style": selected_config.professional_style,
-                        # "suggestive_responses": selected_config.suggestive_responses,
-                        # "manager_handover": selected_config.manager_handover,
-                        # "fallback_message": selected_config.fallback_message,
-                        # "handover_message": selected_config.handover_message,
-                        # Context docs overrides
-                        # "context_docs_enabled": ctx_enabled if ctx_enabled is not None else None,
-                        # "context_docs_dir": ctx_dir,
-                        # "context_docs_max_chars": ctx_max_chars,
-                        # Prompt template fields so they affect the model
-                        # "language_instruction": selected_config.language_instruction,
-                        # "persona_instruction": selected_config.persona_instruction,
                         "system_instruction": selected_config.system_instruction,
-                        # "order_flow_block": selected_config.order_flow_block,
-                        # "other_instruction": selected_config.other_instruction,
-                        # Pass id through for logging
                         "id": selected_config.id,
                     }
                     if selected_config
@@ -231,17 +212,13 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 conversation_history=conversation_history,
             )
 
-            # Persist bot response and update conversation state
             try:
                 should_log = True
                 if active_config and active_config.conversation_logging is not None:
                     should_log = bool(active_config.conversation_logging)
                 if should_log:
-                    # Sanitize customer-visible text to avoid leaking JSON action payloads
                     visible_text = str(chat_response.response or "")
                     try:
-                        # Remove any trailing JSON block if accidentally appended by the model
-                        # Keep everything before the last balanced JSON object marker
                         last_open = visible_text.rfind("{")
                         last_close = visible_text.rfind("}")
                         if (
@@ -250,7 +227,6 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                             and last_close > last_open
                         ):
                             candidate = visible_text[last_open : last_close + 1]
-                            # Try to parse to confirm it's JSON; if yes, strip it from visible text
                             try:
                                 json.loads(candidate)
                                 visible_text = visible_text[:last_open].rstrip()

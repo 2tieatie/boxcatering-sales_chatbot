@@ -1,0 +1,8 @@
+{
+    "response": "Дякую за підтвердження! ✅ Замовлення прийнято. Менеджер зв’яжеться з Вами найближчим часом.",
+    "action": "create_order",
+    "data": {
+        "customer_name": "Ігор",
+        "customer_phone": "+380975455445",
+        "customer_address": "Київ, вул. Хрещатик 1",
+        "menu_items": [{"name": "Salad big box", "quantity": 2, "price": 2599.0, "line_total": 5198.0}, {"name": "Salad shot", "quantity": 1, "price": 1699.0, "line_total": 1699.0}], "total_amount": 6897.0, "delivery_date": "2025-11-20", "delivery_time": "10:00", "currency": "UAH"}}, "response": "Дякую за підтвердження! ✅ Замовлення прийнято. Менеджер зв’яжеться з Вами найближчим часом.", "response_length": 91, "handover": False, "handover_reason": None, "handover_reason_description": None, "conversation_summary": None, "action": "create_order", "total_duration": 78128}

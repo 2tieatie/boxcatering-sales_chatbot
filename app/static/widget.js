@@ -5,9 +5,13 @@ let ws = null;
 let reconnectTimer = null;
 const RECONNECT_DELAY_MS = 1500;
 
-const scriptTag = Array.from(document.getElementsByTagName("script")).find((s) => s.src.includes("widget.js"));
+const scriptTag = Array.from(document.getElementsByTagName("script")).find(
+  (s) => s.src.includes("widget.js"),
+);
 const srcLink = scriptTag.getAttribute("src");
-const homeLink = srcLink.includes("http") ? srcLink.split("//")[0] + "//" + srcLink.split("//")[1].split("/")[0] : "";
+const homeLink = srcLink.includes("http")
+  ? srcLink.split("//")[0] + "//" + srcLink.split("//")[1].split("/")[0]
+  : "";
 // console.log(homeLink);
 
 /**
@@ -17,43 +21,50 @@ const homeLink = srcLink.includes("http") ? srcLink.split("//")[0] + "//" + srcL
  * for the widget. It will also initialize the chat functionality.
  */
 function loadWidget() {
-    (async function () {
-        try {
-            // Fetch auth data
-            const token = localStorage.getItem("access_token");
-            const response = await fetch(homeLink + "/system-config/settings/widget", {
-                headers: token ? { Authorization: `Bearer ${token}` } : {},
-            });
+  (async function () {
+    try {
+      // Fetch auth data
+      const token = localStorage.getItem("access_token");
+      const response = await fetch(
+        homeLink + "/system-config/settings/widget",
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        },
+      );
 
-            if (response.ok) {
-                // Fetch settings
-                const settings = await response.json();
+      if (response.ok) {
+        // Fetch settings
+        const settings = await response.json();
 
-                // Load styles
-                const styles = [`./call_style.min.css`, `./live_chat.css`];
+        // Load styles
+        const styles = [`./call_style.min.css`, `./live_chat.css`];
 
-                styles.forEach((styleHref) => {
-                    const link = document.createElement("link");
-                    link.rel = "stylesheet";
-                    link.href = homeLink ? homeLink + "/static/" + styleHref : "static/" + styleHref;
-                    document.head.appendChild(link);
-                });
+        styles.forEach((styleHref) => {
+          const link = document.createElement("link");
+          link.rel = "stylesheet";
+          link.href = homeLink
+            ? homeLink + "/static/" + styleHref
+            : "static/" + styleHref;
+          document.head.appendChild(link);
+        });
 
-                // Load scripts
-                const scripts = [`https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js`];
+        // Load scripts
+        const scripts = [
+          `https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js`,
+        ];
 
-                scripts.forEach((scriptHref) => {
-                    const link = document.createElement("script");
-                    link.src = scriptHref;
-                    document.head.appendChild(link);
-                });
+        scripts.forEach((scriptHref) => {
+          const link = document.createElement("script");
+          link.src = scriptHref;
+          document.head.appendChild(link);
+        });
 
-                // Create widget
-                const widget = document.createElement("div");
-                widget.id = "callback-widget";
+        // Create widget
+        const widget = document.createElement("div");
+        widget.id = "callback-widget";
 
-                // Add widget to DOM
-                widget.innerHTML = `
+        // Add widget to DOM
+        widget.innerHTML = `
                 
                 <div class="callback-widget-block">
                     <div style="display: none">
@@ -119,8 +130,8 @@ function loadWidget() {
                                 <span class="callback-widget-button-social-tooltip">Live Chat</span> </a
                             >
                             ${
-                                settings.widget?.facebook
-                                    ? `
+                              settings.widget?.facebook
+                                ? `
                             <a
                                 class="callback-widget-button-social-item ui-icon ui-icon-service-fb connector-icon-45"
                                 title=""
@@ -133,21 +144,21 @@ function loadWidget() {
                                 <span class="callback-widget-button-social-tooltip">Facebook</span> </a
                             >
                             `
-                                    : ""
+                                : ""
                             }
                             ${
-                                settings.widget?.viber
-                                    ? `
+                              settings.widget?.viber
+                                ? `
                             <a class="callback-widget-button-social-item ui-icon ui-icon-service-viber connector-icon-45" title="" href="viber://pa?chatURI=${settings.widget?.viber}" target="_blank" id="viber-btn">
                                 <i></i>
                                 <span class="callback-widget-button-social-tooltip">Viber</span> </a
                             >
                             `
-                                    : ""
+                                : ""
                             }
                             ${
-                                settings.widget?.telegram
-                                    ? `
+                              settings.widget?.telegram
+                                ? `
                             <a
                                 class="callback-widget-button-social-item ui-icon ui-icon-service-telegram connector-icon-45"
                                 title=""
@@ -160,7 +171,7 @@ function loadWidget() {
                                 <span class="callback-widget-button-social-tooltip">Telegram</span>
                             </a>
                             `
-                                    : ""
+                                : ""
                             }
                         </div>
                         <div class="callback-widget-button-inner-container">
@@ -228,65 +239,66 @@ function loadWidget() {
                     </div>
                 </div>
                 `;
-                setTimeout(() => {
-                    (async () => {
-                        document.body.appendChild(widget);
-                        await fetchActiveChatbotConfig();
-                        setTimeout(() => {
-                            document.querySelector(".chat-container").classList.remove("hide-container");
-                        }, 500);
-                        initChat();
-                        initI18N();
-                        setTimeout(() => {
-                            fetchActiveChatbotConfig();
-                        }, 500);
-                    })();
-                }, 250);
-            }
-        } catch (error) {
-            console.error("Error loading settings:", error);
-        }
-    })();
+        setTimeout(() => {
+          (async () => {
+            document.body.appendChild(widget);
+            await fetchActiveChatbotConfig();
+            setTimeout(() => {
+              document
+                .querySelector(".chat-container")
+                .classList.remove("hide-container");
+            }, 500);
+            initChat();
+            initI18N();
+            setTimeout(() => {
+              fetchActiveChatbotConfig();
+            }, 500);
+          })();
+        }, 250);
+      }
+    } catch (error) {
+      console.error("Error loading settings:", error);
+    }
+  })();
 }
 
 /**
  * Initializes i18n
  */
 async function initI18N() {
-    try {
-        const token = localStorage.getItem("access_token");
-        // const meRes = await fetch(homeLink + "/users/me", {
-        //     headers: token ? { Authorization: `Bearer ${token}` } : {},
-        // });
-        const storedLang = localStorage.getItem("ui_language");
-        let lang = storedLang || "uk";
-        // if (!storedLang && meRes && meRes.ok) {
-        //     const me = await meRes.json();
-        //     lang = me.preferred_language || lang;
-        // }
+  try {
+    const token = localStorage.getItem("access_token");
+    // const meRes = await fetch(homeLink + "/users/me", {
+    //     headers: token ? { Authorization: `Bearer ${token}` } : {},
+    // });
+    const storedLang = localStorage.getItem("ui_language");
+    let lang = storedLang || "uk";
+    // if (!storedLang && meRes && meRes.ok) {
+    //     const me = await meRes.json();
+    //     lang = me.preferred_language || lang;
+    // }
 
-        if (window.I18N && I18N.setLanguage) {
-            await I18N.setLanguage(lang);
-        }
-        console.log(I18N);
-
-        try {
-            const input = document.getElementById("chat-input");
-
-            if (input && window.I18N && I18N.t) {
-                input.placeholder = I18N.t("chatTest.input.label");
-            }
-        } catch {}
-        document.querySelectorAll("[data-i18n]").forEach(function (el) {
-            const k = el.getAttribute("data-i18n");
-            if (window.I18N && I18N.t) {
-                el.textContent = I18N.t(k);
-            }
-        });
-    } catch (e) {
-        console.log(e);
-
+    if (window.I18N && I18N.setLanguage) {
+      await I18N.setLanguage(lang);
     }
+    console.log(I18N);
+
+    try {
+      const input = document.getElementById("chat-input");
+
+      if (input && window.I18N && I18N.t) {
+        input.placeholder = I18N.t("chatTest.input.label");
+      }
+    } catch {}
+    document.querySelectorAll("[data-i18n]").forEach(function (el) {
+      const k = el.getAttribute("data-i18n");
+      if (window.I18N && I18N.t) {
+        el.textContent = I18N.t(k);
+      }
+    });
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 loadWidget();
@@ -295,11 +307,14 @@ loadWidget();
  * Updates the chat input placeholder when the language changes
  */
 document.addEventListener("i18n:languageChanged", () => {
-    let placeholder = document.getElementById("chat-input");
-    if (placeholder) {
-        placeholder.placeholder = window.I18N && I18N.t ? I18N.t("chatTest.input.label") : "Enter a message:";
-    }
-    fetchActiveChatbotConfig();
+  let placeholder = document.getElementById("chat-input");
+  if (placeholder) {
+    placeholder.placeholder =
+      window.I18N && I18N.t
+        ? I18N.t("chatTest.input.label")
+        : "Enter a message:";
+  }
+  fetchActiveChatbotConfig();
 });
 
 /**
@@ -307,10 +322,14 @@ document.addEventListener("i18n:languageChanged", () => {
  * to appear as the active chat button.
  */
 function displayChat() {
-    document.querySelector(".callback-widget-button-wrapper").classList.add("callback-widget-button-chat");
-    const widget = document.querySelector(".callback-widget-button-wrapper");
-    widget.classList.toggle("callback-widget-button-bottom");
-    document.querySelector(".chat-container").classList.remove("callback-widget-button-hide");
+  document
+    .querySelector(".callback-widget-button-wrapper")
+    .classList.add("callback-widget-button-chat");
+  const widget = document.querySelector(".callback-widget-button-wrapper");
+  widget.classList.toggle("callback-widget-button-bottom");
+  document
+    .querySelector(".chat-container")
+    .classList.remove("callback-widget-button-hide");
 }
 
 /**
@@ -318,8 +337,12 @@ function displayChat() {
  * to appear as the default chat button.
  */
 function closeChat() {
-    document.querySelector(".chat-container").classList.add("callback-widget-button-hide");
-    document.querySelector(".callback-widget-button-wrapper").classList.remove("callback-widget-button-chat");
+  document
+    .querySelector(".chat-container")
+    .classList.add("callback-widget-button-hide");
+  document
+    .querySelector(".callback-widget-button-wrapper")
+    .classList.remove("callback-widget-button-chat");
 }
 
 /**
@@ -330,229 +353,252 @@ function closeChat() {
  * being visible and being hidden.
  */
 function displayWidget() {
-    const widget = document.querySelector(".callback-widget-button-wrapper");
-    widget.classList.toggle("callback-widget-button-bottom");
+  const widget = document.querySelector(".callback-widget-button-wrapper");
+  widget.classList.toggle("callback-widget-button-bottom");
 
-    const social = document.querySelector(".callback-widget-button-social");
-    social.classList.toggle("callback-widget-button-hide");
-    social.classList.toggle("callback-widget-button-show");
+  const social = document.querySelector(".callback-widget-button-social");
+  social.classList.toggle("callback-widget-button-hide");
+  social.classList.toggle("callback-widget-button-show");
 }
 
 // Copy from main CODE
 function initChat() {
-    connectWebSocket();
+  connectWebSocket();
 
-    // Set initial message time
-    document.getElementById("bot-welcome-time").textContent = new Date().toLocaleTimeString();
+  // Set initial message time
+  document.getElementById("bot-welcome-time").textContent =
+    new Date().toLocaleTimeString();
 
-    // Handle form submission
-    document.getElementById("chat-form").addEventListener("submit", function (e) {
-        e.preventDefault();
+  // Handle form submission
+  document.getElementById("chat-form").addEventListener("submit", function (e) {
+    e.preventDefault();
 
-        const input = document.getElementById("chat-input");
-        const message = input.value.trim();
+    const input = document.getElementById("chat-input");
+    const message = input.value.trim();
 
-        if (!message) return;
+    if (!message) return;
 
-        // Add user message
-        addMessage(message, true);
+    // Add user message
+    addMessage(message, true);
 
-        // Clear input
-        input.value = "";
-        input.style.height = "auto";
+    // Clear input
+    input.value = "";
+    input.style.height = "auto";
 
-        // Build payload per backend schema (avoid 'Z' for Python fromisoformat)
-        const timestamp = new Date().toISOString().replace("Z", "+00:00");
-        const payload = {
-            session_id: sessionId,
-            sender: "user",
-            message: message,
-            timestamp: timestamp,
-        };
+    // Build payload per backend schema (avoid 'Z' for Python fromisoformat)
+    const timestamp = new Date().toISOString().replace("Z", "+00:00");
+    const payload = {
+      session_id: sessionId,
+      sender: "user",
+      message: message,
+      timestamp: timestamp,
+    };
 
-        // Show typing while awaiting response
-        showTypingIndicator();
-        sendToWebSocket(payload);
-    });
+    // Show typing while awaiting response
+    showTypingIndicator();
+    sendToWebSocket(payload);
+  });
 
-    // Auto-resize textarea
-    // document.getElementById("chat-input").addEventListener("input", function () {
-    //     this.style.height = "auto";
-    //     this.style.height = Math.min(this.scrollHeight, 120) + "px";
-    // });
+  // Auto-resize textarea
+  // document.getElementById("chat-input").addEventListener("input", function () {
+  //     this.style.height = "auto";
+  //     this.style.height = Math.min(this.scrollHeight, 120) + "px";
+  // });
 }
 
 // Session management
 function getOrCreateSessionId() {
-    // const key = "chat_session_id";
-    // let id = localStorage.getItem(key);
-    // if (!id) {
-    // id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    // localStorage.setItem(key, id);
-    // }
-    id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    return id;
+  // const key = "chat_session_id";
+  // let id = localStorage.getItem(key);
+  // if (!id) {
+  // id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  // localStorage.setItem(key, id);
+  // }
+  id = crypto.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return id;
 }
 let sessionId = getOrCreateSessionId();
 
 // Fetch active chatbot configuration and show welcome message
 async function fetchActiveChatbotConfig() {
-    try {
-        const token = localStorage.getItem("access_token");
-        const resp = await fetch(homeLink + "/chatbot-config/active", {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const cfg = await resp.json();
-        const welcome = cfg.welcome_message || "";
-        // const welcome = window.I18N && I18N.t ? I18N.t("chatTest.welcome.default") : "Welcome! How can I help?";
-        const node = document.getElementById("bot-welcome-content");
-        if (node) node.textContent = welcome;
-        // document.getElementById("bot-welcome-time").textContent = new Date().toLocaleTimeString();
-    } catch (e) {
-        console.warn("Failed to load active chatbot config:", e);
-        const node = document.getElementById("bot-welcome-content");
-        if (node) node.textContent = "";
-        // document.getElementById("bot-welcome-time").textContent = new Date().toLocaleTimeString();
-    }
+  try {
+    const token = localStorage.getItem("access_token");
+    const resp = await fetch(homeLink + "/chatbot-config/active", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const cfg = await resp.json();
+    const welcome = cfg.welcome_message || "";
+    // const welcome = window.I18N && I18N.t ? I18N.t("chatTest.welcome.default") : "Welcome! How can I help?";
+    const node = document.getElementById("bot-welcome-content");
+    if (node) node.textContent = welcome;
+    // document.getElementById("bot-welcome-time").textContent = new Date().toLocaleTimeString();
+  } catch (e) {
+    console.warn("Failed to load active chatbot config:", e);
+    const node = document.getElementById("bot-welcome-content");
+    if (node) node.textContent = "";
+    // document.getElementById("bot-welcome-time").textContent = new Date().toLocaleTimeString();
+  }
 }
 
 // Add message to chat
 function addMessage(content, isUser = false, timestamp = null) {
-    const messagesContainer = document.getElementById("chat-messages");
-    const messageDiv = document.createElement("div");
-    messageDiv.className = `message ${isUser ? "user" : "bot"}`;
+  const messagesContainer = document.getElementById("chat-messages");
+  const messageDiv = document.createElement("div");
+  messageDiv.className = `message ${isUser ? "user" : "bot"}`;
 
-    const time = timestamp || new Date().toLocaleTimeString();
+  const time = timestamp || new Date().toLocaleTimeString();
 
-    messageDiv.innerHTML = `
+  messageDiv.innerHTML = `
                 <div class="message-content">
                     <div>${marked.parse(content)}</div>
                     <div class="message-time">${time}</div>
                 </div>
             `;
 
-    messagesContainer.appendChild(messageDiv);
-    // messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    messagesContainer.scrollTop = messagesContainer.scrollTop + 300;
+  messagesContainer.appendChild(messageDiv);
+  // messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  messagesContainer.scrollTop = messagesContainer.scrollTop + 300;
 
-    // Store in chat history
-    chatHistory.push({
-        content,
-        isUser,
-        timestamp: time,
-    });
+  // Store in chat history
+  chatHistory.push({
+    content,
+    isUser,
+    timestamp: time,
+  });
 }
 
 // Show typing indicator
 function showTypingIndicator() {
-    const indicator = document.getElementById("typing-indicator");
-    indicator.style.display = "block";
-    document.getElementById("chat-messages").scrollTop = document.getElementById("chat-messages").scrollHeight;
+  const indicator = document.getElementById("typing-indicator");
+  indicator.style.display = "block";
+  document.getElementById("chat-messages").scrollTop =
+    document.getElementById("chat-messages").scrollHeight;
 }
 
 // Hide typing indicator
 function hideTypingIndicator() {
-    document.getElementById("typing-indicator").style.display = "none";
+  document.getElementById("typing-indicator").style.display = "none";
 }
 
 // WebSocket helpers
 function setStatus(status, cssClass) {
-    const dot = document.getElementById("status-dot");
-    const text = document.getElementById("status-text");
-    dot.classList.remove("offline", "connecting");
-    if (cssClass) dot.classList.add(cssClass);
-    try {
-        if (window.I18N && I18N.t) {
-            text.textContent = I18N.t(status) || status;
-        } else {
-            text.textContent = status;
-        }
-    } catch {
-        text.textContent = status;
+  const dot = document.getElementById("status-dot");
+  const text = document.getElementById("status-text");
+  dot.classList.remove("offline", "connecting");
+  if (cssClass) dot.classList.add(cssClass);
+  try {
+    if (window.I18N && I18N.t) {
+      text.textContent = I18N.t(status) || status;
+    } else {
+      text.textContent = status;
     }
+  } catch {
+    text.textContent = status;
+  }
 }
 
 // WebSocket helpers
 function connectWebSocket() {
-    if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+  if (
+    ws &&
+    (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)
+  )
+    return;
 
-    const protocol = location.protocol === "https:" ? "wss" : "ws";
-    let url = "https://boxcatering-chatbot.todo.ltd/chat/ws"
+  const protocol = location.protocol === "https:" ? "wss" : "ws";
+  let url = "https://boxcatering-chatbot.todo.ltd/chat/ws";
 
-    if (location.host in ["0.0.0.0", "localhost"]) {
-      url = `${protocol}://${location.host}/chat/ws${location.search || ""}`;
+  if (location.host in ["0.0.0.0", "localhost"]) {
+    url = `${protocol}://${location.host}/chat/ws${location.search || ""}`;
+  }
+  setStatus("chatTest.status.connectingToAI", "connecting");
+
+  ws = new WebSocket(url);
+
+  ws.onopen = () => {
+    setStatus("chatTest.status.connectedToAI", "");
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
     }
-    setStatus("chatTest.status.connectingToAI", "connecting");
+  };
 
-    ws = new WebSocket(url);
+  ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      hideTypingIndicator();
+      const text =
+        data && typeof data.response === "string" ? data.response.trim() : "";
+      if (text) {
+        addMessage(text);
+      } else {
+        addMessage(
+          window.I18N && I18N.t
+            ? I18N.t("chatTest.error.generic")
+            : "Sorry, something went wrong. Please try again later.",
+        );
+      }
 
-    ws.onopen = () => {
-        setStatus("chatTest.status.connectedToAI", "");
-        if (reconnectTimer) {
-            clearTimeout(reconnectTimer);
-            reconnectTimer = null;
-        }
-    };
+      if (data.handover_to_manager) {
+        showHandoverNotice(data);
+      }
 
-    ws.onmessage = (event) => {
-        try {
-            const data = JSON.parse(event.data);
-            hideTypingIndicator();
-            const text = data && typeof data.response === "string" ? data.response.trim() : "";
-            if (text) {
-                addMessage(text);
-            } else {
-                addMessage(window.I18N && I18N.t ? I18N.t("chatTest.error.generic") : "Sorry, something went wrong. Please try again later.");
-            }
+      // Optional debug logging when enabled via ?debug=1
+      if (data.debug) {
+        console.log("AI Debug:", data.debug);
+      }
+    } catch (err) {
+      console.error("Failed to parse message:", err);
+    }
+  };
 
-            if (data.handover_to_manager) {
-                showHandoverNotice(data);
-            }
+  ws.onerror = () => {
+    setStatus("chatTest.status.connectionError", "connecting");
+  };
 
-            // Optional debug logging when enabled via ?debug=1
-            if (data.debug) {
-                console.log("AI Debug:", data.debug);
-            }
-        } catch (err) {
-            console.error("Failed to parse message:", err);
-        }
-    };
-
-    ws.onerror = () => {
-        setStatus("chatTest.status.connectionError", "connecting");
-    };
-
-    ws.onclose = () => {
-        setStatus("chatTest.status.disconnected", "offline");
-        reconnectTimer = setTimeout(connectWebSocket, RECONNECT_DELAY_MS);
-    };
+  ws.onclose = () => {
+    setStatus("chatTest.status.disconnected", "offline");
+    reconnectTimer = setTimeout(connectWebSocket, RECONNECT_DELAY_MS);
+  };
 }
 
 function sendToWebSocket(payload) {
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-        connectWebSocket();
-        // Small delay to allow connection, then retry once
-        setTimeout(() => {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify(payload));
-            } else {
-                hideTypingIndicator();
-                addMessage(window.I18N && I18N.t ? I18N.t("chatTest.error.connectFail") : "Connection failed. Please try again later.");
-            }
-        }, 500);
-        return;
-    }
-    ws.send(JSON.stringify(payload));
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    connectWebSocket();
+    // Small delay to allow connection, then retry once
+    setTimeout(() => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(payload));
+      } else {
+        hideTypingIndicator();
+        addMessage(
+          window.I18N && I18N.t
+            ? I18N.t("chatTest.error.connectFail")
+            : "Connection failed. Please try again later.",
+        );
+      }
+    }, 500);
+    return;
+  }
+  ws.send(JSON.stringify(payload));
 }
 
 function showHandoverNotice(data) {
-    const reason = data.handover_reason || "HANDOVER";
-    const desc = data.handover_reason_description || "";
-    try {
-        const notice = window.I18N && I18N.t ? I18N.t("chatTest.handover.notice", { reason: reason, desc: desc }).trim() : `Handing over to manager (${reason}). ${desc}`.trim();
-        addMessage(notice);
-    } catch {
-        addMessage(`Handing over to manager (${reason}). ${desc}`.trim());
-    }
+  const reason = data.handover_reason || "HANDOVER";
+  const desc = data.handover_reason_description || "";
+  try {
+    const notice =
+      window.I18N && I18N.t
+        ? I18N.t("chatTest.handover.notice", {
+            reason: reason,
+            desc: desc,
+          }).trim()
+        : `Handing over to manager (${reason}). ${desc}`.trim();
+    addMessage(notice);
+  } catch {
+    addMessage(`Handing over to manager (${reason}). ${desc}`.trim());
+  }
 }

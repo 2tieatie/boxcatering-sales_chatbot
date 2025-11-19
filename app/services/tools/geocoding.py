@@ -1,9 +1,13 @@
+import asyncio
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 import os
 import json
+
+import httpx
 import requests
 from cachetools import TTLCache, cached
 from requests.adapters import HTTPAdapter, Retry
+from langchain.tools import tool
 
 cache = TTLCache(maxsize=1024, ttl=86400)
 
@@ -62,8 +66,9 @@ def get_delivery_zones() -> List[Dict[str, Any]]:
     return data
 
 
-def geocode_google(query: str) -> Optional[Dict[str, Any]]:
+async def geocode_google(query: str) -> Optional[Dict[str, Any]]:
     require(GOOGLE_MAPS_API_KEY, "GOOGLE_MAPS_API_KEY is not set.")
+
     url = "https://maps.googleapis.com/maps/api/geocode/json"
     params = {
         "address": query,
@@ -71,9 +76,11 @@ def geocode_google(query: str) -> Optional[Dict[str, Any]]:
         "language": LANGUAGE,
         "components": f"country:{COUNTRY_BIAS}",
     }
-    r = make_session().get(url, params=params, timeout=HTTP_TIMEOUT_S)
-    r.raise_for_status()
-    payload = r.json()
+
+    async with httpx.AsyncClient(timeout=HTTP_TIMEOUT_S) as client:
+        r = await client.get(url, params=params)
+        r.raise_for_status()
+        payload = r.json()
 
     if payload.get("status") != "OK":
         return None
@@ -84,8 +91,8 @@ def geocode_google(query: str) -> Optional[Dict[str, Any]]:
 
     best = results[0]
     loc = (best.get("geometry") or {}).get("location") or {}
-
     lat, lng = loc.get("lat"), loc.get("lng")
+
     if not (is_finite(lat) and is_finite(lng)):
         return None
 
@@ -117,8 +124,9 @@ def geocode_google(query: str) -> Optional[Dict[str, Any]]:
     }
 
 
-def geocode_nominatim(query: str) -> Optional[Dict[str, Any]]:
+async def geocode_nominatim(query: str) -> Optional[Dict[str, Any]]:
     url = "https://nominatim.openstreetmap.org/search"
+
     headers = {"Accept-Language": LANGUAGE}
     if NOMINATIM_EMAIL:
         headers["From"] = NOMINATIM_EMAIL
@@ -130,11 +138,11 @@ def geocode_nominatim(query: str) -> Optional[Dict[str, Any]]:
         "limit": 1,
         "countrycodes": COUNTRY_BIAS.lower(),
     }
-    r = make_session().get(
-        url, params=params, headers=headers, timeout=HTTP_TIMEOUT_S + 2
-    )
-    r.raise_for_status()
-    data = r.json()
+
+    async with httpx.AsyncClient(timeout=HTTP_TIMEOUT_S + 2) as client:
+        r = await client.get(url, params=params, headers=headers)
+        r.raise_for_status()
+        data = r.json()
 
     if not data:
         return None
@@ -167,21 +175,25 @@ def geocode_nominatim(query: str) -> Optional[Dict[str, Any]]:
     }
 
 
-def geocode(
+async def geocode(
     query: str, providers: Sequence[str] = ("google", "nominatim")
 ) -> Dict[str, Any]:
+
     require(isinstance(query, str) and query.strip(), "Empty address query.")
     last_err: Optional[Exception] = None
 
     for p in providers:
         try:
-            res = (
-                geocode_google(query)
-                if p == "google"
-                else geocode_nominatim(query) if p == "nominatim" else None
-            )
+            if p == "google":
+                res = await geocode_google(query)
+            elif p == "nominatim":
+                res = await geocode_nominatim(query)
+            else:
+                continue
+
             if res:
                 return res
+
         except Exception as e:
             last_err = e
             continue
@@ -299,14 +311,14 @@ def get_delivery_by_point(
     return {"price": price}
 
 
-def get_delivery_price(
+async def get_delivery_price(
     query: str,
     subtotal: Optional[float] = None,
     providers: Sequence[str] = ("google", "nominatim"),
 ) -> Dict[str, Any]:
     min_confidence: float = 0.55
 
-    geo = geocode(query, providers=providers)
+    geo = await geocode(query, providers=providers)
 
     require(
         is_finite(geo.get("lat")) and is_finite(geo.get("lng")),
@@ -317,14 +329,16 @@ def get_delivery_price(
     zones_data = get_delivery_zones()
 
     delivery = get_delivery_by_point(zones_data, point, subtotal=subtotal)
-    print({
-        "address": {
-            "query": query,
-            "formatted": geo.get("formatted"),
-            "confidence": geo.get("confidence"),
-        },
-        "delivery": delivery,
-    })
+    print(
+        {
+            "address": {
+                "query": query,
+                "formatted": geo.get("formatted"),
+                "confidence": geo.get("confidence"),
+            },
+            "delivery": delivery,
+        }
+    )
     return {
         "address": {
             "query": query,
@@ -335,11 +349,29 @@ def get_delivery_price(
     }
 
 
+@tool
+async def get_delivery_price_tool(query: str, subtotal: int = None) -> str:
+    """
+    Determines whether delivery is available to the specified address and returns calculated delivery cost based on geocoding and delivery zone polygons. The function resolves the address using Google and/or Nominatim geocoding providers, checks confidence of the detected coordinates, identifies whether the point falls inside any delivery polygon, applies delivery cost rules including free-delivery thresholds, and returns the final delivery price and address metadata.
+
+    Args:
+        query (str): Full address provided by the user in format: [Місто], вул. [Вулиця], [Будинок] (e.g., 'Одеса, вул. Шевченка, 1') OR by destination in format: [Місто], [Destination] (e.g. 'Київ, Ocean Plaza', 'Київ, Метро Вокзальна'). Used for geocoding and zone detection.
+        subtotal (int): Order subtotal used to determine free delivery eligibility. ALWAYS INPUT THIS PARAMETER IF ORDER PREPARED OTHER WAYS PASS 0!!.
+    Returns:
+        str: delivery price and address metadata.
+    """
+    delivery_data = await get_delivery_price(query, subtotal)
+    delivery_text = json.dumps(delivery_data, ensure_ascii=False)
+    return delivery_text
+
+
 if __name__ == "__main__":
     try:
-        result = get_delivery_price(
-            query="Крюківщина, вул. Парникова 18",
-            subtotal=3095,
+        result = asyncio.run(
+            get_delivery_price(
+                query="Крюківщина, вул. Парникова 18",
+                subtotal=3095,
+            )
         )
         print(json.dumps(result, ensure_ascii=False, indent=2))
     except Exception as e:

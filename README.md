@@ -54,38 +54,44 @@ The system follows a clean architecture pattern with:
 ### Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd boxcatering-chatbot
    ```
 
 2. **Create virtual environment**
+
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
 3. **Install dependencies**
+
    ```bash
    pip install -e .
    ```
 
 4. **Environment configuration**
+
    ```bash
    cp env.example .env
    # Edit .env with your configuration
    ```
 
 5. **Database setup**
+
    ```bash
    # Create PostgreSQL database
    createdb boxcatering_chatbot
-   
+
    # Run migrations
    alembic upgrade head
    ```
 
 6. **Run the application**
+
    ```bash
    python -m app.main
    ```
@@ -101,6 +107,7 @@ The system follows a clean architecture pattern with:
 If you're on Windows and don't have `make` installed, you can use the provided PowerShell or batch scripts:
 
 **PowerShell (Recommended):**
+
 ```powershell
 # Show available commands
 .\run.ps1 help
@@ -116,6 +123,7 @@ If you're on Windows and don't have `make` installed, you can use the provided P
 ```
 
 **Batch File:**
+
 ```cmd
 # Show available commands
 run.bat help
@@ -132,6 +140,7 @@ run.bat db-init
 
 **Alternative: Install Make for Windows**
 You can also install `make` on Windows using:
+
 - **Chocolatey**: `choco install make`
 - **Scoop**: `scoop install make`
 - **WSL**: Use Windows Subsystem for Linux
@@ -140,19 +149,20 @@ You can also install `make` on Windows using:
 
 ### Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `OPENAI_API_KEY` | OpenAI API key | Yes |
-| `OPENAI_MODEL` | GPT model to use | No (default: gpt-4) |
-| `TELEGRAM_BOT_TOKEN` | Telegram bot token | No |
-| `TELEGRAM_CHAT_ID` | Telegram chat ID for notifications | No |
-| `SECRET_KEY` | JWT secret key | Yes |
-| `DEBUG` | Debug mode | No (default: false) |
+| Variable             | Description                        | Required            |
+| -------------------- | ---------------------------------- | ------------------- |
+| `DATABASE_URL`       | PostgreSQL connection string       | Yes                 |
+| `OPENAI_API_KEY`     | OpenAI API key                     | Yes                 |
+| `OPENAI_MODEL`       | GPT model to use                   | No (default: gpt-4) |
+| `TELEGRAM_BOT_TOKEN` | Telegram bot token                 | No                  |
+| `TELEGRAM_CHAT_ID`   | Telegram chat ID for notifications | No                  |
+| `SECRET_KEY`         | JWT secret key                     | Yes                 |
+| `DEBUG`              | Debug mode                         | No (default: false) |
 
 ### Database Configuration
 
 The system uses PostgreSQL with the following connection format:
+
 ```
 postgresql://username:password@host:port/database_name
 ```
@@ -162,16 +172,19 @@ postgresql://username:password@host:port/database_name
 The system now supports persistent configuration storage through the database. The `make db-init` command (or `.\run.ps1 db-init` on Windows) automatically creates all necessary initial data:
 
 **Linux/macOS:**
+
 ```bash
 make db-init
 ```
 
 **Windows:**
+
 ```powershell
 .\run.ps1 db-init
 ```
 
 This creates:
+
 - **Database tables** for all models
 - **System administrator user** (admin/admin123)
 - **Default system configurations** for OpenAI, Telegram, System, and Security settings
@@ -182,16 +195,20 @@ This creates:
 ## API Endpoints
 
 ### Chat
+
 - `GET /chat/ws` - WebSocket endpoint for real-time chat
 
 ### Health
+
 - `GET /health` - Health check endpoint
 
 ### Authentication
+
 - `POST /auth/login` - User login
 - `POST /auth/register` - User registration
 
 ### Users
+
 - `GET /users/` - List users
 - `POST /users/` - Create user
 - `PUT /users/{id}` - Update user
@@ -199,16 +216,19 @@ This creates:
 - `GET /users/me` - Get current user info
 
 ### Conversations
+
 - `GET /conversations/` - List conversations
 - `GET /conversations/{id}` - Get conversation details
 - `PUT /conversations/{id}` - Update conversation
 
 ### Orders
+
 - `GET /orders/` - List orders
 - `GET /orders/{id}` - Get order details
 - `PUT /orders/{id}` - Update order
 
 ### System Configuration
+
 - `GET /system-config/` - List all system configurations
 - `GET /system-config/{id}` - Get configuration by ID
 - `GET /system-config/key/{key}` - Get configuration by key
@@ -223,6 +243,7 @@ This creates:
 - `POST /system-config/settings/security` - Save security settings
 
 ### Chatbot Configuration
+
 - `GET /chatbot-config/` - List all chatbot configurations
 - `GET /chatbot-config/{id}` - Get configuration by ID
 - `GET /chatbot-config/active` - Get active chatbot configuration

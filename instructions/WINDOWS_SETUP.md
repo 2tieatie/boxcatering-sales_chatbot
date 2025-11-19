@@ -1,45 +1,52 @@
 # Windows Setup Guide
 
 ## Problem
+
 The `make` command is not available on Windows by default, causing the error:
+
 ```
 make: The term 'make' is not recognized as a name of a cmdlet, function, script file, or executable program.
 ```
 
 ## Solution
+
 Use the provided PowerShell or batch scripts instead of `make` commands.
 
 ## Quick Reference
 
-| Make Command | PowerShell | Batch File |
-|--------------|------------|------------|
-| `make help` | `.\run.ps1 help` | `.\run.bat help` |
-| `make install` | `.\run.ps1 install` | `.\run.bat install` |
-| `make dev` | `.\run.ps1 dev` | `.\run.bat dev` |
-| `make test` | `.\run.ps1 test` | `.\run.bat test` |
-| `make format` | `.\run.ps1 format` | `.\run.bat format` |
-| `make lint` | `.\run.ps1 lint` | `.\run.bat lint` |
-| `make clean` | `.\run.ps1 clean` | `.\run.bat clean` |
-| `make db-init` | `.\run.ps1 db-init` | `.\run.bat db-init` |
+| Make Command      | PowerShell             | Batch File             |
+| ----------------- | ---------------------- | ---------------------- |
+| `make help`       | `.\run.ps1 help`       | `.\run.bat help`       |
+| `make install`    | `.\run.ps1 install`    | `.\run.bat install`    |
+| `make dev`        | `.\run.ps1 dev`        | `.\run.bat dev`        |
+| `make test`       | `.\run.ps1 test`       | `.\run.bat test`       |
+| `make format`     | `.\run.ps1 format`     | `.\run.bat format`     |
+| `make lint`       | `.\run.ps1 lint`       | `.\run.bat lint`       |
+| `make clean`      | `.\run.ps1 clean`      | `.\run.bat clean`      |
+| `make db-init`    | `.\run.ps1 db-init`    | `.\run.bat db-init`    |
 | `make db-migrate` | `.\run.ps1 db-migrate` | `.\run.bat db-migrate` |
-| `make setup` | `.\run.ps1 setup` | `.\run.bat setup` |
-| `make run` | `.\run.ps1 run` | `.\run.bat run` |
-| `make run-prod` | `.\run.ps1 run-prod` | `.\run.bat run-prod` |
+| `make setup`      | `.\run.ps1 setup`      | `.\run.bat setup`      |
+| `make run`        | `.\run.ps1 run`        | `.\run.bat run`        |
+| `make run-prod`   | `.\run.ps1 run-prod`   | `.\run.bat run-prod`   |
 
 ## Special Commands
 
 ### Database Revision (Create Migration)
+
 **Make:**
+
 ```bash
 make db-revision msg="description"
 ```
 
 **PowerShell:**
+
 ```powershell
 .\run.ps1 db-revision "description"
 ```
 
 **Batch:**
+
 ```cmd
 .\run.bat db-revision "description"
 ```
@@ -54,11 +61,13 @@ make db-revision msg="description"
 If you want to use `make` directly:
 
 1. **Install via Chocolatey:**
+
    ```powershell
    choco install make
    ```
 
 2. **Install via Scoop:**
+
    ```powershell
    scoop install make
    ```

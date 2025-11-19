@@ -32,6 +32,9 @@ from app.utils.logging_config import logging_config, get_logger
 from app.middleware.logging_middleware import LoggingMiddleware
 
 
+run_scraping_loop = False
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler."""
@@ -40,11 +43,12 @@ async def lifespan(app: FastAPI):
     app_logger = get_logger("app")
     app_logger.info("Starting Boxcatering Chatbot API...")
     # Start background web scraper
-    try:
-        await web_scraper.start()
-        app_logger.info("Web scraper started successfully")
-    except Exception as e:
-        app_logger.warning(f"Failed to start web scraper: {e}")
+    if run_scraping_loop:
+        try:
+            await web_scraper.start()
+            app_logger.info("Web scraper started successfully")
+        except Exception as e:
+            app_logger.warning(f"Failed to start web scraper: {e}")
 
     try:
         yield

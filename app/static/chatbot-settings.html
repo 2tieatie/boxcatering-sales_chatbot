@@ -1,1105 +1,1247 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Box Catering Chatbot - Configuration</title>
-        <style>
-            body {
-                min-height: 100vh;
-            }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Box Catering Chatbot - Configuration</title>
+    <style>
+      body {
+        min-height: 100vh;
+      }
 
-            .container {
-                max-width: 1200px;
-                margin: 40px auto;
-                padding: 0 20px;
-            }
+      .container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
 
-            .settings-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-                gap: 30px;
-            }
+      .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 30px;
+      }
 
-            /* Special layout only for one row */
-            .special-row {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                grid-template-rows: 1fr 1fr;
-                gap: 30px;
-                grid-template-areas:
-                    "large small1"
-                    "large small2";
+      /* Special layout only for one row */
+      .special-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 30px;
+        grid-template-areas:
+          "large small1"
+          "large small2";
 
-                /* Make sure this row spans the whole parent grid width */
-                grid-column: 1 / -1;
-            }
+        /* Make sure this row spans the whole parent grid width */
+        grid-column: 1 / -1;
+      }
 
-            .large-card {
-                grid-area: large;
-            }
+      .large-card {
+        grid-area: large;
+      }
 
-            .small-card-1 {
-                grid-area: small1;
-            }
+      .small-card-1 {
+        grid-area: small1;
+      }
 
-            .small-card-2 {
-                grid-area: small2;
-            }
+      .small-card-2 {
+        grid-area: small2;
+      }
 
-            .settings-card {
-                background: white;
-                border-radius: 15px;
-                padding: 30px;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            }
+      .settings-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+      }
 
-            .settings-card h3 {
-                color: #333;
-                margin-bottom: 20px;
-                font-size: 20px;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
+      .settings-card h3 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
 
-            .settings-card h3 .icon {
-                font-size: 24px;
-            }
+      .settings-card h3 .icon {
+        font-size: 24px;
+      }
 
-            /* Compact variant to reduce vertical space (approx half height) */
-            .settings-card.compact {
-                padding: 16px;
-            }
+      /* Compact variant to reduce vertical space (approx half height) */
+      .settings-card.compact {
+        padding: 16px;
+      }
 
-            .settings-card.compact h3 {
-                margin-bottom: 12px;
-                font-size: 18px;
-            }
+      .settings-card.compact h3 {
+        margin-bottom: 12px;
+        font-size: 18px;
+      }
 
-            .settings-card.compact .form-group {
-                margin-bottom: 14px;
-            }
+      .settings-card.compact .form-group {
+        margin-bottom: 14px;
+      }
 
-            .settings-card.compact .toggle-group {
-                padding: 8px 0;
-            }
+      .settings-card.compact .toggle-group {
+        padding: 8px 0;
+      }
 
-            .form-group {
-                margin-bottom: 25px;
-            }
+      .form-group {
+        margin-bottom: 25px;
+      }
 
-            .form-group label {
-                display: block;
-                margin-bottom: 8px;
-                color: #555;
-                font-weight: 600;
-                font-size: 14px;
-            }
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-weight: 600;
+        font-size: 14px;
+      }
 
-            .form-group input,
-            .form-group textarea,
-            .form-group select {
-                width: 100%;
-                padding: 12px 15px;
-                border: 2px solid #e1e5e9;
-                border-radius: 8px;
-                font-size: 14px;
-                font-family: inherit;
-                transition: border-color 0.3s ease;
-                background: #f8f9fa;
-            }
+      .form-group input,
+      .form-group textarea,
+      .form-group select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+        transition: border-color 0.3s ease;
+        background: #f8f9fa;
+      }
 
-            .form-group input:focus,
-            .form-group textarea:focus,
-            .form-group select:focus {
-                outline: none;
-                border-color: #667eea;
-                background: white;
-            }
+      .form-group input:focus,
+      .form-group textarea:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+        background: white;
+      }
 
-            .form-group textarea {
-                resize: vertical;
-                min-height: 100px;
-            }
+      .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+      }
 
-            .form-group .help-text {
-                font-size: 12px;
-                color: #666;
-                margin-top: 5px;
-                font-style: italic;
-            }
+      .form-group .help-text {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+        font-style: italic;
+      }
 
-            .toggle-group {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 15px 0;
-                border-bottom: 1px solid #e9ecef;
-            }
+      .toggle-group {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 0;
+        border-bottom: 1px solid #e9ecef;
+      }
 
-            .toggle-group:last-child {
-                border-bottom: none;
-            }
+      .toggle-group:last-child {
+        border-bottom: none;
+      }
 
-            .toggle-label {
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
-            }
+      .toggle-label {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
 
-            .toggle-label .title {
-                font-weight: 600;
-                color: #333;
-            }
+      .toggle-label .title {
+        font-weight: 600;
+        color: #333;
+      }
 
-            .toggle-label .description {
-                font-size: 13px;
-                color: #666;
-            }
+      .toggle-label .description {
+        font-size: 13px;
+        color: #666;
+      }
 
-            .toggle-switch {
-                position: relative;
-                display: inline-block;
-                width: 50px;
-                height: 24px;
-            }
+      .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+      }
 
-            .toggle-switch input {
-                opacity: 0;
-                width: 0;
-                height: 0;
-            }
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
 
-            .slider {
-                position: absolute;
-                cursor: pointer;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background-color: #ccc;
-                transition: 0.4s;
-                border-radius: 24px;
-            }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.4s;
+        border-radius: 24px;
+      }
 
-            .slider:before {
-                position: absolute;
-                content: "";
-                height: 18px;
-                width: 18px;
-                left: 3px;
-                bottom: 3px;
-                background-color: white;
-                transition: 0.4s;
-                border-radius: 50%;
-            }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
 
-            input:checked + .slider {
-                background-color: #667eea;
-            }
+      input:checked + .slider {
+        background-color: #667eea;
+      }
 
-            input:checked + .slider:before {
-                transform: translateX(26px);
-            }
+      input:checked + .slider:before {
+        transform: translateX(26px);
+      }
 
-            .range-group {
-                display: flex;
-                align-items: center;
-                gap: 15px;
-            }
+      .range-group {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
 
-            .range-slider {
-                flex: 1;
-                height: 6px;
-                border-radius: 3px;
-                background: #e1e5e9;
-                outline: none;
-                appearance: none;
-                -webkit-appearance: none;
-            }
+      .range-slider {
+        flex: 1;
+        height: 6px;
+        border-radius: 3px;
+        background: #e1e5e9;
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+      }
 
-            .range-slider::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                background: #667eea;
-                cursor: pointer;
-            }
+      .range-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #667eea;
+        cursor: pointer;
+      }
 
-            .range-slider::-moz-range-thumb {
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                background: #667eea;
-                cursor: pointer;
-                border: none;
-            }
+      .range-slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #667eea;
+        cursor: pointer;
+        border: none;
+      }
 
-            .range-value {
-                min-width: 50px;
-                text-align: center;
-                font-weight: 600;
-                color: #667eea;
-            }
+      .range-value {
+        min-width: 50px;
+        text-align: center;
+        font-weight: 600;
+        color: #667eea;
+      }
 
-            .action-buttons {
-                display: flex;
-                gap: 15px;
-                justify-content: center;
-                margin-top: 40px;
-            }
+      .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 40px;
+      }
 
-            .status-indicator {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                font-size: 14px;
-                color: #666;
-                margin-top: 20px;
-                justify-content: center;
-            }
+      .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #666;
+        margin-top: 20px;
+        justify-content: center;
+      }
 
-            .status-dot {
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background: #28a745;
-            }
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #28a745;
+      }
 
-            .status-dot.offline {
-                background: #dc3545;
-            }
+      .status-dot.offline {
+        background: #dc3545;
+      }
 
-            .status-dot.connecting {
-                background: #ffc107;
-                animation: pulse 1.5s infinite;
-            }
+      .status-dot.connecting {
+        background: #ffc107;
+        animation: pulse 1.5s infinite;
+      }
 
-            @keyframes pulse {
-                0%,
-                100% {
-                    opacity: 1;
-                }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
 
-                50% {
-                    opacity: 0.5;
-                }
-            }
+        50% {
+          opacity: 0.5;
+        }
+      }
 
-            .alert {
-                padding: 15px;
-                border-radius: 8px;
-                margin-bottom: 20px;
-                display: none;
-            }
+      .alert {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: none;
+      }
 
-            .alert-success {
-                background: #d4edda;
-                color: #155724;
-                border: 1px solid #c3e6cb;
-            }
+      .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
 
-            .alert-error {
-                background: #f8d7da;
-                color: #721c24;
-                border: 1px solid #f5c6cb;
-            }
+      .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
 
-            .alert-warning {
-                background: #fff3cd;
-                color: #856404;
-                border: 1px solid #ffeaa7;
-            }
+      .alert-warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
 
-            @media (max-width: 768px) {
-                .settings-grid {
-                    grid-template-columns: 1fr;
-                }
+      @media (max-width: 768px) {
+        .settings-grid {
+          grid-template-columns: 1fr;
+        }
 
-                .special-row {
-                    /* one column only */
-                    grid-template-columns: 1fr;
-                    /* rows auto-expand */
-                    grid-template-rows: auto;
-                    grid-template-areas:
-                        "large"
-                        "small1"
-                        "small2";
-                }
+        .special-row {
+          /* one column only */
+          grid-template-columns: 1fr;
+          /* rows auto-expand */
+          grid-template-rows: auto;
+          grid-template-areas:
+            "large"
+            "small1"
+            "small2";
+        }
 
-                .action-buttons {
-                    flex-direction: column;
-                    align-items: stretch;
-                }
+        .action-buttons {
+          flex-direction: column;
+          align-items: stretch;
+        }
 
-                .range-group {
-                    flex-direction: column;
-                    align-items: stretch;
-                    gap: 10px;
-                }
-            }
-        </style>
-        <link rel="stylesheet" href="/static/styles.css" />
-    </head>
+        .range-group {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 10px;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
 
-    <body>
-        <div class="header">
-            <h1 data-i18n="app.title">Box Catering Chatbot</h1>
-            <div class="nav-links" id="nav"></div>
-            <div class="user-info">
-                <div class="user-avatar" id="user-avatar">U</div>
-                <span id="username">User</span>
-                <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">Logout</button>
-            </div>
+  <body>
+    <div class="header">
+      <h1 data-i18n="app.title">Box Catering Chatbot</h1>
+      <div class="nav-links" id="nav"></div>
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar">U</div>
+        <span id="username">User</span>
+        <button class="logout-btn" onclick="logout()" data-i18n="auth.logout">
+          Logout
+        </button>
+      </div>
+    </div>
+
+    <div class="container">
+      <div
+        id="configs-sidebar"
+        style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap"
+      ></div>
+      <div class="page-header">
+        <h2 data-i18n="chatbotSettings.headerTitle">
+          ⚙️ Chatbot Configuration
+        </h2>
+        <p data-i18n="chatbotSettings.headerSubtitle">
+          Customize your AI-powered chatbot settings, behavior, and responses to
+          match your business needs
+        </p>
+        <div class="form-group" style="margin-top: 20px">
+          <label
+            for="chatbot-name"
+            data-i18n="chatbotSettings.labels.chatbotName"
+            >Chatbot Name</label
+          >
+          <input
+            type="text"
+            id="chatbot-name"
+            value="Marichka"
+            placeholder="Marichka"
+            data-i18n-placeholder="chatbotSettings.placeholders.chatbotName"
+          />
+          <div
+            class="help-text"
+            data-i18n="chatbotSettings.labels.chatbotNameHelp"
+          >
+            Shown in widgets and test header
+          </div>
         </div>
-
-        <div class="container">
-            <div id="configs-sidebar" style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap"></div>
-            <div class="page-header">
-                <h2 data-i18n="chatbotSettings.headerTitle">⚙️ Chatbot Configuration</h2>
-                <p data-i18n="chatbotSettings.headerSubtitle">Customize your AI-powered chatbot settings, behavior, and responses to match your business needs</p>
-                <div class="form-group" style="margin-top: 20px">
-                    <label for="chatbot-name" data-i18n="chatbotSettings.labels.chatbotName">Chatbot Name</label>
-                    <input type="text" id="chatbot-name" value="Marichka" placeholder="Marichka" data-i18n-placeholder="chatbotSettings.placeholders.chatbotName" />
-                    <div class="help-text" data-i18n="chatbotSettings.labels.chatbotNameHelp">Shown in widgets and test header</div>
-                </div>
-                <div class="form-group" style="margin-top: 20px">
-                    <label for="system-instruction" data-i18n="chatbotSettings.section.prompts">Prompt Templates</label>
-                    <textarea id="system-instruction" placeholder=""></textarea>
-                </div>
-                <div class="form-group" style="margin-top: 20px">
-                    <label for="greeting-message" data-i18n="chatbotSettings.labels.welcome">Welcome Message</label>
-                    <textarea id="greeting-message" placeholder="Custom greeting message..." data-i18n-placeholder="chatbotSettings.placeholders.welcome"></textarea>
-                </div>
-            </div>
-
-            <div id="alert-container"></div>
-
-            <div class="action-buttons">
-                <button class="btn btn-primary" onclick="saveSettings()" data-i18n="chatbotSettings.btn.save">💾 Save Settings</button>
-                <button class="btn btn-secondary" onclick="resetToDefaults()" data-i18n="chatbotSettings.btn.reset">🔄 Reset to Defaults</button>
-                <button class="btn btn-success" onclick="testConfiguration()" data-i18n="chatbotSettings.btn.test">🧪 Test Configuration</button>
-            </div>
-
-            <div class="status-indicator" style="margin-top: 30px">
-                <div class="status-dot" id="status-dot"></div>
-                <span id="status-text" data-i18n="chatbotSettings.status.saved">Configuration saved successfully</span>
-            </div>
+        <div class="form-group" style="margin-top: 20px">
+          <label
+            for="system-instruction"
+            data-i18n="chatbotSettings.section.prompts"
+            >Prompt Templates</label
+          >
+          <textarea id="system-instruction" placeholder=""></textarea>
         </div>
+        <div class="form-group" style="margin-top: 20px">
+          <label
+            for="greeting-message"
+            data-i18n="chatbotSettings.labels.welcome"
+            >Welcome Message</label
+          >
+          <textarea
+            id="greeting-message"
+            placeholder="Custom greeting message..."
+            data-i18n-placeholder="chatbotSettings.placeholders.welcome"
+          ></textarea>
+        </div>
+      </div>
 
-        <script src="/static/auth.js"></script>
-        <script src="/static/i18n.js"></script>
-        <script>
-            (function () {
-                async function initI18N() {
-                    try {
-                        const token = localStorage.getItem("access_token");
-                        const meRes = await fetch("/users/me", { headers: { Authorization: `Bearer ${token}` } });
-                        const storedLang = localStorage.getItem("ui_language");
-                        let lang = storedLang || "uk";
-                        if (!storedLang && meRes.ok) {
-                            const me = await meRes.json();
-                            lang = me.preferred_language || lang;
-                        }
-                        if (window.I18N && I18N.setLanguage) {
-                            await I18N.setLanguage(lang);
-                        }
-                        document.querySelectorAll("[data-i18n]").forEach(function (el) {
-                            const k = el.getAttribute("data-i18n");
-                            const txt = window.I18N && I18N._dict && I18N._dict[k] ? I18N._dict[k] : null;
-                            if (txt) el.textContent = txt;
-                        });
-                        // Translate placeholders for inputs/textareas
-                        document.querySelectorAll("[data-i18n-placeholder]").forEach(function (el) {
-                            const k = el.getAttribute("data-i18n-placeholder");
-                            const txt = window.I18N && I18N._dict && I18N._dict[k] ? I18N._dict[k] : null;
-                            if (txt) el.setAttribute("placeholder", txt);
-                        });
-                    } catch {}
-                }
-                window.__i18nReady = initI18N();
-            })();
-        </script>
-        <script src="/static/nav.js"></script>
-        <script>
-            // Initialize settings
-            let currentSettings = {};
-            let pendingContextFiles = [];
-            let __currentUserRole = null;
-            let __currentConfigId = null;
+      <div id="alert-container"></div>
 
-            // Default settings
-            const defaultSettings = {
-                systemInstruction: "",
-                greetingMessage: "",
+      <div class="action-buttons">
+        <button
+          class="btn btn-primary"
+          onclick="saveSettings()"
+          data-i18n="chatbotSettings.btn.save"
+        >
+          💾 Save Settings
+        </button>
+        <button
+          class="btn btn-secondary"
+          onclick="resetToDefaults()"
+          data-i18n="chatbotSettings.btn.reset"
+        >
+          🔄 Reset to Defaults
+        </button>
+        <button
+          class="btn btn-success"
+          onclick="testConfiguration()"
+          data-i18n="chatbotSettings.btn.test"
+        >
+          🧪 Test Configuration
+        </button>
+      </div>
+
+      <div class="status-indicator" style="margin-top: 30px">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="status-text" data-i18n="chatbotSettings.status.saved"
+          >Configuration saved successfully</span
+        >
+      </div>
+    </div>
+
+    <script src="/static/auth.js"></script>
+    <script src="/static/i18n.js"></script>
+    <script>
+      (function () {
+        async function initI18N() {
+          try {
+            const token = localStorage.getItem("access_token");
+            const meRes = await fetch("/users/me", {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const storedLang = localStorage.getItem("ui_language");
+            let lang = storedLang || "uk";
+            if (!storedLang && meRes.ok) {
+              const me = await meRes.json();
+              lang = me.preferred_language || lang;
+            }
+            if (window.I18N && I18N.setLanguage) {
+              await I18N.setLanguage(lang);
+            }
+            document.querySelectorAll("[data-i18n]").forEach(function (el) {
+              const k = el.getAttribute("data-i18n");
+              const txt =
+                window.I18N && I18N._dict && I18N._dict[k]
+                  ? I18N._dict[k]
+                  : null;
+              if (txt) el.textContent = txt;
+            });
+            // Translate placeholders for inputs/textareas
+            document
+              .querySelectorAll("[data-i18n-placeholder]")
+              .forEach(function (el) {
+                const k = el.getAttribute("data-i18n-placeholder");
+                const txt =
+                  window.I18N && I18N._dict && I18N._dict[k]
+                    ? I18N._dict[k]
+                    : null;
+                if (txt) el.setAttribute("placeholder", txt);
+              });
+          } catch {}
+        }
+        window.__i18nReady = initI18N();
+      })();
+    </script>
+    <script src="/static/nav.js"></script>
+    <script>
+      // Initialize settings
+      let currentSettings = {};
+      let pendingContextFiles = [];
+      let __currentUserRole = null;
+      let __currentConfigId = null;
+
+      // Default settings
+      const defaultSettings = {
+        systemInstruction: "",
+        greetingMessage: "",
+      };
+
+      // Check authentication
+      function checkAuth() {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+          window.location.href = "/login";
+          return;
+        }
+        fetchUserInfo();
+      }
+
+      // Fetch user information
+      async function fetchUserInfo() {
+        try {
+          const token = localStorage.getItem("access_token");
+          const response = await fetch("/users/me", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (response.ok) {
+            const user = await response.json();
+            __currentUserRole = user.role || null;
+            document.getElementById("username").textContent =
+              user.full_name || user.username;
+            document.getElementById("user-avatar").textContent = (
+              user.full_name || user.username
+            )
+              .charAt(0)
+              .toUpperCase();
+
+            // Check if user has access to this page
+            if (__currentUserRole === "manager") {
+              // MANAGER role cannot access General Settings pages
+              showAccessDeniedMessage();
+              return;
+            }
+            // Initialize context uploader and list files once role is known
+            try {
+              setupContextUploader();
+            } catch {}
+            if (__currentUserRole === "system_admin") {
+              try {
+                listContextFiles();
+              } catch {}
+            }
+            // Load settings only if user has access
+            loadSettings();
+          }
+        } catch (error) {
+          console.error("Error fetching user info:", error);
+        }
+      }
+
+      // Load current settings
+      async function loadSettings() {
+        try {
+          const token = localStorage.getItem("access_token");
+          // Allow editing a specific config via query param
+          const url = new URL(window.location.href);
+          const qpConfigId = url.searchParams.get("config_id");
+          __currentConfigId = qpConfigId ? parseInt(qpConfigId) : null;
+
+          const endpoint = __currentConfigId
+            ? `/chatbot-config/${__currentConfigId}`
+            : "/chatbot-config/active";
+          const response = await fetch(endpoint, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (response.ok) {
+            const dbSettings = await response.json();
+            // console.log("Current settings:", dbSettings);
+
+            // Map database fields to form fields
+            currentSettings = {
+              ...defaultSettings,
+              // New: chatbot name
+              chatbotName: dbSettings.chatbot_name || "Marichka",
+              greetingMessage:
+                dbSettings.welcome_message || defaultSettings.greetingMessage,
+              // Prompt fields
+              system_instruction:
+                dbSettings.system_instruction ||
+                defaultSettings.systemInstruction,
+            };
+          } else {
+            // No configuration found in database, use defaults
+            setDefaults();
+            return;
+          }
+        } catch (error) {
+          console.error("Error loading settings from database:", error);
+          // Use default values if database is unavailable
+          setDefaults();
+          return;
+        }
+        // Load system settings for context documents and scraping (system admin only)
+        if (__currentUserRole === "system_admin") {
+          try {
+            const token = localStorage.getItem("access_token");
+            const sysResp = await fetch("/system-config/settings/all", {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+            if (sysResp.ok) {
+              const sysSettings = await sysResp.json();
+              // console.log("System settings:", sysSettings);
+
+              const system = sysSettings.system || {};
+              if (system.scrape_enabled !== undefined) {
+                currentSettings.scrapeEnabled =
+                  system.scrape_enabled === true ||
+                  system.scrape_enabled === "True";
+              }
+              if (system.context_docs_enabled !== undefined) {
+                currentSettings.contextDocsEnabled =
+                  system.context_docs_enabled === true ||
+                  system.context_docs_enabled === "True";
+              }
+              if (system.context_docs_dir) {
+                currentSettings.contextDocsDir = system.context_docs_dir;
+              }
+              if (system.context_docs_max_chars) {
+                const n = parseInt(system.context_docs_max_chars);
+                if (!isNaN(n)) currentSettings.contextDocsMaxChars = n;
+              }
+              if (system.scrape_website_url) {
+                currentSettings.scrapeWebsiteUrl = system.scrape_website_url;
+              }
+              if (system.scrape_interval_minutes) {
+                const m = parseInt(system.scrape_interval_minutes);
+                if (!isNaN(m)) currentSettings.scrapeIntervalMinutes = m;
+              }
+            }
+            // Local override for context docs toggle (persist UI interactions)
+            try {
+              const override = localStorage.getItem("context_docs_enabled");
+              if (override !== null) {
+                currentSettings.contextDocsEnabled = override === "true";
+              }
+            } catch {}
+          } catch (e) {
+            console.warn("Could not load system settings:", e);
+          }
+        } else {
+          // Make system-admin-only sections read-only and show notice
+          try {
+            setReadOnlyForSystemCards();
+          } catch {}
+        }
+        applySettings();
+      }
+
+      // Set default settings
+      function setDefaults() {
+        currentSettings = { ...defaultSettings };
+        applySettings();
+      }
+
+      // Apply settings to form
+      function applySettings() {
+        // Header Chatbot Name
+        const botNameEl = document.getElementById("chatbot-name");
+        if (botNameEl)
+          botNameEl.value = currentSettings.chatbotName || "Marichka";
+        document.getElementById("greeting-message").value =
+          currentSettings.greetingMessage;
+
+        // Prompt fields
+        document.getElementById("system-instruction").value =
+          currentSettings.system_instruction;
+      }
+
+      // Save settings
+      async function saveSettings() {
+        try {
+          // Collect all form values
+          const greetingMessage = document
+            .getElementById("greeting-message")
+            .value.trim();
+          const chatbotName = (
+            document.getElementById("chatbot-name").value || ""
+          ).trim();
+          const system_instruction = (
+            document.getElementById("system-instruction").value || ""
+          ).trim();
+
+          // Build payload
+          const settings = {
+            name: "Box Catering Chatbot Configuration",
+            chatbot_name: chatbotName || "Marichka",
+            welcome_message: greetingMessage,
+            system_instruction: document
+              .getElementById("system-instruction")
+              .value.trim(),
+          };
+
+          // Determine target endpoint/method
+          const isEditingSpecificConfig = !!__currentConfigId;
+          if (!isEditingSpecificConfig) {
+            // Only when saving to the active config upsert flow
+            settings.is_active = true;
+          } else {
+            // Do not override name on a specific draft; avoid unique-name collisions
+            try {
+              delete settings.name;
+            } catch {}
+          }
+
+          console.log("Saving settings:", settings); // Debug log
+          console.log("Field values:", {
+            system_instruction,
+          });
+
+          // Save to database via API
+          const token = localStorage.getItem("access_token");
+          console.log("Using token:", token ? "Token exists" : "No token"); // Debug log
+
+          const endpoint = isEditingSpecificConfig
+            ? `/chatbot-config/${__currentConfigId}`
+            : "/chatbot-config/";
+          const method = isEditingSpecificConfig ? "PUT" : "POST";
+
+          const response = await fetch(endpoint, {
+            method: method,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(settings),
+          });
+
+          console.log(response);
+
+          console.log("Response status:", response.status); // Debug log
+
+          if (response.ok) {
+            // Update current settings in memory
+            currentSettings = {
+              chatbotName:
+                (document.getElementById("chatbot-name").value || "").trim() ||
+                "Marichka",
+              greetingMessage:
+                (
+                  document.getElementById("greeting-message").value || ""
+                ).trim() || "",
+              system_instruction:
+                document.getElementById("system-instruction").value,
             };
 
-            // Check authentication
-            function checkAuth() {
-                const token = localStorage.getItem("access_token");
-                if (!token) {
-                    window.location.href = "/login";
-                    return;
-                }
-                fetchUserInfo();
+            showAlert("Settings saved successfully to database!", "success");
+            updateStatus("Configuration saved successfully", "success");
+          } else {
+            const errorData = await response.json();
+            console.error("Error response:", errorData); // Debug log
+            console.error("Full error details:", {
+              status: response.status,
+              statusText: response.statusText,
+              headers: Object.fromEntries(response.headers.entries()),
+              errorData,
+            });
+
+            // Show detailed error information
+            let errorMessage = "Failed to save settings";
+            if (errorData.detail) {
+              if (Array.isArray(errorData.detail)) {
+                errorMessage +=
+                  ": " +
+                  errorData.detail
+                    .map((e) => e.msg || e.message || "Unknown error")
+                    .join(", ");
+              } else {
+                errorMessage += ": " + errorData.detail;
+              }
             }
 
-            // Fetch user information
-            async function fetchUserInfo() {
-                try {
-                    const token = localStorage.getItem("access_token");
-                    const response = await fetch("/users/me", {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    });
+            showAlert(errorMessage, "error");
+            updateStatus("Failed to save configuration", "error");
+          }
+        } catch (error) {
+          console.error("Error saving settings:", error);
+          let errorMessage = "Unknown error occurred";
 
-                    if (response.ok) {
-                        const user = await response.json();
-                        __currentUserRole = user.role || null;
-                        document.getElementById("username").textContent = user.full_name || user.username;
-                        document.getElementById("user-avatar").textContent = (user.full_name || user.username).charAt(0).toUpperCase();
-
-                        // Check if user has access to this page
-                        if (__currentUserRole === "manager") {
-                            // MANAGER role cannot access General Settings pages
-                            showAccessDeniedMessage();
-                            return;
-                        }
-                        // Initialize context uploader and list files once role is known
-                        try {
-                            setupContextUploader();
-                        } catch {}
-                        if (__currentUserRole === "system_admin") {
-                            try {
-                                listContextFiles();
-                            } catch {}
-                        }
-                        // Load settings only if user has access
-                        loadSettings();
-                    }
-                } catch (error) {
-                    console.error("Error fetching user info:", error);
-                }
+          if (error.detail) {
+            if (Array.isArray(error.detail)) {
+              errorMessage = error.detail
+                .map((err) => err.msg || err)
+                .join(", ");
+            } else if (typeof error.detail === "string") {
+              errorMessage = error.detail;
+            } else {
+              errorMessage = JSON.stringify(error.detail);
             }
+          }
 
-            // Load current settings
-            async function loadSettings() {
-                try {
-                    const token = localStorage.getItem("access_token");
-                    // Allow editing a specific config via query param
-                    const url = new URL(window.location.href);
-                    const qpConfigId = url.searchParams.get("config_id");
-                    __currentConfigId = qpConfigId ? parseInt(qpConfigId) : null;
+          showAlert(`Failed to save settings: ${errorMessage}`, "error");
+          updateStatus("Error saving configuration", "error");
+        }
+      }
 
-                    const endpoint = __currentConfigId ? `/chatbot-config/${__currentConfigId}` : "/chatbot-config/active";
-                    const response = await fetch(endpoint, {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    });
+      // Admin-only: create a brand new configuration without overwriting active
+      async function createNewConfig() {
+        try {
+          const token = localStorage.getItem("access_token");
+          const payload = await buildPayloadFromForm(false);
+          const resp = await fetch("/chatbot-config/new", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(payload),
+          });
+          if (!resp.ok) throw new Error("Create failed");
+          showAlert("New configuration created", "success");
+        } catch (e) {
+          console.warn(e);
+          showAlert("Failed to create configuration", "error");
+        }
+      }
 
-                    if (response.ok) {
-                        const dbSettings = await response.json();
-                        // console.log("Current settings:", dbSettings);
+      async function cloneConfig(configId) {
+        try {
+          const token = localStorage.getItem("access_token");
+          const resp = await fetch(`/chatbot-config/${configId}/clone`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!resp.ok) throw new Error("Clone failed");
+          const data = await resp.json();
+          showAlert("Configuration cloned", "success");
+          // Optionally open test panel for the new config id
+          openTestPanelForConfig(data.id);
+        } catch (e) {
+          console.warn(e);
+          showAlert("Failed to clone configuration", "error");
+        }
+      }
 
-                        // Map database fields to form fields
-                        currentSettings = {
-                            ...defaultSettings,
-                            // New: chatbot name
-                            chatbotName: dbSettings.chatbot_name || "Marichka",
-                            greetingMessage: dbSettings.welcome_message || defaultSettings.greetingMessage,
-                            // Prompt fields
-                            system_instruction: dbSettings.system_instruction || defaultSettings.systemInstruction,
-                        };
-                    } else {
-                        // No configuration found in database, use defaults
-                        setDefaults();
-                        return;
-                    }
-                } catch (error) {
-                    console.error("Error loading settings from database:", error);
-                    // Use default values if database is unavailable
-                    setDefaults();
-                    return;
-                }
-                // Load system settings for context documents and scraping (system admin only)
-                if (__currentUserRole === "system_admin") {
-                    try {
-                        const token = localStorage.getItem("access_token");
-                        const sysResp = await fetch("/system-config/settings/all", {
-                            headers: {
-                                Authorization: `Bearer ${token}`,
-                            },
-                        });
-                        if (sysResp.ok) {
-                            const sysSettings = await sysResp.json();
-                            // console.log("System settings:", sysSettings);
+      function openTestPanelForConfig(configId) {
+        try {
+          // Implement a simple WS test popup for admins
+          const token = localStorage.getItem("access_token");
+          const url = new URL(
+            window.location.origin.replace("http", "ws") + "/chat/ws",
+          );
+          url.searchParams.set("config_id", String(configId));
+          url.searchParams.set("debug", "1");
+          const ws = new WebSocket(url);
+          ws.addEventListener("open", () => {
+            updateStatus(
+              "Connected to test chat (config " + configId + ")",
+              "connected",
+            );
+          });
+          // Attach Authorization header via protocol is not supported in plain WS in browsers.
+          // Expect server to read token from cookies or unauthenticated test to fail gracefully.
+        } catch (e) {
+          console.warn("Failed to open test panel WS:", e);
+        }
+      }
 
-                            const system = sysSettings.system || {};
-                            if (system.scrape_enabled !== undefined) {
-                                currentSettings.scrapeEnabled = system.scrape_enabled === true || system.scrape_enabled === "True";
-                            }
-                            if (system.context_docs_enabled !== undefined) {
-                                currentSettings.contextDocsEnabled = system.context_docs_enabled === true || system.context_docs_enabled === "True";
-                            }
-                            if (system.context_docs_dir) {
-                                currentSettings.contextDocsDir = system.context_docs_dir;
-                            }
-                            if (system.context_docs_max_chars) {
-                                const n = parseInt(system.context_docs_max_chars);
-                                if (!isNaN(n)) currentSettings.contextDocsMaxChars = n;
-                            }
-                            if (system.scrape_website_url) {
-                                currentSettings.scrapeWebsiteUrl = system.scrape_website_url;
-                            }
-                            if (system.scrape_interval_minutes) {
-                                const m = parseInt(system.scrape_interval_minutes);
-                                if (!isNaN(m)) currentSettings.scrapeIntervalMinutes = m;
-                            }
-                        }
-                        // Local override for context docs toggle (persist UI interactions)
-                        try {
-                            const override = localStorage.getItem("context_docs_enabled");
-                            if (override !== null) {
-                                currentSettings.contextDocsEnabled = override === "true";
-                            }
-                        } catch {}
-                    } catch (e) {
-                        console.warn("Could not load system settings:", e);
-                    }
-                } else {
-                    // Make system-admin-only sections read-only and show notice
-                    try {
-                        setReadOnlyForSystemCards();
-                    } catch {}
-                }
-                applySettings();
+      async function listContextFiles() {
+        try {
+          const token = localStorage.getItem("access_token");
+          const resp = await fetch("/context-docs/list", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!resp.ok) throw new Error("Failed to list context files");
+          const data = await resp.json();
+          renderContextFiles(data.files || []);
+        } catch (e) {
+          renderContextFiles([]);
+          console.warn("List files failed", e);
+        }
+      }
+
+      function renderContextFiles(files) {
+        const container = document.getElementById("context-files-list");
+        if (!container) return;
+        container.innerHTML = "";
+        if (!files.length) {
+          const div = document.createElement("div");
+          div.style.padding = "10px";
+          div.style.fontSize = "14px";
+          div.style.color = "#666";
+          div.textContent = "No files loaded";
+          container.appendChild(div);
+          return;
+        }
+        for (const f of files) {
+          const row = document.createElement("div");
+          row.style.display = "flex";
+          row.style.alignItems = "center";
+          row.style.justifyContent = "space-between";
+          row.style.padding = "10px 12px";
+          row.style.borderBottom = "1px solid #f0f2f5";
+
+          const left = document.createElement("div");
+          left.style.display = "flex";
+          left.style.alignItems = "center";
+          left.style.gap = "10px";
+          const icon = document.createElement("span");
+          icon.textContent = "📄";
+          const name = document.createElement("span");
+          name.textContent = f.name;
+          name.style.fontWeight = "600";
+          const small = document.createElement("span");
+          small.style.color = "#888";
+          small.style.fontSize = "12px";
+          small.textContent = ` ${Math.ceil((f.size || 0) / 1024)} KB`;
+          left.appendChild(icon);
+          left.appendChild(name);
+          left.appendChild(small);
+
+          const del = document.createElement("button");
+          del.className = "btn-sm btn-danger";
+          del.textContent =
+            window.I18N && I18N.t
+              ? I18N.t("chatbotSettings.ctx.delete")
+              : "Delete";
+          del.onclick = async () => {
+            if (!confirm(`Delete ${f.name}?`)) return;
+            try {
+              const token = localStorage.getItem("access_token");
+              const resp = await fetch(
+                `/context-docs/${encodeURIComponent(f.name)}`,
+                {
+                  method: "DELETE",
+                  headers: { Authorization: `Bearer ${token}` },
+                },
+              );
+              if (!resp.ok) throw new Error("Delete failed");
+              showAlert("File deleted", "success");
+              await listContextFiles();
+            } catch (e) {
+              showAlert("Failed to delete file", "error");
+              console.warn(e);
             }
+          };
 
-            // Set default settings
-            function setDefaults() {
-                currentSettings = { ...defaultSettings };
-                applySettings();
+          row.appendChild(left);
+          row.appendChild(del);
+          container.appendChild(row);
+        }
+      }
+
+      function setupContextUploader() {
+        if (__currentUserRole !== "system_admin") return;
+        const area = document.getElementById("context-upload-area");
+        const input = document.getElementById("context-file-input");
+        const uploadBtn = document.getElementById("upload-context-files");
+        const refreshBtn = document.getElementById("refresh-context-files");
+        const selectedContainer = document.getElementById(
+          "context-selected-files",
+        );
+
+        const highlight = () => {
+          area.style.borderColor = "#667eea";
+          area.style.background = "#f0f2ff";
+        };
+        const unhighlight = () => {
+          area.style.borderColor = "#e1e5e9";
+          area.style.background = "#fafbfc";
+        };
+
+        area.addEventListener("click", () => input.click());
+        area.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          highlight();
+        });
+        area.addEventListener("dragleave", (e) => {
+          e.preventDefault();
+          unhighlight();
+        });
+        area.addEventListener("drop", (e) => {
+          e.preventDefault();
+          unhighlight();
+          if (e.dataTransfer && e.dataTransfer.files) {
+            input.files = e.dataTransfer.files;
+            renderSelectedFiles(input.files);
+            showAlert(`${input.files.length} file(s) selected`, "success");
+          }
+        });
+        input.addEventListener("change", () => {
+          renderSelectedFiles(input.files);
+          showAlert(`${input.files.length} file(s) selected`, "success");
+        });
+
+        uploadBtn.addEventListener("click", async () => {
+          try {
+            if (!input.files || input.files.length === 0) {
+              showAlert("No files selected", "error");
+              return;
             }
+            const fd = new FormData();
+            for (const f of input.files) fd.append("files", f);
+            const token = localStorage.getItem("access_token");
+            const resp = await fetch("/context-docs/upload", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}` },
+              body: fd,
+            });
+            if (!resp.ok) throw new Error("Upload failed");
+            const data = await resp.json();
+            const saved = data.saved || [];
+            const skipped = data.skipped || [];
+            if (saved.length)
+              showAlert(`Uploaded: ${saved.join(", ")}`, "success");
+            if (skipped.length)
+              showAlert(
+                `Skipped: ${skipped.map((s) => s.name).join(", ")}`,
+                "warning",
+              );
+            input.value = "";
+            renderSelectedFiles([]);
+            await listContextFiles();
+          } catch (e) {
+            console.warn(e);
+            showAlert("Failed to upload files", "error");
+          }
+        });
 
-            // Apply settings to form
-            function applySettings() {
-                // Header Chatbot Name
-                const botNameEl = document.getElementById("chatbot-name");
-                if (botNameEl) botNameEl.value = currentSettings.chatbotName || "Marichka";
-                document.getElementById("greeting-message").value = currentSettings.greetingMessage;
+        refreshBtn.addEventListener("click", listContextFiles);
 
-                // Prompt fields
-                document.getElementById("system-instruction").value = currentSettings.system_instruction;
+        function renderSelectedFiles(fileList) {
+          if (!selectedContainer) return;
+          selectedContainer.innerHTML = "";
+          const files = Array.from(fileList || []);
+          if (!files.length) {
+            const empty = document.createElement("div");
+            empty.style.padding = "8px";
+            empty.style.fontSize = "13px";
+            empty.style.color = "#666";
+            empty.textContent = "No files selected";
+            selectedContainer.appendChild(empty);
+            return;
+          }
+          for (const f of files) {
+            const row = document.createElement("div");
+            row.style.display = "flex";
+            row.style.alignItems = "center";
+            row.style.justifyContent = "space-between";
+            row.style.padding = "8px 10px";
+            row.style.borderBottom = "1px solid #f0f2f5";
+
+            const left = document.createElement("div");
+            left.style.display = "flex";
+            left.style.alignItems = "center";
+            left.style.gap = "10px";
+            const icon = document.createElement("span");
+            icon.textContent = "📎";
+            const name = document.createElement("span");
+            name.textContent = f.name;
+            name.style.fontWeight = "600";
+            const size = document.createElement("span");
+            size.style.color = "#888";
+            size.style.fontSize = "12px";
+            size.textContent = ` ${Math.ceil((f.size || 0) / 1024)} KB`;
+            left.appendChild(icon);
+            left.appendChild(name);
+            left.appendChild(size);
+
+            row.appendChild(left);
+            selectedContainer.appendChild(row);
+          }
+        }
+      }
+
+      // Persist and restore Context Documents toggle across language changes and reloads
+      function setupContextDocsTogglePersistence() {
+        const el = document.getElementById("context-docs-enabled");
+        if (!el) return;
+        // Initialize from localStorage if present (does not overwrite loaded value unless explicitly set)
+        try {
+          const stored = localStorage.getItem("context_docs_enabled");
+          if (stored !== null) {
+            el.checked = stored === "true";
+          }
+        } catch {}
+        // On user change, persist locally and to backend immediately
+        el.addEventListener("change", async function () {
+          const v = !!this.checked;
+          try {
+            localStorage.setItem("context_docs_enabled", String(v));
+          } catch {}
+          try {
+            const token = localStorage.getItem("access_token");
+            await fetch("/system-config/settings/system", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ context_docs_enabled: v }),
+            });
+          } catch (e) {
+            console.warn("Failed to persist context_docs_enabled", e);
+          }
+        });
+        // Re-apply stored state when UI language changes to avoid visual reset
+        document.addEventListener("i18n:languageChanged", function () {
+          try {
+            const stored = localStorage.getItem("context_docs_enabled");
+            if (stored !== null) {
+              el.checked = stored === "true";
             }
+          } catch {}
+        });
+      }
 
-            // Save settings
-            async function saveSettings() {
-                try {
-                    // Collect all form values
-                    const greetingMessage = document.getElementById("greeting-message").value.trim();
-                    const chatbotName = (document.getElementById("chatbot-name").value || "").trim();
-                    const system_instruction = (document.getElementById("system-instruction").value || "").trim();
+      function setReadOnlyForSystemCards() {
+        const makeReadOnly = function (card) {
+          if (!card) return;
+          // Banner
+          const note = document.createElement("div");
+          note.className = "alert alert-warning";
+          note.style.display = "block";
+          note.setAttribute("data-i18n", "chatbotSettings.readOnlyNotice");
+          note.textContent =
+            window.I18N && I18N.t
+              ? I18N.t("chatbotSettings.readOnlyNotice")
+              : "View only. System Administrator required to edit.";
+          card.prepend(note);
+          // Disable inputs/buttons inside
+          card
+            .querySelectorAll("input, select, textarea, button")
+            .forEach(function (el) {
+              if (el) {
+                el.disabled = true;
+              }
+            });
+        };
+        try {
+          makeReadOnly(document.querySelector(".settings-card.large-card"));
+          makeReadOnly(document.querySelector(".settings-card.small-card-2"));
+        } catch {}
+      }
 
-                    // Build payload
-                    const settings = {
-                        name: "Box Catering Chatbot Configuration",
-                        chatbot_name: chatbotName || "Marichka",
-                        welcome_message: greetingMessage,
-                        system_instruction: document.getElementById("system-instruction").value.trim(),
-                    };
+      // Reset to defaults
+      function resetToDefaults() {
+        if (
+          confirm(
+            "Are you sure you want to reset all settings to default values? This action cannot be undone.",
+          )
+        ) {
+          setDefaults();
+          showAlert("Settings reset to defaults!", "success");
+          updateStatus("Settings reset to defaults", "success");
+        }
+      }
 
-                    // Determine target endpoint/method
-                    const isEditingSpecificConfig = !!__currentConfigId;
-                    if (!isEditingSpecificConfig) {
-                        // Only when saving to the active config upsert flow
-                        settings.is_active = true;
-                    } else {
-                        // Do not override name on a specific draft; avoid unique-name collisions
-                        try {
-                            delete settings.name;
-                        } catch {}
-                    }
+      // Test configuration
+      function testConfiguration() {
+        showAlert(
+          "Testing configuration... This may take a few moments.",
+          "warning",
+        );
+        updateStatus("Testing configuration...", "connecting");
 
-                    console.log("Saving settings:", settings); // Debug log
-                    console.log("Field values:", {
-                        system_instruction,
-                    });
+        // Simulate configuration test
+        setTimeout(() => {
+          showAlert(
+            "Configuration test completed successfully! All settings are valid.",
+            "success",
+          );
+          updateStatus("Configuration test completed successfully", "success");
+        }, 2000);
+      }
 
-                    // Save to database via API
-                    const token = localStorage.getItem("access_token");
-                    console.log("Using token:", token ? "Token exists" : "No token"); // Debug log
+      // Show alert message
+      function showAlert(message, type) {
+        const alertContainer = document.getElementById("alert-container");
+        const alertDiv = document.createElement("div");
+        alertDiv.className = `alert alert-${type}`;
+        alertDiv.textContent = message;
 
-                    const endpoint = isEditingSpecificConfig ? `/chatbot-config/${__currentConfigId}` : "/chatbot-config/";
-                    const method = isEditingSpecificConfig ? "PUT" : "POST";
+        alertContainer.appendChild(alertDiv);
+        alertDiv.style.display = "block";
 
-                    const response = await fetch(endpoint, {
-                        method: method,
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${token}`,
-                        },
-                        body: JSON.stringify(settings),
-                    });
+        setTimeout(() => {
+          alertDiv.remove();
+        }, 5000);
+      }
 
-                    console.log(response);
+      // Update status indicator
+      function updateStatus(message, type) {
+        const statusText = document.getElementById("status-text");
+        const statusDot = document.getElementById("status-dot");
 
-                    console.log("Response status:", response.status); // Debug log
+        statusText.textContent = message;
+        statusDot.className = `status-dot ${type}`;
+      }
 
-                    if (response.ok) {
-                        // Update current settings in memory
-                        currentSettings = {
-                            chatbotName: (document.getElementById("chatbot-name").value || "").trim() || "Marichka",
-                            greetingMessage: (document.getElementById("greeting-message").value || "").trim() || "",
-                            system_instruction: document.getElementById("system-instruction").value,
-                        };
+      // Handle range slider updates (guard for non-existent elements)
+      const temperatureEl = document.getElementById("temperature");
+      if (temperatureEl) {
+        temperatureEl.addEventListener("input", function () {
+          const temperatureValueEl =
+            document.getElementById("temperature-value");
+          if (temperatureValueEl) {
+            temperatureValueEl.textContent = this.value;
+          }
+        });
+      }
 
-                        showAlert("Settings saved successfully to database!", "success");
-                        updateStatus("Configuration saved successfully", "success");
-                    } else {
-                        const errorData = await response.json();
-                        console.error("Error response:", errorData); // Debug log
-                        console.error("Full error details:", {
-                            status: response.status,
-                            statusText: response.statusText,
-                            headers: Object.fromEntries(response.headers.entries()),
-                            errorData,
-                        });
+      const maxTokensEl = document.getElementById("max-tokens");
+      if (maxTokensEl) {
+        maxTokensEl.addEventListener("input", function () {
+          const maxTokensValueEl = document.getElementById("max-tokens-value");
+          if (maxTokensValueEl) {
+            maxTokensValueEl.textContent = this.value;
+          }
+        });
+      }
 
-                        // Show detailed error information
-                        let errorMessage = "Failed to save settings";
-                        if (errorData.detail) {
-                            if (Array.isArray(errorData.detail)) {
-                                errorMessage += ": " + errorData.detail.map((e) => e.msg || e.message || "Unknown error").join(", ");
-                            } else {
-                                errorMessage += ": " + errorData.detail;
-                            }
-                        }
+      const responseTimeoutEl = document.getElementById("response-timeout");
+      if (responseTimeoutEl) {
+        responseTimeoutEl.addEventListener("input", function () {
+          const responseTimeoutValueEl = document.getElementById(
+            "response-timeout-value",
+          );
+          if (responseTimeoutValueEl) {
+            responseTimeoutValueEl.textContent = this.value;
+          }
+        });
+      }
 
-                        showAlert(errorMessage, "error");
-                        updateStatus("Failed to save configuration", "error");
-                    }
-                } catch (error) {
-                    console.error("Error saving settings:", error);
-                    let errorMessage = "Unknown error occurred";
-
-                    if (error.detail) {
-                        if (Array.isArray(error.detail)) {
-                            errorMessage = error.detail.map((err) => err.msg || err).join(", ");
-                        } else if (typeof error.detail === "string") {
-                            errorMessage = error.detail;
-                        } else {
-                            errorMessage = JSON.stringify(error.detail);
-                        }
-                    }
-
-                    showAlert(`Failed to save settings: ${errorMessage}`, "error");
-                    updateStatus("Error saving configuration", "error");
-                }
-            }
-
-            // Admin-only: create a brand new configuration without overwriting active
-            async function createNewConfig() {
-                try {
-                    const token = localStorage.getItem("access_token");
-                    const payload = await buildPayloadFromForm(false);
-                    const resp = await fetch("/chatbot-config/new", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${token}`,
-                        },
-                        body: JSON.stringify(payload),
-                    });
-                    if (!resp.ok) throw new Error("Create failed");
-                    showAlert("New configuration created", "success");
-                } catch (e) {
-                    console.warn(e);
-                    showAlert("Failed to create configuration", "error");
-                }
-            }
-
-            async function cloneConfig(configId) {
-                try {
-                    const token = localStorage.getItem("access_token");
-                    const resp = await fetch(`/chatbot-config/${configId}/clone`, {
-                        method: "POST",
-                        headers: { Authorization: `Bearer ${token}` },
-                    });
-                    if (!resp.ok) throw new Error("Clone failed");
-                    const data = await resp.json();
-                    showAlert("Configuration cloned", "success");
-                    // Optionally open test panel for the new config id
-                    openTestPanelForConfig(data.id);
-                } catch (e) {
-                    console.warn(e);
-                    showAlert("Failed to clone configuration", "error");
-                }
-            }
-
-            function openTestPanelForConfig(configId) {
-                try {
-                    // Implement a simple WS test popup for admins
-                    const token = localStorage.getItem("access_token");
-                    const url = new URL(window.location.origin.replace("http", "ws") + "/chat/ws");
-                    url.searchParams.set("config_id", String(configId));
-                    url.searchParams.set("debug", "1");
-                    const ws = new WebSocket(url);
-                    ws.addEventListener("open", () => {
-                        updateStatus("Connected to test chat (config " + configId + ")", "connected");
-                    });
-                    // Attach Authorization header via protocol is not supported in plain WS in browsers.
-                    // Expect server to read token from cookies or unauthenticated test to fail gracefully.
-                } catch (e) {
-                    console.warn("Failed to open test panel WS:", e);
-                }
-            }
-
-            async function listContextFiles() {
-                try {
-                    const token = localStorage.getItem("access_token");
-                    const resp = await fetch("/context-docs/list", {
-                        headers: { Authorization: `Bearer ${token}` },
-                    });
-                    if (!resp.ok) throw new Error("Failed to list context files");
-                    const data = await resp.json();
-                    renderContextFiles(data.files || []);
-                } catch (e) {
-                    renderContextFiles([]);
-                    console.warn("List files failed", e);
-                }
-            }
-
-            function renderContextFiles(files) {
-                const container = document.getElementById("context-files-list");
-                if (!container) return;
-                container.innerHTML = "";
-                if (!files.length) {
-                    const div = document.createElement("div");
-                    div.style.padding = "10px";
-                    div.style.fontSize = "14px";
-                    div.style.color = "#666";
-                    div.textContent = "No files loaded";
-                    container.appendChild(div);
-                    return;
-                }
-                for (const f of files) {
-                    const row = document.createElement("div");
-                    row.style.display = "flex";
-                    row.style.alignItems = "center";
-                    row.style.justifyContent = "space-between";
-                    row.style.padding = "10px 12px";
-                    row.style.borderBottom = "1px solid #f0f2f5";
-
-                    const left = document.createElement("div");
-                    left.style.display = "flex";
-                    left.style.alignItems = "center";
-                    left.style.gap = "10px";
-                    const icon = document.createElement("span");
-                    icon.textContent = "📄";
-                    const name = document.createElement("span");
-                    name.textContent = f.name;
-                    name.style.fontWeight = "600";
-                    const small = document.createElement("span");
-                    small.style.color = "#888";
-                    small.style.fontSize = "12px";
-                    small.textContent = ` ${Math.ceil((f.size || 0) / 1024)} KB`;
-                    left.appendChild(icon);
-                    left.appendChild(name);
-                    left.appendChild(small);
-
-                    const del = document.createElement("button");
-                    del.className = "btn-sm btn-danger";
-                    del.textContent = window.I18N && I18N.t ? I18N.t("chatbotSettings.ctx.delete") : "Delete";
-                    del.onclick = async () => {
-                        if (!confirm(`Delete ${f.name}?`)) return;
-                        try {
-                            const token = localStorage.getItem("access_token");
-                            const resp = await fetch(`/context-docs/${encodeURIComponent(f.name)}`, {
-                                method: "DELETE",
-                                headers: { Authorization: `Bearer ${token}` },
-                            });
-                            if (!resp.ok) throw new Error("Delete failed");
-                            showAlert("File deleted", "success");
-                            await listContextFiles();
-                        } catch (e) {
-                            showAlert("Failed to delete file", "error");
-                            console.warn(e);
-                        }
-                    };
-
-                    row.appendChild(left);
-                    row.appendChild(del);
-                    container.appendChild(row);
-                }
-            }
-
-            function setupContextUploader() {
-                if (__currentUserRole !== "system_admin") return;
-                const area = document.getElementById("context-upload-area");
-                const input = document.getElementById("context-file-input");
-                const uploadBtn = document.getElementById("upload-context-files");
-                const refreshBtn = document.getElementById("refresh-context-files");
-                const selectedContainer = document.getElementById("context-selected-files");
-
-                const highlight = () => {
-                    area.style.borderColor = "#667eea";
-                    area.style.background = "#f0f2ff";
-                };
-                const unhighlight = () => {
-                    area.style.borderColor = "#e1e5e9";
-                    area.style.background = "#fafbfc";
-                };
-
-                area.addEventListener("click", () => input.click());
-                area.addEventListener("dragover", (e) => {
-                    e.preventDefault();
-                    highlight();
-                });
-                area.addEventListener("dragleave", (e) => {
-                    e.preventDefault();
-                    unhighlight();
-                });
-                area.addEventListener("drop", (e) => {
-                    e.preventDefault();
-                    unhighlight();
-                    if (e.dataTransfer && e.dataTransfer.files) {
-                        input.files = e.dataTransfer.files;
-                        renderSelectedFiles(input.files);
-                        showAlert(`${input.files.length} file(s) selected`, "success");
-                    }
-                });
-                input.addEventListener("change", () => {
-                    renderSelectedFiles(input.files);
-                    showAlert(`${input.files.length} file(s) selected`, "success");
-                });
-
-                uploadBtn.addEventListener("click", async () => {
-                    try {
-                        if (!input.files || input.files.length === 0) {
-                            showAlert("No files selected", "error");
-                            return;
-                        }
-                        const fd = new FormData();
-                        for (const f of input.files) fd.append("files", f);
-                        const token = localStorage.getItem("access_token");
-                        const resp = await fetch("/context-docs/upload", {
-                            method: "POST",
-                            headers: { Authorization: `Bearer ${token}` },
-                            body: fd,
-                        });
-                        if (!resp.ok) throw new Error("Upload failed");
-                        const data = await resp.json();
-                        const saved = data.saved || [];
-                        const skipped = data.skipped || [];
-                        if (saved.length) showAlert(`Uploaded: ${saved.join(", ")}`, "success");
-                        if (skipped.length) showAlert(`Skipped: ${skipped.map((s) => s.name).join(", ")}`, "warning");
-                        input.value = "";
-                        renderSelectedFiles([]);
-                        await listContextFiles();
-                    } catch (e) {
-                        console.warn(e);
-                        showAlert("Failed to upload files", "error");
-                    }
-                });
-
-                refreshBtn.addEventListener("click", listContextFiles);
-
-                function renderSelectedFiles(fileList) {
-                    if (!selectedContainer) return;
-                    selectedContainer.innerHTML = "";
-                    const files = Array.from(fileList || []);
-                    if (!files.length) {
-                        const empty = document.createElement("div");
-                        empty.style.padding = "8px";
-                        empty.style.fontSize = "13px";
-                        empty.style.color = "#666";
-                        empty.textContent = "No files selected";
-                        selectedContainer.appendChild(empty);
-                        return;
-                    }
-                    for (const f of files) {
-                        const row = document.createElement("div");
-                        row.style.display = "flex";
-                        row.style.alignItems = "center";
-                        row.style.justifyContent = "space-between";
-                        row.style.padding = "8px 10px";
-                        row.style.borderBottom = "1px solid #f0f2f5";
-
-                        const left = document.createElement("div");
-                        left.style.display = "flex";
-                        left.style.alignItems = "center";
-                        left.style.gap = "10px";
-                        const icon = document.createElement("span");
-                        icon.textContent = "📎";
-                        const name = document.createElement("span");
-                        name.textContent = f.name;
-                        name.style.fontWeight = "600";
-                        const size = document.createElement("span");
-                        size.style.color = "#888";
-                        size.style.fontSize = "12px";
-                        size.textContent = ` ${Math.ceil((f.size || 0) / 1024)} KB`;
-                        left.appendChild(icon);
-                        left.appendChild(name);
-                        left.appendChild(size);
-
-                        row.appendChild(left);
-                        selectedContainer.appendChild(row);
-                    }
-                }
-            }
-
-            // Persist and restore Context Documents toggle across language changes and reloads
-            function setupContextDocsTogglePersistence() {
-                const el = document.getElementById("context-docs-enabled");
-                if (!el) return;
-                // Initialize from localStorage if present (does not overwrite loaded value unless explicitly set)
-                try {
-                    const stored = localStorage.getItem("context_docs_enabled");
-                    if (stored !== null) {
-                        el.checked = stored === "true";
-                    }
-                } catch {}
-                // On user change, persist locally and to backend immediately
-                el.addEventListener("change", async function () {
-                    const v = !!this.checked;
-                    try {
-                        localStorage.setItem("context_docs_enabled", String(v));
-                    } catch {}
-                    try {
-                        const token = localStorage.getItem("access_token");
-                        await fetch("/system-config/settings/system", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                Authorization: `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({ context_docs_enabled: v }),
-                        });
-                    } catch (e) {
-                        console.warn("Failed to persist context_docs_enabled", e);
-                    }
-                });
-                // Re-apply stored state when UI language changes to avoid visual reset
-                document.addEventListener("i18n:languageChanged", function () {
-                    try {
-                        const stored = localStorage.getItem("context_docs_enabled");
-                        if (stored !== null) {
-                            el.checked = stored === "true";
-                        }
-                    } catch {}
-                });
-            }
-
-            function setReadOnlyForSystemCards() {
-                const makeReadOnly = function (card) {
-                    if (!card) return;
-                    // Banner
-                    const note = document.createElement("div");
-                    note.className = "alert alert-warning";
-                    note.style.display = "block";
-                    note.setAttribute("data-i18n", "chatbotSettings.readOnlyNotice");
-                    note.textContent = window.I18N && I18N.t ? I18N.t("chatbotSettings.readOnlyNotice") : "View only. System Administrator required to edit.";
-                    card.prepend(note);
-                    // Disable inputs/buttons inside
-                    card.querySelectorAll("input, select, textarea, button").forEach(function (el) {
-                        if (el) {
-                            el.disabled = true;
-                        }
-                    });
-                };
-                try {
-                    makeReadOnly(document.querySelector(".settings-card.large-card"));
-                    makeReadOnly(document.querySelector(".settings-card.small-card-2"));
-                } catch {}
-            }
-
-            // Reset to defaults
-            function resetToDefaults() {
-                if (confirm("Are you sure you want to reset all settings to default values? This action cannot be undone.")) {
-                    setDefaults();
-                    showAlert("Settings reset to defaults!", "success");
-                    updateStatus("Settings reset to defaults", "success");
-                }
-            }
-
-            // Test configuration
-            function testConfiguration() {
-                showAlert("Testing configuration... This may take a few moments.", "warning");
-                updateStatus("Testing configuration...", "connecting");
-
-                // Simulate configuration test
-                setTimeout(() => {
-                    showAlert("Configuration test completed successfully! All settings are valid.", "success");
-                    updateStatus("Configuration test completed successfully", "success");
-                }, 2000);
-            }
-
-            // Show alert message
-            function showAlert(message, type) {
-                const alertContainer = document.getElementById("alert-container");
-                const alertDiv = document.createElement("div");
-                alertDiv.className = `alert alert-${type}`;
-                alertDiv.textContent = message;
-
-                alertContainer.appendChild(alertDiv);
-                alertDiv.style.display = "block";
-
-                setTimeout(() => {
-                    alertDiv.remove();
-                }, 5000);
-            }
-
-            // Update status indicator
-            function updateStatus(message, type) {
-                const statusText = document.getElementById("status-text");
-                const statusDot = document.getElementById("status-dot");
-
-                statusText.textContent = message;
-                statusDot.className = `status-dot ${type}`;
-            }
-
-            // Handle range slider updates (guard for non-existent elements)
-            const temperatureEl = document.getElementById("temperature");
-            if (temperatureEl) {
-                temperatureEl.addEventListener("input", function () {
-                    const temperatureValueEl = document.getElementById("temperature-value");
-                    if (temperatureValueEl) {
-                        temperatureValueEl.textContent = this.value;
-                    }
-                });
-            }
-
-            const maxTokensEl = document.getElementById("max-tokens");
-            if (maxTokensEl) {
-                maxTokensEl.addEventListener("input", function () {
-                    const maxTokensValueEl = document.getElementById("max-tokens-value");
-                    if (maxTokensValueEl) {
-                        maxTokensValueEl.textContent = this.value;
-                    }
-                });
-            }
-
-            const responseTimeoutEl = document.getElementById("response-timeout");
-            if (responseTimeoutEl) {
-                responseTimeoutEl.addEventListener("input", function () {
-                    const responseTimeoutValueEl = document.getElementById("response-timeout-value");
-                    if (responseTimeoutValueEl) {
-                        responseTimeoutValueEl.textContent = this.value;
-                    }
-                });
-            }
-
-            // Show access denied message and redirect
-            function showAccessDeniedMessage() {
-                // Hide the main content
-                const container = document.querySelector(".container");
-                if (container) {
-                    container.innerHTML = `
+      // Show access denied message and redirect
+      function showAccessDeniedMessage() {
+        // Hide the main content
+        const container = document.querySelector(".container");
+        if (container) {
+          container.innerHTML = `
                     <div class="page-header">
                         <h2>🚫 Access Denied</h2>
                         <p>You do not have permission to access this page. Only administrators and system administrators can access General Settings.</p>
@@ -1110,25 +1252,25 @@
                         </button>
                     </div>
                 `;
-                }
-            }
+        }
+      }
 
-            // Logout function
-            function logout() {
-                localStorage.removeItem("access_token");
-                window.location.href = "/login";
-            }
+      // Logout function
+      function logout() {
+        localStorage.removeItem("access_token");
+        window.location.href = "/login";
+      }
 
-            // Initialize on page load
-            document.addEventListener("DOMContentLoaded", async () => {
-                checkAuth();
-                setupContextDocsTogglePersistence();
-                try {
-                    await renderConfigsSidebar();
-                } catch (e) {
-                    console.warn("Configs sidebar failed:", e);
-                }
-            });
-        </script>
-    </body>
+      // Initialize on page load
+      document.addEventListener("DOMContentLoaded", async () => {
+        checkAuth();
+        setupContextDocsTogglePersistence();
+        try {
+          await renderConfigsSidebar();
+        } catch (e) {
+          console.warn("Configs sidebar failed:", e);
+        }
+      });
+    </script>
+  </body>
 </html>
