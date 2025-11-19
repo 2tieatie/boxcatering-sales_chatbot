@@ -78,10 +78,13 @@ Based on duration:
 Calculate:
 ```
 total_weight_needed = guest_count × weight_per_person
+FOR each verified product u can check if its corrent and make propose to client(NOT HARD - RULE, use it only to make recomendation):
+  quantity = CEIL(total_weight_needed / product.weight_in_grams)
+  line_total = product.price × quantity
 ```
 
 ---
-
+  
 ### Step 4: CALL `get_products()` for Categories
 
 **Based on format, call these queries:**
@@ -134,13 +137,9 @@ Display results exactly as returned from `get_products()`:
 
 ---
 
-### Step 6: Calculate Quantities
+### Step 6: Calculate Subtotal
 
 ```
-FOR each verified product:
-  quantity = CEIL(total_weight_needed / product.weight_in_grams)
-  line_total = product.price × quantity
-
 To calculate `subtotal` use next rules:
 For EACH meny_item in meny items:
 line_total = meny_item.price * quantity of box amount(from user information)

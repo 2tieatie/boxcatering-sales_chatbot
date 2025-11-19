@@ -39,6 +39,9 @@ from app.services.unified_logger import UnifiedLogger
 from haystack.utils import Secret
 from haystack_integrations.document_stores.qdrant import QdrantDocumentStore
 
+from app.utils.logging_config import get_logger
+
+prompt_logger = get_logger("prompt")
 
 def _model_supports_temperature(model_name: str) -> bool:
     unsupported = {"gpt-5", "gpt-5-mini", "gpt-5-nano"}
@@ -81,7 +84,9 @@ class Agent:
             raise PermissionError(
                 f"Agent '{self.name}' is not allowed to call tool '{tool_name}'"
             )
-        logger.info(f"[{self.name}] → tool call: {tool_name} | payload={kwargs}")
+        # logger.info(f"[{self.name}] → tool call: {tool_name} | payload={kwargs}")
+        prompt_logger.info(f"[{self.name}] → tool call: {tool_name} | payload={kwargs}")
+
         for t in self.tools:
             if t.name == tool_name:
                 if hasattr(t, "ainvoke"):
@@ -116,15 +121,17 @@ class Agent:
         last_tool_results: Dict[str, Any] = {}
 
         while True:
-            logger.info(f"[{self.name}] executing, messages_count={len(messages)}")
-
+            # logger.info(f"[{self.name}] executing, messages_count={len(messages)}")
+            prompt_logger.info(f"[{self.name}] executing, messages_count={len(messages)}")
             bound_model = self.model.bind_tools(self.tools)
             msg = await bound_model.ainvoke(messages)
 
-            logger.info(f"[{self.name}] msg: {msg}")
-            tool_calls = msg.tool_calls
-            logger.info(f"[{self.name}] tool_calls: {tool_calls}")
+            # logger.info(f"[{self.name}] msg: {msg}")
+            prompt_logger.info(f"[{self.name}] msg: {msg}")
 
+            tool_calls = msg.tool_calls
+            # logger.info(f"[{self.name}] tool_calls: {tool_calls}")
+            prompt_logger.info(f"[{self.name}] tool_calls: {tool_calls}")
             messages.append(msg)
 
             if tool_calls:
@@ -161,8 +168,8 @@ class Agent:
                     *[execute_single_tool(call) for call in tool_calls]
                 )
 
-                logger.info(f"[{self.name}] tool_messages: {tool_messages}")
-
+                # logger.info(f"[{self.name}] tool_messages: {tool_messages}")
+                prompt_logger.info(f"[{self.name}] tool_messages: {tool_messages}")
                 messages.extend(tool_messages)
 
                 if self.enable_memory:
@@ -186,7 +193,8 @@ class Agent:
             )
 
         async def _entry(query: str) -> Any:
-            logger.info(f"[{self.name}] entrypoint tool → execute")
+            # logger.info(f"[{self.name}] entrypoint tool → execute")
+            prompt_logger.info(f"[{self.name}] entrypoint tool → execute")
             return await self.execute(query)
 
         return StructuredTool(
@@ -221,7 +229,7 @@ def get_main_agent() -> Agent:
         system_message=validation_system_message,
         tools=[],
         enable_memory=True,
-        model="gpt-4.1-nano"
+        model="gpt-4.1-mini"
     )
 
     validation_agent_tool = validation_agent.as_tool()
@@ -234,7 +242,7 @@ def get_main_agent() -> Agent:
         system_message=main_agent_system,
         tools=[validation_agent_tool, delivery_agent_tool, assortment_agent_tool],
         enable_memory=True,
-        model="gpt-5"
+        model="gpt-5.1"
     )
     return main_agent
 
