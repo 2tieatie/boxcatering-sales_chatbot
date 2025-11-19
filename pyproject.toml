@@ -5,6 +5,7 @@ description = "AI-powered chatbot for boxcatering business with manager handover
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "aiocache==0.12.3",
     "aiohappyeyeballs==2.6.1",
     "aiohttp==3.13.2",
     "aiosignal==1.4.0",

@@ -44,6 +44,9 @@ def _model_supports_temperature(model_name: str) -> bool:
     unsupported = {"gpt-5", "gpt-5-mini", "gpt-5-nano"}
     return model_name not in unsupported
 
+def _model_supports_reasoning(model_name: str) -> bool:
+    supported = {"gpt-5", "gpt-5-mini", "gpt-5-nano"}
+    return model_name in supported
 
 class Agent:
     def __init__(
@@ -65,11 +68,10 @@ class Agent:
             model=model,
             temperature=temperature if _model_supports_temperature(model) else None,
             api_key=settings.openai_api_key,
-            # reasoning={"enable": False},
             reasoning={
                 "effort": "low",
                 "summary": None,
-            },
+            } if _model_supports_reasoning(model) else None,
         )
         self.model.bind_tools(self.tools)
         self.system_message = system_message
@@ -202,6 +204,7 @@ def get_main_agent() -> Agent:
         system_message=assortment_system_message,
         enable_memory=True,
         tools=[get_products_tool],
+        model="gpt-4.1"
     )
 
     delivery_agent = Agent(
@@ -210,6 +213,7 @@ def get_main_agent() -> Agent:
         system_message=delivery_agent_system,
         tools=[get_delivery_price_tool],
         enable_memory=True,
+        model="gpt-4.1-mini"
     )
     validation_agent = Agent(
         "validation_agent",
@@ -217,6 +221,7 @@ def get_main_agent() -> Agent:
         system_message=validation_system_message,
         tools=[],
         enable_memory=True,
+        model="gpt-4.1-nano"
     )
 
     validation_agent_tool = validation_agent.as_tool()
@@ -229,6 +234,7 @@ def get_main_agent() -> Agent:
         system_message=main_agent_system,
         tools=[validation_agent_tool, delivery_agent_tool, assortment_agent_tool],
         enable_memory=True,
+        model="gpt-5"
     )
     return main_agent
 
@@ -623,13 +629,16 @@ class ChatbotService:
 
 
 async def main() -> None:
+    start = time.time()
     assortment_agent = Agent(
         "assortment_agent",
         description="Specialized menu agent. Identifies event format (buffet/coffee-break/cocktail; banquet→escalate), collects guest_count + event_duration.",
         system_message=assortment_system_message,
         enable_memory=True,
         tools=[get_products_tool],
+        model="gpt-4.1-mini"
     )
+    print(time.time() - start)
     messages = [
         HumanMessage(
             content="Дитяче свято, 10 осіб, тривалість 3 години",
@@ -640,6 +649,7 @@ async def main() -> None:
 
     resp = await assortment_agent.execute(messages)
     print(resp)
+    print(time.time() - start)
     # gp = get_products_tool.coroutine
     # result = await gp("ланчі")
     # print(result)
