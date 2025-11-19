@@ -60,7 +60,7 @@ class Agent:
         tools: List[BaseTool] | None = None,
         enable_memory: bool = True,
         temperature: float = 0.7,
-        model: str = "gpt-5",
+        model: str = "gpt-5.1",
     ):
         self.name = name
         self.description = description
@@ -212,7 +212,7 @@ def get_main_agent() -> Agent:
         system_message=assortment_system_message,
         enable_memory=True,
         tools=[get_products_tool],
-        model="gpt-4.1"
+        # model="gpt-4.1"
     )
 
     delivery_agent = Agent(
@@ -221,7 +221,7 @@ def get_main_agent() -> Agent:
         system_message=delivery_agent_system,
         tools=[get_delivery_price_tool],
         enable_memory=True,
-        model="gpt-4.1-mini"
+        # model="gpt-4.1-mini"
     )
     validation_agent = Agent(
         "validation_agent",
@@ -229,7 +229,7 @@ def get_main_agent() -> Agent:
         system_message=validation_system_message,
         tools=[],
         enable_memory=True,
-        model="gpt-4.1-mini"
+        # model="gpt-4.1-mini"
     )
 
     validation_agent_tool = validation_agent.as_tool()
@@ -242,7 +242,7 @@ def get_main_agent() -> Agent:
         system_message=main_agent_system,
         tools=[validation_agent_tool, delivery_agent_tool, assortment_agent_tool],
         enable_memory=True,
-        model="gpt-5.1"
+        # model="gpt-5.1"
     )
     return main_agent
 
