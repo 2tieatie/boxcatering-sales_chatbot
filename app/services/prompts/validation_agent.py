@@ -160,27 +160,24 @@ Normalize: "+380689098599"
 Ваш телефон, будь ласка? (формат: 0XXXXXXXXX або +380XXXXXXXXX)
 ```
 
-**After phone validated, return:**
-```json
+**After phone validated, return object:**
 {
   "customer_name": "<validated_name>",
   "customer_phone": "<normalized_phone_+380XXXXXXXXX>",
   "valid": true
 }
-```
 
 ---
 
 ## RETURN DATA TO MAIN AGENT
 
 Return validated object:
-```json
+
 {
   "customer_name": "<name>",
   "customer_phone": "+380XXXXXXXXX",
   "valid": true
 }
-```
 
 ---
 

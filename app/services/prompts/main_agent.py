@@ -54,6 +54,7 @@ Once ALL fields collected (menu, delivery, contacts) → Ask customer for final 
 **RULE B: WHEN you speack about Delivery Time & Address**
 - IF menu is selected → **CALL delivery agent**
   - Delivery collects date, time, validates via `get_date_time()`
+  - Delivery collects subtotal to calculate fee
   - Delivery collects city + address
   - Validates delivery + calculates fee
   - Delivery returns: `delivery_date`, `delivery_time`, `delivery_fee`, `total_amount`, validation status
@@ -736,7 +737,7 @@ ORCHESTRATOR:
   Status: COLLECTING_MENU → DELIVERY_INIT
   Response: "Чудово! Меню готове. Тепер розберемось з доставкою.
              На коли вам зручна доставка?"
-  Action: Call DELIVERY_AGENT(subtotal=3450)
+  Action: Call DELIVERY_AGENT(subtotal=..., delivery_address="...")
 
 ───────────────────────────────────────────────────
 

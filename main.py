@@ -11,6 +11,8 @@ if __name__ == "__main__":
 #
 # sudo docker exec -it chatbot python ./scripts/migrate_assortment.py
 #
+# sudo git fetch
+# sudo git pull origin 16.1-misha
 # sudo docker compose -f Docker/docker-compose.yml down
 # sudo docker build -t chatbot:latest .
 # sudo docker compose -f Docker/docker-compose.yml up -d
