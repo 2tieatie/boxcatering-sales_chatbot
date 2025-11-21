@@ -193,11 +193,38 @@ async def get_conversation_messages(
     conversation = (
         db.query(Conversation).filter(Conversation.id == conversation_id).first()
     )
+
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     messages = (
         db.query(Message)
         .filter(Message.chat_id == conversation_id)
+        .order_by(Message.timestamp.asc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return messages
+
+
+@router.get("/widget/{session_id}/messages", response_model=List[MessageResponse])
+async def get_conversation_messages(
+        session_id: str,
+        skip: int = 0,
+        limit: int = 100,
+        db: Session = Depends(get_db),
+):
+    """Get messages for a conversation."""
+    # Ensure conversation exists
+    conversation = (
+        db.query(Conversation).filter(Conversation.session_id == session_id).first()
+    )
+
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    messages = (
+        db.query(Message)
+        .filter(Message.chat_id == conversation.id)
         .order_by(Message.timestamp.asc())
         .offset(skip)
         .limit(limit)

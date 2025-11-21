@@ -1,18 +1,10 @@
 import asyncio
-import pprint
-from datetime import date, datetime, timedelta
-import re
+import traceback
 import json
-import csv
-import hashlib
-from sqlite3 import IntegrityError
 import time
 import uuid
 
-from pathlib import Path
 from typing import Optional, Dict, Any, List
-from langchain_qdrant import QdrantVectorStore
-from langchain.tools import tool
 from langchain_core.messages import (
     SystemMessage,
     AIMessage,
@@ -21,18 +13,17 @@ from langchain_core.messages import (
     BaseMessage,
 )
 from langchain_core.tools import BaseTool, StructuredTool
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_openai import ChatOpenAI
 from openai import OpenAI
 from loguru import logger
 from pydantic import BaseModel, Field
-from qdrant_client import QdrantClient
-
 from app.config import settings
 from app.schemas.chat import ChatRequest, ChatResponse, HandoverReason
 from app.services.prompts.assortement_agent import assortment_system_message
 from app.services.prompts.delivery_agent import delivery_agent_system
 from app.services.prompts.main_agent import main_agent_system
 from app.services.prompts.validation_agent import validation_system_message
+from app.services.tools.delivery_time import validate_time_tool
 from app.services.tools.geocoding import get_delivery_price_tool
 from app.services.tools.products import get_products_tool
 from app.services.unified_logger import UnifiedLogger
@@ -40,6 +31,7 @@ from haystack.utils import Secret
 from haystack_integrations.document_stores.qdrant import QdrantDocumentStore
 
 from app.utils.logging_config import get_logger
+from app.utils.utils import format_kyiv_timestamp
 
 prompt_logger = get_logger("prompt")
 
@@ -219,7 +211,7 @@ def get_main_agent() -> Agent:
         "delivery_agent",
         description="Delivery time validation specialist. Informs customer of working hours (09:00-19:00, 7 days/week). Collects desired delivery date (handles relative: сьогодні/завтра, explicit: DD.MM) + exact time. Normalizes input to YYYY-MM-DD and HH:MM format. Calls get_date_time(query) returning {valid, approved_time, approved_date, reason_if_invalid}. Enforces: working window 09:00-19:00, 2h lead time for TODAY only (tomorrow+ no lead check). NO autocompletion or nearest-time suggestions. Accepts/rejects exactly as requested.",
         system_message=delivery_agent_system,
-        tools=[get_delivery_price_tool],
+        tools=[get_delivery_price_tool, validate_time_tool],
         enable_memory=True,
         # model="gpt-4.1-mini"
     )
@@ -298,20 +290,22 @@ class ChatbotService:
 
             messages = []
             if conversation_history:
-                for msg in conversation_history[-13:]:
+                for msg in conversation_history[-20:]:
                     if isinstance(msg, dict) and "role" in msg and "content" in msg:
                         if msg["role"] == "assistant":
                             messages.append(AIMessage(content=msg["content"]))
                         elif msg["role"] == "user":
-                            messages.append(HumanMessage(content=msg["content"]))
+                            messages.append(HumanMessage(content=f"Current time: {format_kyiv_timestamp(msg["timestamp"])}\nmessage: {msg['content']}"))
 
-            messages.append(HumanMessage(content=chat_request.message))
+            messages.append(HumanMessage(content=f"Current time: {format_kyiv_timestamp(chat_request.timestamp)}\nmessage: {chat_request.message}"))
 
             agent = get_main_agent()
             ai_response = await agent.execute(messages)
             parsed_response = self._parse_ai_response(ai_response)
             user_text = (parsed_response.get("response") or ai_response or "").strip()
             needs_handover = bool(parsed_response.get("handover_to_manager", False))
+            if parsed_response.get("action") == "handover_to_manager":
+                needs_handover = True
             handover_reason = parsed_response.get("handover_reason")
             handover_desc = parsed_response.get("handover_reason_description")
             summary = parsed_response.get("debug", {}).get("summary")
@@ -360,7 +354,7 @@ class ChatbotService:
                         else None
                     ),
                 )
-
+            print(needs_handover, parsed_response, config)
             if needs_handover and not (parsed_response.get("response") or "").strip():
                 user_text = default_handover_msg
                 if not handover_reason:
@@ -411,11 +405,16 @@ class ChatbotService:
                     action = None
                     data = None
 
+            if data and needs_handover:
+                data["customer_name"] = parsed_response.get("customer_name")
+                data["customer_phone"] = parsed_response.get("customer_phone")
+
             chat_result = ChatResponse(
                 response=user_text,
                 handover_to_manager=needs_handover,
                 handover_reason=handover_reason,
                 handover_reason_description=handover_desc,
+
                 action=action,
                 data=data,
                 debug=(
@@ -480,7 +479,7 @@ class ChatbotService:
                 f"[{correlation_id}] CHAT_ERROR: {str(e)}"
             )
             logger.error(f"Error processing message: {e}")
-
+            print(traceback.format_exc())
             return ChatResponse(
                 response=(
                     "Перепрошую, але в мене виникли технічні проблеми. Будь ласка, спробуйте пізніше."
@@ -628,7 +627,7 @@ class ChatbotService:
             history = []
             for msg in reversed(messages):
                 role = "user" if msg.sender == MessageSender.USER else "assistant"
-                history.append({"role": role, "content": msg.text})
+                history.append({"role": role, "content": msg.text, "timestamp": msg.timestamp})
 
             return history
         except Exception as e:
@@ -663,6 +662,12 @@ async def main() -> None:
     # print(result)
 
 
+
+
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    ...
+    # res = validate_delivery("7:00, 2")
+    # print(res)
+    # loop = asyncio.get_event_loop()
+    # loop.run_until_complete(main())
+

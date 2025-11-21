@@ -11,9 +11,9 @@ from app.schemas.chat import ChatResponse
 class TelegramService:
     """Service for sending Telegram notifications."""
 
-    def __init__(self):
-        self.bot_token = settings.telegram_bot_token
-        self.chat_id = settings.telegram_chat_id
+    def __init__(self, bot_token: str, chat_id: int):
+        self.bot_token = bot_token or settings.telegram_bot_token
+        self.chat_id = chat_id or settings.telegram_chat_id
         self.bot = None
 
         if self.bot_token:

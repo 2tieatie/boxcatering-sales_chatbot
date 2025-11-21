@@ -41,7 +41,7 @@ class Order(Base):
     state = Column(SQLEnum(OrderState), default=OrderState.DRAFT)
     total_amount = Column(Numeric(10, 2), nullable=False, default=0)
     currency = Column(String, default="UAH")
-    # Scheduling and content
+
     delivery_date = Column(DateTime(timezone=True), nullable=True)
     delivery_time = Column(String, nullable=True)
     menu_items = Column(Text, nullable=True)
@@ -57,7 +57,6 @@ class Order(Base):
     priority = Column(String, nullable=True)
     guests_count = Column(Integer, nullable=True)
 
-    # Relationships
     customer = relationship("Customer", back_populates="orders")
     conversation = relationship("Conversation")
     processed_user = relationship("User")

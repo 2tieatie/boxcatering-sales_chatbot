@@ -342,7 +342,6 @@
             <div class="message-content">
               <div
                 id="bot-welcome-content"
-                data-i18n="chatTest.welcome.loading"
               >
                 Loading welcome message…
               </div>
@@ -489,8 +488,8 @@
       let sessionId = getOrCreateSessionId();
 
       // Set initial message time
-      document.getElementById("bot-welcome-time").textContent =
-        new Date().toLocaleTimeString();
+      // document.getElementById("bot-welcome-time").textContent =
+      //   new Date().toLocaleTimeString();
 
       // Check authentication
       function checkAuth() {
@@ -541,8 +540,7 @@
           const welcome = cfg.welcome_message || "";
           const node = document.getElementById("bot-welcome-content");
           if (node) node.textContent = welcome;
-          document.getElementById("bot-welcome-time").textContent =
-            new Date().toLocaleTimeString();
+          console.log(node, welcome)
           try {
             const titleNode = document.getElementById("chat-header-title");
             if (titleNode) {
@@ -554,8 +552,6 @@
           console.warn("Failed to load active chatbot config:", e);
           const node = document.getElementById("bot-welcome-content");
           if (node) node.textContent = "";
-          document.getElementById("bot-welcome-time").textContent =
-            new Date().toLocaleTimeString();
         }
       }
 
@@ -589,6 +585,26 @@
         this.loadLogsSidebar();
       }
 
+      async function loadChatHistory() {
+        const response = await fetch(`/conversations/widget/${getOrCreateSessionId()}/messages`);
+        const prevMessages = await response.json();
+
+        for (const message of prevMessages) {
+          const tsLocal = new Date(message.timestamp).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false,
+          })
+          chatHistory.push({
+            content: message.text,
+            isUser: message.sender === "user",
+            timestamp: tsLocal,
+          });
+
+          addMessage(message.text, message.sender === "user", tsLocal);
+        }
+      }
       // Show typing indicator
       function showTypingIndicator() {
         const indicator = document.getElementById("typing-indicator");
@@ -741,7 +757,7 @@
           // Build payload per backend schema (avoid 'Z' for Python fromisoformat)
           const timestamp = new Date().toISOString().replace("Z", "+00:00");
           const payload = {
-            session_id: sessionId,
+            session_id: getOrCreateSessionId(),
             sender: "user",
             message: message,
             timestamp: timestamp,
@@ -847,7 +863,7 @@
         checkAuth();
         connectWebSocket();
         try {
-          loadConfigsSidebar();
+          loadConfigsSidebar().then(() => loadChatHistory());
           loadLogsSidebar();
         } catch {}
       });

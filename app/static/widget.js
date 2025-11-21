@@ -105,6 +105,9 @@ function loadWidget() {
                                     <input id="chat-input" class="chat-input" data-i18n="chatTest.input.label" placeholder="Enter a message:"/>
                                 </div>
                                 <button type="submit" class="send-btn" id="send-btn" data-i18n="chatTest.send">Send</button>
+                                <button class="send-btn clear-btn" id="clear-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-brush-cleaning-icon lucide-brush-cleaning"><path d="m16 22-1-4"/><path d="M19 13.99a1 1 0 0 0 1-1V12a2 2 0 0 0-2-2h-3a1 1 0 0 1-1-1V4a2 2 0 0 0-4 0v5a1 1 0 0 1-1 1H6a2 2 0 0 0-2 2v.99a1 1 0 0 0 1 1"/><path d="M5 14h14l1.973 6.767A1 1 0 0 1 20 22H4a1 1 0 0 1-.973-1.233z"/><path d="m8 22 1-4"/></svg>
+                            </button>
                             </form>
 
                             <div class="status-indicator" style="display: none; margin-top: 15px; justify-content: center;">
@@ -253,6 +256,8 @@ function loadWidget() {
             setTimeout(() => {
               fetchActiveChatbotConfig();
             }, 500);
+            loadChatHistory()
+
           })();
         }, 250);
       }
@@ -366,9 +371,15 @@ function initChat() {
   connectWebSocket();
 
   // Set initial message time
-  document.getElementById("bot-welcome-time").textContent =
-    new Date().toLocaleTimeString();
+  // document.getElementById("bot-welcome-time").textContent =
+  //   new Date().toLocaleTimeString();
+  document.getElementById("clear-btn").addEventListener("click", function () {
+    if (!confirm("Очистити чат?")) return;
 
+    clearChatMessages();
+    chatHistory.length = 0;
+    getOrCreateSessionId(true);
+  });
   // Handle form submission
   document.getElementById("chat-form").addEventListener("submit", function (e) {
     e.preventDefault();
@@ -388,39 +399,69 @@ function initChat() {
     // Build payload per backend schema (avoid 'Z' for Python fromisoformat)
     const timestamp = new Date().toISOString().replace("Z", "+00:00");
     const payload = {
-      session_id: sessionId,
+      session_id: getOrCreateSessionId(),
       sender: "user",
       message: message,
       timestamp: timestamp,
     };
 
-    // Show typing while awaiting response
     showTypingIndicator();
     sendToWebSocket(payload);
   });
 
-  // Auto-resize textarea
-  // document.getElementById("chat-input").addEventListener("input", function () {
-  //     this.style.height = "auto";
-  //     this.style.height = Math.min(this.scrollHeight, 120) + "px";
-  // });
 }
+
+function clearChatMessages() {
+  const container = document.querySelector('.chat-messages');
+  if (!container) return;
+
+  while (container.children.length > 1) {
+    container.removeChild(container.lastElementChild);
+  }
+}
+
+
+async function loadChatHistory() {
+  const response = await fetch(
+    homeLink + `/conversations/widget/${getOrCreateSessionId()}/messages`,
+  );
+
+  const prevMessages = await response.json();
+
+  for (const message of prevMessages) {
+    const tsLocal = new Date(message.timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    })
+    chatHistory.push({
+      content: message.text,
+      isUser: message.sender === "user",
+      timestamp: tsLocal,
+    });
+
+    addMessage(message.text, message.sender === "user", tsLocal);
+  }
+}
+
 
 // Session management
-function getOrCreateSessionId() {
-  // const key = "chat_session_id";
-  // let id = localStorage.getItem(key);
-  // if (!id) {
-  // id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  // localStorage.setItem(key, id);
-  // }
-  id = crypto.randomUUID
+function getOrCreateSessionId(create = false) {
+  const key = "chat_session_id";
+  let id = localStorage.getItem(key);
+  if (!id || create) {
+    // id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    // localStorage.setItem(key, id);
+    id = crypto.randomUUID
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    localStorage.setItem(key, id);
+  }
+
+
   return id;
 }
-let sessionId = getOrCreateSessionId();
-
 // Fetch active chatbot configuration and show welcome message
 async function fetchActiveChatbotConfig() {
   try {

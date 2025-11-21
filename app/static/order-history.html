@@ -1078,11 +1078,11 @@
                     <div>
                         <h4>${t("orderHistory.modal.customerInfo")}</h4>
                         <p><strong>${t("orderHistory.modal.name")}</strong> ${order.customer_name}</p>
-                        <p><strong>${t("orderHistory.modal.email")}</strong> ${order.customer_email}</p>
+<!--                        <p><strong>${t("orderHistory.modal.email")}</strong> ${order.customer_email}</p>-->
                         <p><strong>${t("orderHistory.modal.phone")}</strong> ${order.customer_phone || "N/A"}</p>
                         <p><strong>${t("orderHistory.modal.deliveryDate")}</strong> ${new Date(order.delivery_date).toLocaleDateString()}</p>
                         <p><strong>${t("orderHistory.modal.deliveryTime")}</strong> ${order.delivery_time}</p>
-                        <p><strong>${t("orderHistory.modal.guests")}</strong> ${order.guests_count}</p>
+<!--                        <p><strong>${t("orderHistory.modal.guests")}</strong> ${order.guests_count}</p>-->
                     </div>
                     <div>
                         <h4>${t("orderHistory.modal.orderDetails")}</h4>
@@ -1093,7 +1093,7 @@
                 </div>
                 <div style="margin-top: 20px;">
                     <h4>${t("orderHistory.modal.customerAddress")}</h4>
-                    <p>${order.customer_address || "N/A"}</p>
+                    <p>${order.customer.address || "N/A"}</p>
                 </div>
                 <div style="margin-top: 20px;">
                     <h4>${t("orderHistory.modal.menuItems")}</h4>
