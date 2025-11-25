@@ -131,8 +131,8 @@ Display results exactly as returned from `get_products()` as a SINGLE LIST.
 
 ```
 **Фуршет:**
-1️⃣ [product.name] — [product.price] UAH/коробка, [product.weight]g
-2️⃣ [product.name] — ...
+[product.name] — [product.price] UAH/коробка, [product.weight]g
+[product.name] — ...
 ...
 
 **CRITICAL CONSTRAINT FOR STEP 5:**
