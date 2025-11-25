@@ -301,7 +301,9 @@ class ChatbotService:
 
             agent = get_main_agent()
             ai_response = await agent.execute(messages)
+            print(f"ai_response: | {ai_response} |")
             parsed_response = self._parse_ai_response(ai_response)
+            print(f"parsed_response: | {parsed_response} |")
             user_text = (parsed_response.get("response") or ai_response or "").strip()
             needs_handover = bool(parsed_response.get("handover_to_manager", False))
             if parsed_response.get("action") == "handover_to_manager":
@@ -354,7 +356,6 @@ class ChatbotService:
                         else None
                     ),
                 )
-            print(needs_handover, parsed_response, config)
             if needs_handover and not (parsed_response.get("response") or "").strip():
                 user_text = default_handover_msg
                 if not handover_reason:
@@ -404,11 +405,12 @@ class ChatbotService:
                     )
                     action = None
                     data = None
-
+            print(data, needs_handover)
             if data and needs_handover:
-                data["customer_name"] = parsed_response.get("customer_name")
-                data["customer_phone"] = parsed_response.get("customer_phone")
-
+                if parsed_response.get("customer_name") and parsed_response.get("customer_phone"):
+                    data["customer_name"] = parsed_response.get("customer_name")
+                    data["customer_phone"] = parsed_response.get("customer_phone")
+            print(1, data)
             chat_result = ChatResponse(
                 response=user_text,
                 handover_to_manager=needs_handover,
@@ -666,6 +668,9 @@ async def main() -> None:
 
 if __name__ == "__main__":
     ...
+    cs = ChatbotService()
+    data = '{"action":"handover_to_manager","response":"Передаю ваш запит менеджеру для оперативного вирішення.","handover_reason":"SENSITIVE_CASE","handover_reason_description":"Клієнт запитує експрес-доставку (менше 2 годин lead time).","data":{"customer_name":"Максим","customer_phone":"+380965443223"}}'
+    res = cs._parse_ai_response(data)
     # res = validate_delivery("7:00, 2")
     # print(res)
     # loop = asyncio.get_event_loop()

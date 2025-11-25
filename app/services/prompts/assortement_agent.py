@@ -84,10 +84,14 @@ FOR each verified product u can check if its corrent and make propose to client(
 ```
 
 ---
-  
+
 ### Step 4: CALL `get_products()` for Categories
 
 **Based on format, call these queries:**
+To show top 3-4 from each queries follow next TOP Map WHEN they are returned by `get_products()` ONLY.
+- **Кава-брейк**: "Sandwich box", "Mini sandwich box", "Croissant box", "Savoury croissant", "Small burger", "Mini burger", "Cookies", "French croissant", "Sweet mini croissant", "Львів", "Sweet pie", "Солодкий кіш"
+- **Фуршет**: "Фуршетний набір на 15 осіб", "Finger Fest big box", "Mini Finger Box", "Finger fest", "Bruschetta Mix Box", "Кіш Роял Box", "Teriyaki chicken box", "Sweet Dessert box", "Fruit"
+- **Коктейль**: "Finger fest", "Finger 1", "Mini finger", "Bruschetta 1", "Bruschetta mix", "Tapas 2", "Fusion", "Veggies snack", "Girls party", "Sweet dessert", "Classic Cake", "Fruit"
 
 **IF Фуршет (Buffet):**
 - `get_products(query="Меню: Холодні закуски, Вегетаріанське, Бургери, Десерти")` → show top 3-4
@@ -101,6 +105,7 @@ FOR each verified product u can check if its corrent and make propose to client(
 - `get_products(query="Меню: Холодні закуски, Десерти")` → show top 3-4
 
 **IF Дитяче свято (Children event):**
+
 - `get_products(query="Меню: Дитяче меню, Десерти")` → show top 3-4
 
 **IF Customer asks or u propose about drinks (Drinks):**
@@ -122,18 +127,24 @@ ELSE Customer ask something not from categories before decline try:
 
 ### Step 5: Present Products & Collect Selection
 
-Display results exactly as returned from `get_products()`:
+Display results exactly as returned from `get_products()` as a SINGLE LIST.
 
 ```
-**Закуски:**
+**Фуршет:**
 1️⃣ [product.name] — [product.price] UAH/коробка, [product.weight]g
 2️⃣ [product.name] — ...
 ...
 
+**CRITICAL CONSTRAINT FOR STEP 5:**
+- ❌ **DO NOT** group products into "Option 1", "Option 2", "Variant A", etc.
+- ❌ **DO NOT** create pre-made sets or bundles.
+- ✅ **MUST** present a flat list of available products.
+- ✅ **MUST** ask the user to specify **which specific items** and quantities they want from the list.
+
 Які вам цікаві?
 ```
 
-**Customer selects**: "Беру 1, 3 і 5"
+**Customer selects**: "Беру 1, 3 і 5" or "Давайте два бокси з бургерами"
 
 ---
 
@@ -208,3 +219,5 @@ Return to main agent:
 - If answer requires external tool/function, MUST call tool first
 - Never reply based on assumptions or incomplete information
 """
+
+print('-\\n[ID:464]\\nКатегорія: Ланчі.\\nНазва: Lunch light №1 (кур. філе з сиром, картопля, мікс салат).\\nОпис: Ідеальний варіант для обіду у швидкому темпі міста. Один бокс — і ти отримуєш все для збалансованого харчування та приємної паузи, що допоможе відновити сили та настрій.\\nСклад: Всередині боксу: запечене куряче філе з моцареллою та помідором, картопля запечена по-селянськи, мікс салат.\\nЦіна: 399.00 гривень.\\nВага: 450.00 грам.\\nНа 1 гостей/осіб.\\n')

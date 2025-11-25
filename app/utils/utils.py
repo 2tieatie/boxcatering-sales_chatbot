@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from datetime import date
 
+
 def format_kyiv_timestamp(ts) -> str:
     if isinstance(ts, datetime):
         dt = ts
@@ -26,9 +27,7 @@ def parse_delivery_date(value):
     if isinstance(value, datetime):
         return value
     if isinstance(value, date):
-        return datetime(
-            value.year, value.month, value.day, tzinfo=timezone.utc
-        )
+        return datetime(value.year, value.month, value.day, tzinfo=timezone.utc)
     if isinstance(value, str):
         value = value.strip()
         for fmt in ("%Y-%m-%d", "%Y.%m.%d"):

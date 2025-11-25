@@ -23,11 +23,11 @@ from app.utils.logging_config import get_logger
 from app.utils.utils import format_kyiv_timestamp, parse_delivery_date, parse_bool
 from app.models.system_config import SystemConfig
 from app.models import Customer
+
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 # Initialize services
 chatbot_service = ChatbotService()
-
 
 
 @router.websocket("/ws")
@@ -83,7 +83,6 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
             if config_id_param is not None:
                 try:
 
-
                     authz = websocket.headers.get("Authorization") or ""
                     token = authz.split(" ")[1] if " " in authz else authz
                     if not token:
@@ -111,7 +110,6 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
 
             language = "uk"
             force_language = True
-
 
             cfg = {c.key: c.value for c in db.query(SystemConfig).all()}
             selected_model = cfg.get("openai_model") or None
@@ -179,7 +177,7 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 ),
                 conversation_history=conversation_history,
             )
-
+            print(chat_response)
             try:
                 should_log = True
                 if active_config and active_config.conversation_logging is not None:
@@ -253,8 +251,6 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                     ):
                         payload["conversation_id"] = conversation.id
 
-
-
                     normalized_delivery_date = parse_delivery_date(
                         payload.get("delivery_date")
                     )
@@ -299,7 +295,6 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
 
                     customer_id = order_create.customer_id
                     if customer_id is None:
-
 
                         customer = None
                         if order_create.customer_email:
@@ -388,7 +383,10 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 except Exception:
                     notif_pref = ""
                 if notif_pref in {"all", "errors"}:
-                    telegram_service = TelegramService(bot_token=cfg.get("telegram_bot_token"), chat_id=cfg.get("telegram_chat_id"))
+                    telegram_service = TelegramService(
+                        bot_token=cfg.get("telegram_bot_token"),
+                        chat_id=cfg.get("telegram_chat_id"),
+                    )
                     await telegram_service.send_error_notification(
                         chat_request.session_id,
                         f"Order action failed: {action_err}",
@@ -400,9 +398,7 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 )
             except Exception:
                 notif_pref = ""
-            print(notif_pref)
             should_notify_handover = notif_pref in {"all", "handovers"}
-            print(chat_response.handover_to_manager, should_notify_handover)
 
             if chat_response.handover_to_manager and should_notify_handover:
                 payload = chat_response.data
@@ -428,8 +424,10 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                     db.add(customer)
                     db.commit()
                     db.refresh(customer)
-                telegram_service = TelegramService(bot_token=cfg.get("telegram_bot_token"),
-                                                   chat_id=cfg.get("telegram_chat_id"))
+                telegram_service = TelegramService(
+                    bot_token=cfg.get("telegram_bot_token"),
+                    chat_id=cfg.get("telegram_chat_id"),
+                )
                 await telegram_service.send_handover_notification(
                     chat_request.session_id, chat_request.message, chat_response
                 )

@@ -79,12 +79,15 @@ class TelegramService:
         self, session_id: str, customer_message: str, chat_response: ChatResponse
     ) -> str:
         """Format the handover message for Telegram."""
+        print(chat_response.data)
         return f"""
 🚨 <b>HANDOVER REQUEST</b>
 
 <b>Session ID:</b> {session_id}
 <b>Reason:</b> {chat_response.handover_reason}
 <b>Description:</b> {chat_response.handover_reason_description}
+
+<b>Customer:</b> <code>{chat_response.data.get("name", chat_response.data.get("customer_name", "Не вказане Імʼя"))}, {chat_response.data.get("phone", chat_response.data.get("customer_phone", "Не вказаний Номер"))}</code>
 
 <b>Customer Message:</b>
 {customer_message}
@@ -93,4 +96,4 @@ class TelegramService:
 {chat_response.response}
 
 <b>Action Required:</b> Please review this conversation and take over if needed.
-        """.strip()
+""".strip()

@@ -209,10 +209,10 @@ async def get_conversation_messages(
 
 @router.get("/widget/{session_id}/messages", response_model=List[MessageResponse])
 async def get_conversation_messages(
-        session_id: str,
-        skip: int = 0,
-        limit: int = 100,
-        db: Session = Depends(get_db),
+    session_id: str,
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
 ):
     """Get messages for a conversation."""
     # Ensure conversation exists
@@ -221,7 +221,8 @@ async def get_conversation_messages(
     )
 
     if conversation is None:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+        return []
+        # raise HTTPException(status_code=404, detail="Conversation not found")
     messages = (
         db.query(Message)
         .filter(Message.chat_id == conversation.id)

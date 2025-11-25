@@ -37,9 +37,7 @@ class Settings(BaseSettings):
     # Security
     secret_key: str = Field(..., env="SECRET_KEY")
     algorithm: str = Field(default="HS256", env="ALGORITHM")
-    access_token_expire_minutes: int = Field(
-        default=60, env="ACCESS_TOKEN_EXPIRE_MINUTES"
-    )
+    access_token_expire_minutes: int = Field(default=1440)
 
     # Application
     debug: bool = Field(default=False, env="DEBUG")

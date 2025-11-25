@@ -14,6 +14,7 @@ FORMATS = [
     "%d.%m.%Y %H:%M",
 ]
 
+
 def parse_input(input_str: str) -> datetime:
     s = " ".join(input_str.split())
     for fmt in FORMATS:
@@ -22,6 +23,7 @@ def parse_input(input_str: str) -> datetime:
         except ValueError:
             continue
     raise ValueError(f"Unsupported datetime format: {input_str}")
+
 
 def is_within_working_hours(dt: datetime) -> bool:
     WORK_START = 9
@@ -36,24 +38,14 @@ def validate_delivery(input_str: str) -> dict:
     min_ready_dt = now + timedelta(minutes=MIN_PREP_MINUTES)
 
     if requested_dt < min_ready_dt:
-        return {
-            "valid": False,
-            "reason": "Requested time is outside working hours"
-        }
-
+        return {"valid": False, "reason": "Requested time is outside working hours"}
 
     if not is_within_working_hours(requested_dt):
-        return {
-            "valid": False,
-            "reason": "Requested time is outside working hours"
-        }
+        return {"valid": False, "reason": "Requested time is outside working hours"}
     minutes_until_delivery = int((requested_dt - now).total_seconds() // 60)
 
     if minutes_until_delivery < MIN_PREP_MINUTES:
-        return {
-            "valid": False,
-            "reason": "Not enough time for preparation"
-        }
+        return {"valid": False, "reason": "Not enough time for preparation"}
 
     return {
         "valid": True,
@@ -61,6 +53,7 @@ def validate_delivery(input_str: str) -> dict:
         "approved_time": requested_dt.strftime("%H:%M"),
         # "approved_datetime": requested_dt.strftime("%Y-%m-%d %H:%M"),
     }
+
 
 @tool
 async def validate_time_tool(date: str) -> str:
