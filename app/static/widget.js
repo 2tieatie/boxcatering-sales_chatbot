@@ -103,7 +103,13 @@ function loadWidget() {
                         <div class="chat-input-container">
                             <form class="chat-input-form" id="chat-form">
                                 <div class="input-group">
-                                    <input id="chat-input" class="chat-input" data-i18n="chatTest.input.label" placeholder="Введіть повідомлення..."/>
+                                    <input 
+                                        id="chat-input"
+                                        autocomplete="off"
+                                        autocorrect="off"
+                                        autocapitalize="off"
+                                        spellcheck="false" 
+                                        class="chat-input" data-i18n="chatTest.input.label" placeholder="Введіть повідомлення..."/>
                                 </div>
                                 <button type="submit" class="send-btn" id="send-btn" data-i18n="chatTest.send">Надіслати</button>
                                 <button class="send-btn clear-btn" id="clear-btn">

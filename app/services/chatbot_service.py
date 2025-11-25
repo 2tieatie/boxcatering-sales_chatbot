@@ -405,12 +405,10 @@ class ChatbotService:
                     )
                     action = None
                     data = None
-            print(data, needs_handover)
             if data and needs_handover:
                 if parsed_response.get("customer_name") and parsed_response.get("customer_phone"):
                     data["customer_name"] = parsed_response.get("customer_name")
                     data["customer_phone"] = parsed_response.get("customer_phone")
-            print(1, data)
             chat_result = ChatResponse(
                 response=user_text,
                 handover_to_manager=needs_handover,
