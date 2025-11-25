@@ -1,19 +1,27 @@
 (function () {
   function tOrFallback(key, fallback) {
     try {
-      if (window.I18N && typeof I18N.t === "function") {
-        const txt = I18N.t(key);
+      const i18n = window.I18N;
+      if (i18n && typeof i18n.t === "function") {
+        const txt = i18n.t(key);
         return txt && txt !== key ? txt : fallback;
       }
     } catch {}
     return fallback;
   }
+
   function isActive(path) {
     try {
       return window.location.pathname === path;
     } catch {
       return false;
     }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", ensureHeader);
+  } else {
+    ensureHeader();
   }
 
   function renderNav(container) {
@@ -23,13 +31,12 @@
       dashboard: {
         href: "/dashboard",
         key: "nav.dashboard",
-        label: window.I18N && I18N.t ? I18N.t("nav.dashboard") : "Dashboard",
+        label: tOrFallback("nav.dashboard", "Dashboard"),
       },
       chatbotTest: {
         href: "/chatbot-test",
         key: "nav.chatbotTest",
-        label:
-          window.I18N && I18N.t ? I18N.t("nav.chatbotTest") : "Chatbot Test",
+        label: tOrFallback("nav.chatbotTest", "Chatbot Test"),
       },
     };
 
@@ -37,23 +44,22 @@
       {
         href: "/conversation-history",
         key: "nav.conversations",
-        label:
-          window.I18N && I18N.t ? I18N.t("nav.conversations") : "Conversations",
+        label: tOrFallback("nav.conversations", "Conversations"),
       },
       {
         href: "/customers",
         key: "nav.customers",
-        label: window.I18N && I18N.t ? I18N.t("nav.customers") : "Customers",
+        label: tOrFallback("nav.customers", "Customers"),
       },
       {
         href: "/order-history",
         key: "nav.orders",
-        label: window.I18N && I18N.t ? I18N.t("nav.orders") : "Orders",
+        label: tOrFallback("nav.orders", "Orders"),
       },
       {
         href: "/assortment",
         key: "nav.assortment",
-        label: window.I18N && I18N.t ? I18N.t("nav.assortment") : "Assortment",
+        label: tOrFallback("nav.assortment", "Assortment"),
       },
     ];
 
@@ -61,20 +67,17 @@
       {
         href: "/settings",
         key: "nav.settings",
-        label: window.I18N && I18N.t ? I18N.t("nav.settings") : "Settings",
+        label: tOrFallback("nav.settings", "Settings"),
       },
       {
         href: "/chatbot-settings",
         key: "nav.chatbotSettings",
-        label:
-          window.I18N && I18N.t
-            ? I18N.t("nav.chatbotSettings")
-            : "Chatbot Settings",
+        label: tOrFallback("nav.chatbotSettings", "Chatbot Settings"),
       },
       {
         href: "/user-management",
         key: "nav.users",
-        label: window.I18N && I18N.t ? I18N.t("nav.users") : "Users",
+        label: tOrFallback("nav.users", "Users"),
       },
     ];
 
@@ -94,7 +97,7 @@
       // Ignore errors, will fall back to showing all navigation
     }
 
-    const nav = document.createElement("div");
+    const nav = document.createElement("nav");
     nav.className = "nav-links";
 
     const dash = document.createElement("a");
@@ -102,10 +105,7 @@
     dash.className =
       "nav-link" + (isActive(links.dashboard.href) ? " active" : "");
     dash.setAttribute("data-i18n", links.dashboard.key);
-    dash.textContent =
-      window.I18N && I18N.t
-        ? I18N.t(links.dashboard.key)
-        : links.dashboard.label;
+    dash.textContent = tOrFallback(links.dashboard.key, links.dashboard.label);
     nav.appendChild(dash);
 
     const test = document.createElement("a");
@@ -113,10 +113,10 @@
     test.className =
       "nav-link" + (isActive(links.chatbotTest.href) ? " active" : "");
     test.setAttribute("data-i18n", links.chatbotTest.key);
-    test.textContent =
-      window.I18N && I18N.t
-        ? I18N.t(links.chatbotTest.key)
-        : links.chatbotTest.label;
+    test.textContent = tOrFallback(
+      links.chatbotTest.key,
+      links.chatbotTest.label,
+    );
     nav.appendChild(test);
 
     function createDropdown(titleKey, fallbackTitle, items) {
@@ -128,8 +128,10 @@
       toggle.className = "nav-link dropdown-toggle";
       if (titleKey) {
         toggle.setAttribute("data-i18n", titleKey);
-        toggle.textContent =
-          window.I18N && I18N.t ? I18N.t(titleKey) : fallbackTitle || titleKey;
+        toggle.textContent = tOrFallback(
+          titleKey,
+          fallbackTitle || titleKey,
+        );
       } else {
         toggle.textContent = fallbackTitle || "";
       }
@@ -148,9 +150,10 @@
         a.className = "dropdown-item" + (active ? " active" : "");
         if (item.key) {
           a.setAttribute("data-i18n", item.key);
+          a.textContent = tOrFallback(item.key, item.label);
+        } else {
+          a.textContent = item.label;
         }
-        a.textContent =
-          item.key && window.I18N && I18N.t ? I18N.t(item.key) : item.label;
         menu.appendChild(a);
       });
 
@@ -205,8 +208,9 @@
 
       async function switchTo(lang) {
         try {
-          if (window.I18N && typeof I18N.setLanguage === "function") {
-            await I18N.setLanguage(lang);
+          const i18n = window.I18N;
+          if (i18n && typeof i18n.setLanguage === "function") {
+            await i18n.setLanguage(lang);
           }
         } catch {}
 
@@ -214,9 +218,10 @@
         try {
           const token = localStorage.getItem("access_token");
           if (token) {
-            const meRes = await fetch("/users/me", {
+            const meRes = await fetch("/auth/me", {
               headers: { Authorization: `Bearer ${token}` },
-            });
+            }).catch(() => null);
+
             if (meRes && meRes.ok) {
               const me = await meRes.json();
               await fetch(`/users/${me.id}`, {
@@ -234,12 +239,11 @@
         updateActive();
       }
 
-      uaBtn.addEventListener("click", function (e) {
-        e.preventDefault();
+      uaBtn.addEventListener("click", function () {
         switchTo("uk");
       });
-      enBtn.addEventListener("click", function (e) {
-        e.preventDefault();
+
+      enBtn.addEventListener("click", function () {
         switchTo("en");
       });
 
@@ -249,7 +253,8 @@
     }
 
     function updateActive() {
-      const current = window.I18N && I18N.lang ? I18N.lang : "uk";
+      const i18n = window.I18N;
+      const current = i18n && i18n.lang ? i18n.lang : "uk";
       const ua = langToggle.querySelector(".lang-btn:nth-child(1)");
       const en = langToggle.querySelector(".lang-btn:nth-child(2)");
       if (ua && en) {
@@ -287,8 +292,7 @@
     if (!title) {
       title = document.createElement("h1");
       title.setAttribute("data-i18n", "app.title");
-      title.textContent =
-        window.I18N && I18N.t ? I18N.t("app.title") : "Box Catering Chatbot";
+      title.textContent = tOrFallback("app.title", "Box Catering Chatbot");
       header.prepend(title);
     }
 
@@ -309,21 +313,7 @@
       }
     } catch {}
 
-    // Re-render nav when language changes to update labels immediately
-    try {
-      document.addEventListener("i18n:languageChanged", function () {
-        renderNav(navContainer);
-      });
-    } catch {}
-
-    // Re-render nav when user info changes (for role-based access control)
-    try {
-      document.addEventListener("userInfoUpdated", function () {
-        renderNav(navContainer);
-      });
-    } catch {}
-
-    // Ensure user-info exists
+    // User info block
     let userInfo = header.querySelector(".user-info");
     if (!userInfo) {
       userInfo = document.createElement("div");
@@ -335,12 +325,11 @@
       const name = document.createElement("span");
       name.id = "username";
       name.setAttribute("data-i18n", "user.label");
-      name.textContent = window.I18N && I18N.t ? I18N.t("user.label") : "User";
+      name.textContent = tOrFallback("user.label", "User");
       const btn = document.createElement("button");
       btn.className = "logout-btn";
       btn.setAttribute("data-i18n", "auth.logout");
-      btn.textContent =
-        window.I18N && I18N.t ? I18N.t("auth.logout") : "Logout";
+      btn.textContent = tOrFallback("auth.logout", "Logout");
       btn.onclick = function () {
         try {
           localStorage.removeItem("access_token");
@@ -363,47 +352,35 @@
     // Populate current user name/avatar if authenticated
     try {
       const token = localStorage.getItem("access_token");
-      if (token) {
-        const nameEl = header.querySelector("#username");
-        const avatarEl = header.querySelector("#user-avatar");
-        fetch("/users/me", { headers: { Authorization: `Bearer ${token}` } })
-          .then(function (res) {
-            return res && res.ok ? res.json() : null;
-          })
-          .then(function (me) {
-            if (!me || !nameEl || !avatarEl) return;
-            const name =
-              me.full_name && String(me.full_name).trim()
-                ? me.full_name
-                : me.username || "User";
-            nameEl.textContent = name;
-            avatarEl.textContent = String(name).charAt(0).toUpperCase() || "U";
+      if (!token) return;
 
-            // Store user info in localStorage for navigation access control
-            try {
-              localStorage.setItem(
-                "user_info",
-                JSON.stringify({
-                  role: me.role,
-                  username: me.username,
-                  full_name: me.full_name,
-                }),
-              );
-
-              // Trigger navigation re-render for role-based access control
-              document.dispatchEvent(
-                new CustomEvent("userInfoUpdated", {
-                  detail: { role: me.role },
-                }),
-              );
-            } catch (e) {
-              // Ignore localStorage errors
+      fetch("/auth/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to load user info");
+          return res.json();
+        })
+        .then((me) => {
+          try {
+            const avatarEl = document.getElementById("user-avatar");
+            const nameEl = document.getElementById("username");
+            if (avatarEl && me && me.email) {
+              avatarEl.textContent = (me.email[0] || "U").toUpperCase();
             }
-          })
-          .catch(function () {
-            /* ignore */
-          });
-      }
+            if (nameEl && me && me.email) {
+              nameEl.textContent = me.email;
+            }
+            localStorage.setItem("user_info", JSON.stringify(me));
+          } catch (e) {
+            // Ignore localStorage errors
+          }
+        })
+        .catch(function () {
+          /* ignore */
+        });
     } catch {}
   }
 
