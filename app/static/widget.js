@@ -334,13 +334,15 @@ function initChat() {
   document.getElementById("clear-btn").addEventListener("click", () => {
     if (!confirm("Очистити чат?")) return
 
-    clearChatMessages()
-    chatHistory.length = 0
-    getOrCreateSessionId(true)
-    hideTypingIndicator()
-    ws.close()
-    connectWebSocket()
-    enableSend()
+    setTimeout(() => {
+      clearChatMessages()
+      chatHistory.length = 0
+      getOrCreateSessionId(true)
+      hideTypingIndicator()
+      ws.close()
+      connectWebSocket()
+      enableSend()
+    }, 0)
 
   })
 
