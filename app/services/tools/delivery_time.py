@@ -1,7 +1,10 @@
 import json
 import sys
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from langchain.tools import tool
+
+KYIV = ZoneInfo("Europe/Kyiv")
 
 FORMATS = [
     "%Y-%m-%d %H:%M",
@@ -19,21 +22,19 @@ def parse_input(input_str: str) -> datetime:
     s = " ".join(input_str.split())
     for fmt in FORMATS:
         try:
-            return datetime.strptime(s, fmt)
+            return datetime.strptime(s, fmt).replace(tzinfo=KYIV)
         except ValueError:
             continue
     raise ValueError(f"Unsupported datetime format: {input_str}")
 
 
 def is_within_working_hours(dt: datetime) -> bool:
-    WORK_START = 9
-    WORK_END = 19
-    return WORK_START <= dt.hour <= WORK_END
+    return 9 <= dt.hour <= 19
 
 
 def validate_delivery(input_str: str) -> dict:
     MIN_PREP_MINUTES = 120
-    now = datetime.now()
+    now = datetime.now(KYIV)
     requested_dt = parse_input(input_str)
     min_ready_dt = now + timedelta(minutes=MIN_PREP_MINUTES)
 
@@ -42,8 +43,8 @@ def validate_delivery(input_str: str) -> dict:
 
     if not is_within_working_hours(requested_dt):
         return {"valid": False, "reason": "Requested time is outside working hours"}
-    minutes_until_delivery = int((requested_dt - now).total_seconds() // 60)
 
+    minutes_until_delivery = int((requested_dt - now).total_seconds() // 60)
     if minutes_until_delivery < MIN_PREP_MINUTES:
         return {"valid": False, "reason": "Not enough time for preparation"}
 
@@ -51,8 +52,8 @@ def validate_delivery(input_str: str) -> dict:
         "valid": True,
         "approved_date": requested_dt.strftime("%Y-%m-%d"),
         "approved_time": requested_dt.strftime("%H:%M"),
-        # "approved_datetime": requested_dt.strftime("%Y-%m-%d %H:%M"),
     }
+
 
 
 @tool
@@ -68,5 +69,5 @@ async def validate_time_tool(date: str) -> str:
 
 
 if __name__ == "__main__":
-    res = validate_delivery("2025-11-21 19:00")
+    res = validate_delivery("2025-11-26 15:00")
     print(res)
