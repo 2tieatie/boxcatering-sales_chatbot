@@ -319,12 +319,25 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                             db.add(customer)
                             db.commit()
                             db.refresh(customer)
+
                         if not customer:
                             raise ValueError(
                                 "Customer info is required to create an order"
                             )
                         customer_id = customer.id
-
+                    else:
+                        customer = (
+                            db.query(Customer)
+                            .filter(Customer.id == customer_id)
+                            .first()
+                        )
+                    new_address = (order_create.customer_address or "").strip()
+                    if customer and new_address:
+                        current_address = (customer.address or "").strip()
+                        if current_address != new_address:
+                            customer.address = new_address
+                            db.commit()
+                            db.refresh(customer)
                     new_order = Order(
                         order_number=order_number,
                         customer_id=customer_id,
@@ -332,7 +345,7 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                         state=order_create.state or getattr(Order, "state").default.arg,
                         total_amount=order_create.total_amount or 0,
                         currency=order_create.currency or "UAH",
-                        notes=order_create.notes,
+                        notes=f"Адреса: {order_create.customer_address}",
                         delivery_date=order_create.delivery_date,
                         delivery_time=order_create.delivery_time,
                         menu_items=order_create.menu_items,
