@@ -332,9 +332,10 @@ function initChat() {
     chatHistory.length = 0
     getOrCreateSessionId(true)
     hideTypingIndicator()
-    enableSend()
     ws.close()
     connectWebSocket()
+    enableSend()
+
   })
 
   document.getElementById("chat-form").addEventListener("submit", (e) => {
@@ -533,7 +534,7 @@ function connectWebSocket() {
       }
 
       if (data.handover_to_manager) {
-        showHandoverNotice(data)
+        // showHandoverNotice(data)
       }
 
       if (data.debug) {
