@@ -372,7 +372,7 @@ function initChat() {
 }
 
 function clearChatMessages() {
-  const container = document.querySelector(".chat-messages")
+  const container = document.querySelector(".messages-container")
   if (!container) return
 
   Array.from(container.children)
