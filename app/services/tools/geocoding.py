@@ -300,7 +300,6 @@ def get_delivery_by_point(
     base_price = float(chosen.get("delivery_cost", 0))
     no_free = int(chosen.get("no_free_shipping", 0)) == 1
     free_threshold = float(chosen.get("free_delivery", float("inf")))
-
     is_free = False
     if not no_free and subtotal is not None and is_finite(subtotal):
         if subtotal >= free_threshold and chosen.get("title") == "Безкоштовна доставка":
@@ -369,8 +368,8 @@ if __name__ == "__main__":
     try:
         result = asyncio.run(
             get_delivery_price(
-                query="Крюківщина, вул. Парникова 18",
-                subtotal=3095,
+                query="Київcька область, смт Гелеваха, вул. Галицька 33",
+                subtotal=7298,
             )
         )
         print(json.dumps(result, ensure_ascii=False, indent=2))

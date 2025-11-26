@@ -1,6 +1,5 @@
 // Initialize chat
 const chatHistory = []
-const isTyping = false
 let ws = null
 let reconnectTimer = null
 const RECONNECT_DELAY_MS = 1500
@@ -13,23 +12,18 @@ const homeLink = srcLink.includes("http") ? srcLink.split("//")[0] + "//" + srcL
 let I18N = null
 let marked = null
 
-
 function loadWidget() {
   ;(async () => {
     try {
-      // Fetch auth data
       const token = localStorage.getItem("access_token")
       const response = await fetch(homeLink + "/system-config/settings/widget", {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
 
       if (response.ok) {
-        // Fetch settings
         const settings = await response.json()
 
-        // Load styles
         const styles = [`./call_style.min.css`, `./live_chat.css`]
-
         styles.forEach((styleHref) => {
           const link = document.createElement("link")
           link.rel = "stylesheet"
@@ -37,10 +31,9 @@ function loadWidget() {
           document.head.appendChild(link)
         })
 
-        // Load scripts
         const scripts = [
           `https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js`,
-          `https://example.com/path/to/i18n.js`, // Placeholder URL for I18N script
+          `https://example.com/path/to/i18n.js`,
         ]
 
         scripts.forEach((scriptHref) => {
@@ -50,21 +43,18 @@ function loadWidget() {
             if (scriptHref.includes("i18n.js")) {
               I18N = window.I18N
             } else if (scriptHref.includes("marked.umd.js")) {
-              marked = window.marked?.marked || window.marked;
-
+              marked = window.marked?.marked || window.marked
               if (marked?.use) {
-                marked.use({ breaks: true, gfm: true });
+                marked.use({ breaks: true, gfm: true })
               }
             }
           }
           document.head.appendChild(link)
         })
 
-        // Create widget
         const widget = document.createElement("div")
         widget.id = "callback-widget"
         await initI18N()
-        // Add widget to DOM
         widget.innerHTML = `
                 
                 <div class="callback-widget-block">
@@ -84,20 +74,22 @@ function loadWidget() {
                         </div>
 
                         <div class="chat-messages" id="chat-messages">
-                            <div class="message bot">
+                          <div id="messages-container">
+                              <div class="message bot">
                                 <div class="message-content">
                                     <div id="bot-welcome-content" data-i18n="chatTest.welcome.loading">Loading welcome message…</div>
                                     <div class="message-time" id="bot-welcome-time"></div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="typing-indicator" id="typing-indicator">
+                          </div>
+                            
+                          <div class="typing-indicator" id="typing-indicator">
                             <div class="typing-dots">
-                                <div class="typing-dot"></div>
-                                <div class="typing-dot"></div>
-                                <div class="typing-dot"></div>
+                              <div class="typing-dot"></div>
+                              <div class="typing-dot"></div>
+                              <div class="typing-dot"></div>
                             </div>
+                          </div>
                         </div>
 
                         <div class="chat-input-container">
@@ -272,14 +264,9 @@ function loadWidget() {
   })()
 }
 
-/**
- * Initializes i18n
- */
 async function initI18N() {
   try {
-    const token = localStorage.getItem("access_token")
-    const storedLang = localStorage.getItem("ui_language")
-    const lang = storedLang || "uk"
+    const lang = localStorage.getItem("ui_language") || "uk"
 
     if (I18N && I18N.setLanguage) {
       await I18N.setLanguage(lang)
@@ -288,11 +275,11 @@ async function initI18N() {
 
     try {
       const input = document.getElementById("chat-input")
-
       if (input && I18N && I18N.t) {
         input.placeholder = I18N.t("chatTest.input.label")
       }
     } catch {}
+
     document.querySelectorAll("[data-i18n]").forEach((el) => {
       const k = el.getAttribute("data-i18n")
       if (I18N && I18N.t) {
@@ -306,9 +293,6 @@ async function initI18N() {
 
 loadWidget()
 
-/**
- * Updates the chat input placeholder when the language changes
- */
 document.addEventListener("i18n:languageChanged", () => {
   const placeholder = document.getElementById("chat-input")
   if (placeholder) {
@@ -317,33 +301,18 @@ document.addEventListener("i18n:languageChanged", () => {
   fetchActiveChatbotConfig()
 })
 
-/**
- * Shows the chat window and styles the chat button
- * to appear as the active chat button.
- */
 function displayChat() {
-  document.querySelector(".callback-widget-button-wrapper").classList.add("callback-widget-button-chat")
-  const widget = document.querySelector(".callback-widget-button-wrapper")
-  widget.classList.toggle("callback-widget-button-bottom")
+  const wrapper = document.querySelector(".callback-widget-button-wrapper")
+  wrapper.classList.add("callback-widget-button-chat")
+  wrapper.classList.toggle("callback-widget-button-bottom")
   document.querySelector(".chat-container").classList.remove("callback-widget-button-hide")
 }
 
-/**
- * Hides the chat window and styles the chat button
- * to appear as the default chat button.
- */
 function closeChat() {
   document.querySelector(".chat-container").classList.add("callback-widget-button-hide")
   document.querySelector(".callback-widget-button-wrapper").classList.remove("callback-widget-button-chat")
 }
 
-/**
- * Toggles the visibility of the chat widget and social media
- * buttons. Toggles the chat widget between being fixed to the
- * bottom of the page and being aligned with the top of the page.
- * Toggles the visiblity of the social media buttons between
- * being visible and being hidden.
- */
 function displayWidget() {
   const widget = document.querySelector(".callback-widget-button-wrapper")
   widget.classList.toggle("callback-widget-button-bottom")
@@ -353,13 +322,9 @@ function displayWidget() {
   social.classList.toggle("callback-widget-button-show")
 }
 
-// Copy from main CODE
 function initChat() {
   connectWebSocket()
 
-  // Set initial message time
-  // document.getElementById("bot-welcome-time").textContent =
-  //   new Date().toLocaleTimeString();
   document.getElementById("clear-btn").addEventListener("click", () => {
     if (!confirm("Очистити чат?")) return
 
@@ -371,29 +336,25 @@ function initChat() {
     ws.close()
     connectWebSocket()
   })
-  // Handle form submission
+
   document.getElementById("chat-form").addEventListener("submit", (e) => {
     e.preventDefault()
 
     const input = document.getElementById("chat-input")
     const message = input.value.trim()
-
     if (!message) return
 
-    // Add user message
     addMessage(message, true)
 
-    // Clear input
     input.value = ""
     input.style.height = "auto"
 
-    // Build payload per backend schema (avoid 'Z' for Python fromisoformat)
     const timestamp = new Date().toISOString().replace("Z", "+00:00")
     const payload = {
       session_id: getOrCreateSessionId(),
       sender: "user",
-      message: message,
-      timestamp: timestamp,
+      message,
+      timestamp,
     }
 
     updateTypingIndicator()
@@ -405,10 +366,11 @@ function clearChatMessages() {
   const container = document.querySelector(".chat-messages")
   if (!container) return
 
-  while (container.children.length > 1) {
-    container.removeChild(container.lastElementChild)
-  }
+  Array.from(container.children)
+    .filter((el, index) => index !== 0 ? el.classList.contains("message") : null)
+    .forEach((el) => el.remove())
 }
+
 
 async function loadChatHistory() {
   const prevMessages = await fetchChatHistoryRaw()
@@ -431,8 +393,6 @@ async function loadChatHistory() {
   return prevMessages
 }
 
-
-// Session management
 function getOrCreateSessionId(create = false) {
   const key = "chat_session_id"
   let id = localStorage.getItem(key)
@@ -443,7 +403,7 @@ function getOrCreateSessionId(create = false) {
 
   return id
 }
-// Fetch active chatbot configuration and show welcome message
+
 async function fetchActiveChatbotConfig() {
   try {
     const token = localStorage.getItem("access_token")
@@ -463,18 +423,18 @@ async function fetchActiveChatbotConfig() {
 }
 
 function addMessage(content, isUser = false, timestamp = null) {
-  const messagesContainer = document.getElementById("chat-messages");
-  const messageDiv = document.createElement("div");
-  messageDiv.className = `message ${isUser ? "user" : "bot"}`;
+  const messagesContainer = document.getElementById("messages-container")
+  const messageDiv = document.createElement("div")
+  messageDiv.className = `message ${isUser ? "user" : "bot"}`
 
-  const time = timestamp || new Date().toLocaleTimeString();
+  const time = timestamp || new Date().toLocaleTimeString()
 
-  let html;
+  let html
   if (marked?.parse) {
-    const mdWithBreaks = content.replace(/\n/g, "  \n");
-    html = marked.parse(mdWithBreaks);
+    const mdWithBreaks = content.replace(/\n/g, "  \n")
+    html = marked.parse(mdWithBreaks)
   } else {
-    html = content.replace(/\n/g, "<br/>");
+    html = content.replace(/\n/g, "<br/>")
   }
 
   messageDiv.innerHTML = `
@@ -482,34 +442,26 @@ function addMessage(content, isUser = false, timestamp = null) {
       <div>${html}</div>
       <div class="message-time">${time}</div>
     </div>
-  `;
+  `
 
-  messagesContainer.appendChild(messageDiv);
-  messagesContainer.scrollTop = messagesContainer.scrollTop + 300;
+  messagesContainer.appendChild(messageDiv)
+  messagesContainer.scrollTop = messagesContainer.scrollTop + 300
 
-  chatHistory.push({ content, isUser, timestamp: time });
+  chatHistory.push({ content, isUser, timestamp: time })
 }
-
 
 function updateTypingIndicator() {
   const indicator = document.getElementById("typing-indicator")
+  const lastMessage = chatHistory[chatHistory.length - 1]
+  const isUserLast = !!lastMessage?.isUser
 
-  if (chatHistory.length > 0) {
-    const lastMessage = chatHistory[chatHistory.length - 1]
-
-    if (lastMessage.isUser) {
-      indicator.style.display = "block"
-      disableSend()
-    } else {
-      indicator.style.display = "none"
-      enableSend()
-    }
+  indicator.style.display = isUserLast ? "block" : "none"
+  if (isUserLast) {
+    disableSend()
   } else {
-    indicator.style.display = "none"
     enableSend()
   }
 }
-
 
 function showTypingIndicator() {
   const indicator = document.getElementById("typing-indicator")
@@ -522,8 +474,6 @@ function hideTypingIndicator() {
   enableSend()
 }
 
-
-// WebSocket helpers
 function setStatus(status, cssClass) {
   const dot = document.getElementById("status-dot")
   const text = document.getElementById("status-text")
@@ -540,7 +490,6 @@ function setStatus(status, cssClass) {
   }
 }
 
-// WebSocket helpers
 function connectWebSocket() {
   if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return
   const protocol = location.protocol === "https:" ? "wss" : "ws"
@@ -568,7 +517,6 @@ function connectWebSocket() {
       waitForBotReply(last.timestamp)
     }
   }
-
 
   ws.onmessage = (event) => {
     try {
@@ -609,7 +557,6 @@ function connectWebSocket() {
 function sendToWebSocket(payload) {
   if (!ws || ws.readyState !== WebSocket.OPEN) {
     connectWebSocket()
-    // Small delay to allow connection, then retry once
     setTimeout(() => {
       if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify(payload))
@@ -627,30 +574,22 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 async function fetchChatHistoryRaw() {
   try {
-      const resp = await fetch(homeLink + `/conversations/widget/${getOrCreateSessionId()}/messages`)
-      if (!resp.ok) {
-        return []
-      }
-      return await resp.json()
-  } catch (e) {
-      return []
+    const resp = await fetch(homeLink + `/conversations/widget/${getOrCreateSessionId()}/messages`)
+    return resp.ok ? await resp.json() : []
+  } catch {
+    return []
   }
 }
 
-
 async function waitForBotReply(lastUserTs) {
   const start = Date.now()
-
   const lastUserTime = new Date(lastUserTs).getTime()
 
   while (Date.now() - start < 60000) {
     const msgs = await fetchChatHistoryRaw()
-
-    const hasReply = msgs.some((m) => {
-      if (m.sender !== "bot") return false
-      const t = new Date(m.timestamp).getTime()
-      return t > lastUserTime
-    })
+    const hasReply = msgs.some(
+      (m) => m.sender === "bot" && new Date(m.timestamp).getTime() > lastUserTime,
+    )
 
     if (hasReply) {
       await loadChatHistory()
@@ -662,7 +601,6 @@ async function waitForBotReply(lastUserTs) {
 
   updateTypingIndicator()
 }
-
 
 function disableSend() {
   const btn = document.getElementById("send-btn")
@@ -676,7 +614,6 @@ function enableSend() {
   btn.classList.remove("disabled")
 }
 
-
 function showHandoverNotice(data) {
   const reason = data.handover_reason || "HANDOVER"
   const desc = data.handover_reason_description || ""
@@ -684,8 +621,8 @@ function showHandoverNotice(data) {
     const notice =
       I18N && I18N.t
         ? I18N.t("chatTest.handover.notice", {
-            reason: reason,
-            desc: desc,
+            reason,
+            desc,
           }).trim()
         : `Handing over to manager (${reason}). ${desc}`.trim()
     addMessage(notice)

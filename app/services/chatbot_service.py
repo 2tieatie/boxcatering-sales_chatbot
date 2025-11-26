@@ -197,11 +197,11 @@ class Agent:
         )
 
 
-def get_main_agent() -> Agent:
+def get_main_agent(prompts: Optional[dict]) -> Agent:
     assortment_agent = Agent(
         "assortment_agent",
         description="Specialized menu agent. Identifies event format (buffet/coffee-break/cocktail; banquet→escalate), collects guest_count + event_duration.",
-        system_message=assortment_system_message,
+        system_message=prompts.get("assortment"),
         enable_memory=True,
         tools=[get_products_tool],
         # model="gpt-4.1"
@@ -210,7 +210,7 @@ def get_main_agent() -> Agent:
     delivery_agent = Agent(
         "delivery_agent",
         description="Delivery time validation specialist. Informs customer of working hours (09:00-19:00, 7 days/week). Collects desired delivery date (handles relative: сьогодні/завтра, explicit: DD.MM) + exact time. Normalizes input to YYYY-MM-DD and HH:MM format. Calls get_date_time(query) returning {valid, approved_time, approved_date, reason_if_invalid}. Enforces: working window 09:00-19:00, 2h lead time for TODAY only (tomorrow+ no lead check). NO autocompletion or nearest-time suggestions. Accepts/rejects exactly as requested.",
-        system_message=delivery_agent_system,
+        system_message=prompts.get("delivery"),
         tools=[get_delivery_price_tool, validate_time_tool],
         enable_memory=True,
         # model="gpt-4.1-mini"
@@ -218,7 +218,7 @@ def get_main_agent() -> Agent:
     validation_agent = Agent(
         "validation_agent",
         description="Contact data validation specialist. Validates customer_name (2-40 chars, letters only, Cyrillic/Latin OK) and customer_phone (0XXXXXXXXX/380XXXXXXXXX/+380XXXXXXXXX). Strict rules, no flexibility. Returns: customer_name, customer_phone (normalized).",
-        system_message=validation_system_message,
+        system_message=prompts.get("validation"),
         tools=[],
         enable_memory=True,
         # model="gpt-4.1-mini"
@@ -231,7 +231,7 @@ def get_main_agent() -> Agent:
     main_agent = Agent(
         "top_agent",
         description="",
-        system_message=main_agent_system,
+        system_message=prompts.get("main"),
         tools=[validation_agent_tool, delivery_agent_tool, assortment_agent_tool],
         enable_memory=True,
         # model="gpt-5.1"
@@ -296,10 +296,10 @@ class ChatbotService:
                             messages.append(AIMessage(content=msg["content"]))
                         elif msg["role"] == "user":
                             messages.append(HumanMessage(content=f"Current time: {format_kyiv_timestamp(msg["timestamp"])}\nmessage: {msg['content']}"))
-
+            prompts = json.loads(config["system_instruction"])
             messages.append(HumanMessage(content=f"Current time: {format_kyiv_timestamp(chat_request.timestamp)}\nmessage: {chat_request.message}"))
 
-            agent = get_main_agent()
+            agent = get_main_agent(prompts)
             ai_response = await agent.execute(messages)
             print(f"ai_response: | {ai_response} |")
             parsed_response = self._parse_ai_response(ai_response)
