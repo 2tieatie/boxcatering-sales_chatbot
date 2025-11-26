@@ -264,6 +264,12 @@ function loadWidget() {
   })()
 }
 
+function scrollChatToBottom() {
+  const chat = document.getElementById("chat-messages")
+  if (!chat) return
+  chat.scrollTop = chat.scrollHeight
+}
+
 async function initI18N() {
   try {
     const lang = localStorage.getItem("ui_language") || "uk"
@@ -428,7 +434,14 @@ function addMessage(content, isUser = false, timestamp = null) {
   const messageDiv = document.createElement("div")
   messageDiv.className = `message ${isUser ? "user" : "bot"}`
 
-  const time = timestamp || new Date().toLocaleTimeString()
+  const time =
+    timestamp ||
+    new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    })
 
   let html
   if (marked?.parse) {
@@ -446,10 +459,11 @@ function addMessage(content, isUser = false, timestamp = null) {
   `
 
   messagesContainer.appendChild(messageDiv)
-  messagesContainer.scrollTop = messagesContainer.scrollTop + 300
 
   chatHistory.push({ content, isUser, timestamp: time })
+  scrollChatToBottom()
 }
+
 
 function updateTypingIndicator() {
   const indicator = document.getElementById("typing-indicator")
@@ -459,6 +473,7 @@ function updateTypingIndicator() {
   indicator.style.display = isUserLast ? "block" : "none"
   if (isUserLast) {
     disableSend()
+    scrollChatToBottom()
   } else {
     enableSend()
   }
