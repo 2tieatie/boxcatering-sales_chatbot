@@ -3,8 +3,7 @@ let ws = null
 let reconnectTimer = null
 const RECONNECT_DELAY_MS = 1500
 
-let scriptTag = Array.from(document.getElementsByTagName("script")).find((s) => s.src.includes("widget.js"))
-const srcLink = scriptTag?.getAttribute("src") || ""
+const srcLink = Array.from(document.getElementsByTagName("script")).find((s) => s.src.includes("widget.js"))?.getAttribute("src") || ""
 
 const srcUrl = srcLink.startsWith("http")
   ? new URL(srcLink)

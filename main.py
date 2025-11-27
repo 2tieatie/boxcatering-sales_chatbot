@@ -35,7 +35,7 @@ if __name__ == "__main__":
 # sudo git fetch
 # sudo git pull origin prod
 # sudo docker compose -f Docker/docker-compose.yml down
-# sudo docker build --no-cache --pull -t chatbot:latest .
+# sudo docker build --pull -t chatbot:latest .
 # sudo docker compose -f Docker/docker-compose.yml up -d --force-recreate --no-deps --build
 # sudo docker logs chatbot -f
 # sudo docker exec -it chatbot python scripts/migrate_order.py
