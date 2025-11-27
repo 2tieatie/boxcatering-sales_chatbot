@@ -144,7 +144,6 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 sender=MessageSender.USER,
                 channel=MessageChannel.WEB,
                 text=chat_request.message,
-                timestamp=chat_request.timestamp,
             )
             db.add(user_message)
             db.commit()
@@ -176,7 +175,6 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 sender=MessageSender.BOT,
                 channel=MessageChannel.WEB,
                 text=chat_response.response,
-                timestamp=datetime.now(timezone.utc),
             )
             db.add(bot_message)
             db.commit()
