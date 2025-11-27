@@ -147,7 +147,8 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 timestamp=chat_request.timestamp,
             )
             db.add(user_message)
-
+            db.commit()
+            print("USER MESSAGE ADDED")
             conversation_history = chatbot_service.get_conversation_history(
                 conversation.id, db
             )
@@ -178,6 +179,8 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
             )
             db.add(bot_message)
             db.commit()
+            print("BOT MESSAGE ADDED")
+
             db.refresh(bot_message)
             try:
                 should_log = True
