@@ -345,12 +345,14 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                         state=order_create.state or getattr(Order, "state").default.arg,
                         total_amount=order_create.total_amount or 0,
                         currency=order_create.currency or "UAH",
-                        notes=f"Адреса: {order_create.customer_address}",
+                        notes=order_create.notes or "",
                         delivery_date=order_create.delivery_date,
                         delivery_time=order_create.delivery_time,
+                        delivery_address=order_create.customer_address,
                         menu_items=order_create.menu_items,
                     )
                     db.add(new_order)
+                    await telegram_service.send_new_order_notification(new_order)
                     try:
                         if (
                             conversation

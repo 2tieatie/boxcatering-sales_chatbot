@@ -5,6 +5,8 @@ from telegram import Bot
 from loguru import logger
 
 from app.config import settings
+from app.models import Order
+from app.schemas import OrderCreate
 from app.schemas.chat import ChatResponse
 
 
@@ -46,6 +48,29 @@ class TelegramService:
             logger.error(f"Failed to send Telegram notification: {e}")
             return False
 
+    async def send_new_order_notification(
+        self, order: Order
+    ) -> bool:
+        """Send new order notification to Telegram."""
+        if not self.bot or not self.chat_id:
+            logger.warning("Telegram bot not configured")
+            return False
+
+        try:
+            message = self._format_order_message(order)
+
+            await self.bot.send_message(
+                chat_id=self.chat_id, text=message, parse_mode="HTML"
+            )
+
+            logger.info(f"Sent new order notification for OID: {order.id}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to send Telegram notification: {e}")
+            return False
+
+
     async def send_error_notification(
         self,
         session_id: Optional[str],
@@ -79,7 +104,6 @@ class TelegramService:
         self, session_id: str, customer_message: str, chat_response: ChatResponse
     ) -> str:
         """Format the handover message for Telegram."""
-        print(chat_response.data)
         return f"""
 🚨 <b>HANDOVER REQUEST</b>
 
@@ -96,4 +120,25 @@ class TelegramService:
 {chat_response.response}
 
 <b>Action Required:</b> Please review this conversation and take over if needed.
+""".strip()
+
+
+    def _format_order_message(
+        self, order: Order,
+    ) -> str:
+        """Format the order message for Telegram."""
+        return f"""
+<b>📅 {order.created_at}</b>
+<b>🆕 Нове замовлення №{order.id}</b>
+<b>👤 Ім'я:</b> {order.customer.name} 
+<b>📞 Телефон:</b> {order.customer.phone}
+
+<b>🚚 Тип доставки:</b> ДОСТАВКА
+<b>🕓 Дата-час доставки:</b> {order.delivery_date} {order.delivery_time}
+<b>📍 Адреса:</b> {order.delivery_address}
+
+<b>Склад замовлення:</b>
+{order.menu_items}
+
+<b>💰 Кінцева ціна: {order.total_amount}</b> грн.
 """.strip()

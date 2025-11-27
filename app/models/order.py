@@ -44,6 +44,8 @@ class Order(Base):
 
     delivery_date = Column(DateTime(timezone=True), nullable=True)
     delivery_time = Column(String, nullable=True)
+    delivery_address = Column(String, nullable=True)
+
     menu_items = Column(Text, nullable=True)
     notes = Column(Text, nullable=True)
     is_processed = Column(Boolean, default=False)

@@ -320,6 +320,7 @@
   "orderHistory.modal.phone": "Phone:",
   "orderHistory.modal.deliveryDate": "Delivery Date:",
   "orderHistory.modal.deliveryTime": "Delivery Time:",
+  "orderHistory.modal.deliveryAddress": "Address:",
   "orderHistory.modal.guests": "Guests:",
   "orderHistory.modal.orderDetails": "Order Details",
   "orderHistory.modal.totalAmount": "Total Amount:",

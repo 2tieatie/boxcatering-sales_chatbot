@@ -38,3 +38,4 @@ if __name__ == "__main__":
 # sudo docker build -t chatbot:latest .
 # sudo docker compose -f Docker/docker-compose.yml up -d
 # sudo docker logs chatbot -f
+# sudo docker exec -it chatbot python ./scripts/migrate_order.py

@@ -321,6 +321,7 @@
   "orderHistory.modal.phone": "Телефон:",
   "orderHistory.modal.deliveryDate": "Дата доставки:",
   "orderHistory.modal.deliveryTime": "Час доставки:",
+  "orderHistory.modal.deliveryAddress": "Адреса:",
   "orderHistory.modal.guests": "Кількість гостей:",
   "orderHistory.modal.orderDetails": "Деталі замовлення",
   "orderHistory.modal.totalAmount": "Сума:",

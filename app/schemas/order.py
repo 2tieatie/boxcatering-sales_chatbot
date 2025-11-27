@@ -45,6 +45,7 @@ class OrderResponse(BaseModel):
     currency: str
     delivery_date: Optional[datetime] = None
     delivery_time: Optional[str] = None
+    delivery_address: Optional[str] = None
     menu_items: Optional[str] = None
     notes: Optional[str] = None
     is_processed: bool
