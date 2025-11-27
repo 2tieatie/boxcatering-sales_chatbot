@@ -1,10 +1,9 @@
-// Initialize chat
 const chatHistory = []
 let ws = null
 let reconnectTimer = null
 const RECONNECT_DELAY_MS = 1500
 
-const scriptTag = Array.from(document.getElementsByTagName("script")).find((s) => s.src.includes("widget.js"))
+let scriptTag = Array.from(document.getElementsByTagName("script")).find((s) => s.src.includes("widget.js"))
 const srcLink = scriptTag?.getAttribute("src") || ""
 
 const srcUrl = srcLink.startsWith("http")
@@ -13,7 +12,6 @@ const srcUrl = srcLink.startsWith("http")
 
 const homeLink = srcUrl.origin
 
-// Declare I18N and marked variables
 let I18N = null
 let marked = null
 
