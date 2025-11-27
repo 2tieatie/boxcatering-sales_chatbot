@@ -22,7 +22,7 @@ function loadStyles(base, files) {
     return new Promise((resolve, reject) => {
       const link = document.createElement("link")
       link.rel = "stylesheet"
-      link.href = `${base}/static/${file}?v=${Date.now()}`;
+      link.href = `https://boxcatering-chatbot.todo.ltd/static/${file}?v=2п`;
       link.onload = () => resolve(file)
       link.onerror = () => reject(new Error(`Failed to load style: ${file}`))
       document.head.appendChild(link)
