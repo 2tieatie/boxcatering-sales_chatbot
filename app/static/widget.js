@@ -5,12 +5,62 @@ let reconnectTimer = null
 const RECONNECT_DELAY_MS = 1500
 
 const scriptTag = Array.from(document.getElementsByTagName("script")).find((s) => s.src.includes("widget.js"))
-const srcLink = scriptTag.getAttribute("src")
-const homeLink = srcLink.includes("http") ? srcLink.split("//")[0] + "//" + srcLink.split("//")[1].split("/")[0] : ""
+const srcLink = scriptTag?.getAttribute("src") || ""
+
+const srcUrl = srcLink.startsWith("http")
+  ? new URL(srcLink)
+  : new URL(srcLink, window.location.origin)
+
+const homeLink = srcUrl.origin
 
 // Declare I18N and marked variables
 let I18N = null
 let marked = null
+
+function loadStyles(base, files) {
+  const promises = files.map((file) => {
+    return new Promise((resolve, reject) => {
+      const link = document.createElement("link")
+      link.rel = "stylesheet"
+      link.href = `${base}/static/${file}`
+      link.onload = () => resolve(file)
+      link.onerror = () => reject(new Error(`Failed to load style: ${file}`))
+      document.head.appendChild(link)
+    })
+  })
+
+  return Promise.allSettled(promises)
+}
+
+function loadScripts() {
+  const scripts = [
+    "https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js",
+    "https://example.com/path/to/i18n.js",
+  ]
+
+  const loaders = scripts.map(
+    (src) =>
+      new Promise((resolve, reject) => {
+        const script = document.createElement("script")
+        script.src = src
+        script.onload = () => {
+          if (src.includes("i18n.js")) {
+            I18N = window.I18N
+          } else if (src.includes("marked.umd.js")) {
+            marked = window.marked?.marked || window.marked
+            if (marked?.use) {
+              marked.use({ breaks: true, gfm: true })
+            }
+          }
+          resolve(src)
+        }
+        script.onerror = () => reject(new Error(`Failed to load script: ${src}`))
+        document.head.appendChild(script)
+      }),
+  )
+
+  return Promise.allSettled(loaders)
+}
 
 function loadWidget() {
   ;(async () => {
@@ -23,38 +73,14 @@ function loadWidget() {
       if (response.ok) {
         const settings = await response.json()
 
-        const styles = [`./call_style.min.css`, `./live_chat.css`]
-        styles.forEach((styleHref) => {
-          const link = document.createElement("link")
-          link.rel = "stylesheet"
-          link.href = homeLink ? homeLink + "/static/" + styleHref : "static/" + styleHref
-          document.head.appendChild(link)
-        })
-
-        const scripts = [
-          `https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js`,
-          `https://example.com/path/to/i18n.js`,
-        ]
-
-        scripts.forEach((scriptHref) => {
-          const link = document.createElement("script")
-          link.src = scriptHref
-          link.onload = () => {
-            if (scriptHref.includes("i18n.js")) {
-              I18N = window.I18N
-            } else if (scriptHref.includes("marked.umd.js")) {
-              marked = window.marked?.marked || window.marked
-              if (marked?.use) {
-                marked.use({ breaks: true, gfm: true })
-              }
-            }
-          }
-          document.head.appendChild(link)
-        })
+        const styles = ["call_style.min.css", "live_chat.css"]
+        await loadStyles(homeLink, styles)
+        await loadScripts()
 
         const widget = document.createElement("div")
         widget.id = "callback-widget"
         await initI18N()
+
         widget.innerHTML = `
                 
                 <div class="callback-widget-block">
@@ -243,6 +269,7 @@ function loadWidget() {
                     </div>
                 </div>
                 `
+
         setTimeout(() => {
           ;(async () => {
             document.body.appendChild(widget)
@@ -345,7 +372,6 @@ function initChat() {
       connectWebSocket()
       enableSend()
     }, 0)
-
   })
 
   document.getElementById("chat-form").addEventListener("submit", (e) => {
@@ -378,10 +404,9 @@ function clearChatMessages() {
   if (!container) return
 
   Array.from(container.children)
-    .filter((el, index) => index !== 0 ? el.classList.contains("message") : null)
+    .filter((el, index) => (index !== 0 ? el.classList.contains("message") : null))
     .forEach((el) => el.remove())
 }
-
 
 async function loadChatHistory() {
   const prevMessages = await fetchChatHistoryRaw()
@@ -467,7 +492,6 @@ function addMessage(content, isUser = false, timestamp = null) {
   chatHistory.push({ content, isUser, timestamp: time })
   scrollChatToBottom()
 }
-
 
 function updateTypingIndicator() {
   const indicator = document.getElementById("typing-indicator")
@@ -607,9 +631,7 @@ async function waitForBotReply(lastUserTs) {
 
   while (Date.now() - start < 60000) {
     const msgs = await fetchChatHistoryRaw()
-    const hasReply = msgs.some(
-      (m) => m.sender === "bot" && new Date(m.timestamp).getTime() > lastUserTime,
-    )
+    const hasReply = msgs.some((m) => m.sender === "bot" && new Date(m.timestamp).getTime() > lastUserTime)
 
     if (hasReply) {
       await loadChatHistory()
