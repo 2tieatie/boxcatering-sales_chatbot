@@ -139,23 +139,14 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
             qs = websocket.query_params
             debug_enabled = str(qs.get("debug", "0")).lower() in {"1", "true", "yes"}
 
-            try:
-                should_log = True
-                if active_config and active_config.conversation_logging is not None:
-                    should_log = bool(active_config.conversation_logging)
-                if should_log:
-                    user_message = Message(
-                        chat_id=conversation.id,
-                        sender=MessageSender.USER,
-                        channel=MessageChannel.WEB,
-                        text=chat_request.message,
-                        timestamp=chat_request.timestamp,
-                    )
-                    db.add(user_message)
-                    db.commit()
-            except Exception as msg_err:
-                db.rollback()
-                logger.error(f"Failed to save user message: {msg_err}")
+            user_message = Message(
+                chat_id=conversation.id,
+                sender=MessageSender.USER,
+                channel=MessageChannel.WEB,
+                text=chat_request.message,
+                timestamp=chat_request.timestamp,
+            )
+            db.add(user_message)
 
             conversation_history = chatbot_service.get_conversation_history(
                 conversation.id, db
