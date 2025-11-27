@@ -352,7 +352,11 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                         menu_items=order_create.menu_items,
                     )
                     db.add(new_order)
-                    await telegram_service.send_new_order_notification(new_order)
+                    telegram_service = TelegramService(
+                        bot_token=cfg.get("telegram_bot_token"),
+                        chat_id=cfg.get("telegram_chat_id"),
+                    )
+
                     try:
                         if (
                             conversation
@@ -364,7 +368,7 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                         pass
                     db.commit()
                     db.refresh(new_order)
-
+                    await telegram_service.send_new_order_notification(new_order, customer)
                     resp_dict = chat_response.model_dump()
                     data = dict(resp_dict.get("data") or {})
                     data.update(

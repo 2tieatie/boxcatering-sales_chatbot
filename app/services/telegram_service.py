@@ -1,11 +1,13 @@
 """Telegram service for sending notifications."""
 
 from typing import Optional
+from zoneinfo import ZoneInfo
+
 from telegram import Bot
 from loguru import logger
 
 from app.config import settings
-from app.models import Order
+from app.models import Order, Customer
 from app.schemas import OrderCreate
 from app.schemas.chat import ChatResponse
 
@@ -49,7 +51,7 @@ class TelegramService:
             return False
 
     async def send_new_order_notification(
-        self, order: Order
+        self, order: Order, customer: Customer
     ) -> bool:
         """Send new order notification to Telegram."""
         if not self.bot or not self.chat_id:
@@ -57,7 +59,7 @@ class TelegramService:
             return False
 
         try:
-            message = self._format_order_message(order)
+            message = self._format_order_message(order, customer)
 
             await self.bot.send_message(
                 chat_id=self.chat_id, text=message, parse_mode="HTML"
@@ -124,17 +126,17 @@ class TelegramService:
 
 
     def _format_order_message(
-        self, order: Order,
+        self, order: Order, customer: Customer
     ) -> str:
         """Format the order message for Telegram."""
         return f"""
-<b>📅 {order.created_at}</b>
-<b>🆕 Нове замовлення №{order.id}</b>
-<b>👤 Ім'я:</b> {order.customer.name} 
-<b>📞 Телефон:</b> {order.customer.phone}
+<b>📅 {order.created_at.astimezone(ZoneInfo("Europe/Kyiv")).strftime("%Y-%m-%d %H:%M")}</b>
+<b>🆕 Нове замовлення</b>
+<b>👤 Ім'я:</b> {customer.name} 
+<b>📞 Телефон:</b> {customer.phone}
 
 <b>🚚 Тип доставки:</b> ДОСТАВКА
-<b>🕓 Дата-час доставки:</b> {order.delivery_date} {order.delivery_time}
+<b>🕓 Дата-час доставки:</b> {order.delivery_date.strftime("%Y-%m-%d")} {order.delivery_time}
 <b>📍 Адреса:</b> {order.delivery_address}
 
 <b>Склад замовлення:</b>
