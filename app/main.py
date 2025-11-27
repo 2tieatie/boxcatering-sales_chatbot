@@ -32,7 +32,7 @@ from app.utils.logging_config import logging_config, get_logger
 from app.middleware.logging_middleware import LoggingMiddleware
 
 
-run_scraping_loop = False
+run_scraping_loop = True
 
 
 @asynccontextmanager

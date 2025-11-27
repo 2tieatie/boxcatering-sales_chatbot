@@ -65,6 +65,8 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                     f"Created new conversation for session_id={chat_request.session_id}"
                 )
 
+
+
             prompt_logger.info(
                 f"WEBSOCKET_CHAT: processing message for conversation {conversation.id}"
             )
@@ -177,7 +179,13 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 ),
                 conversation_history=conversation_history,
             )
-            print(chat_response)
+            bot_message = Message(
+                chat_id=conversation.id,
+                sender=MessageSender.BOT,
+                channel=MessageChannel.WEB,
+                text=chat_response.response,
+            )
+            db.add(bot_message)
             try:
                 should_log = True
                 if active_config and active_config.conversation_logging is not None:
@@ -200,14 +208,6 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                                 pass
                     except Exception:
                         pass
-
-                    bot_message = Message(
-                        chat_id=conversation.id,
-                        sender=MessageSender.BOT,
-                        channel=MessageChannel.WEB,
-                        text=visible_text,
-                    )
-                    db.add(bot_message)
 
                 if chat_response.handover_to_manager:
                     if conversation.handover_state not in {

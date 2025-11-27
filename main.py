@@ -1,6 +1,8 @@
 """Main entry point for the Boxcatering Chatbot."""
 
 import uvicorn
+from h11 import PRODUCT_ID
+
 from app.config import settings
 
 if __name__ == "__main__":
@@ -27,3 +29,12 @@ if __name__ == "__main__":
 
 # git fetch --all
 # git reset --hard origin/16.10-misha
+
+# PROD
+#
+# sudo git fetch
+# sudo git pull prod
+# sudo docker compose -f Docker/docker-compose.yml down
+# sudo docker build -t chatbot:latest .
+# sudo docker compose -f Docker/docker-compose.yml up -d
+# sudo docker logs chatbot -f
