@@ -186,6 +186,8 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
                 text=chat_response.response,
             )
             db.add(bot_message)
+            db.commit()
+            db.refresh(bot_message)
             try:
                 should_log = True
                 if active_config and active_config.conversation_logging is not None:
