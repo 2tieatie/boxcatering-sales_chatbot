@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse, Response
 from loguru import logger
-
+from fastapi import Request
 from app.api import (
     chat_router,
     auth_router,
@@ -201,6 +201,16 @@ async def chrome_devtools_probe_get() -> JSONResponse:
     """Respond to Chrome DevTools discovery GET probe with empty config."""
     return JSONResponse(content={})
 
+@app.middleware("http")
+async def no_cache(request: Request, call_next):
+    response: Response = await call_next(request)
+
+    if request.url.path.startswith("/static"):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+
+    return response
 
 if __name__ == "__main__":
     import uvicorn
