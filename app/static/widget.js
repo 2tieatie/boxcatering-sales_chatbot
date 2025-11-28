@@ -320,13 +320,9 @@ async function initI18N() {
   }
 }
 
-function sleepBlock(ms) {
-  const end = Date.now() + ms
-  while (Date.now() < end) {}
-}
-
-sleepBlock(5000)
-loadChatWidget()
+setTimeout(() => {
+  loadChatWidget()
+}, 5000)
 
 document.addEventListener("i18n:languageChanged", () => {
   const placeholder = document.getElementById("chat-input")
