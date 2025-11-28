@@ -32,6 +32,7 @@ if __name__ == "__main__":
 
 # PROD
 #
+# cd ../../opt/chatbot/boxcatering-16.1-misha
 # sudo git fetch
 # sudo git pull origin 16.1-misha
 # sudo docker compose -f Docker/docker-compose.yml down

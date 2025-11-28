@@ -58,7 +58,7 @@ function loadScripts() {
   return Promise.allSettled(loaders)
 }
 
-function loadWidget() {
+function loadChatWidget() {
   ;(async () => {
     try {
       const token = localStorage.getItem("access_token")
@@ -317,13 +317,13 @@ async function initI18N() {
   }
 }
 
-function sleepBlock(ms) {
-  const end = Date.now() + ms
-  while (Date.now() < end) {}
-}
-
-sleepBlock(5000)
-loadWidget()
+// function sleepBlock(ms) {
+//   const end = Date.now() + ms
+//   while (Date.now() < end) {}
+// }
+//
+// sleepBlock(5000)
+loadChatWidget()
 
 document.addEventListener("i18n:languageChanged", () => {
   const placeholder = document.getElementById("chat-input")
