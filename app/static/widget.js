@@ -19,7 +19,7 @@ function loadStyles(base, files) {
     return new Promise((resolve, reject) => {
       const link = document.createElement("link")
       link.rel = "stylesheet"
-      link.href = `https://boxcatering-chatbot.todo.ltd/static/${file}?v=2п`;
+      link.href = `https://boxcatering-chatbot.todo.ltd/static/${file}?v=3`;
       link.onload = () => resolve(file)
       link.onerror = () => reject(new Error(`Failed to load style: ${file}`))
       document.head.appendChild(link)
@@ -145,7 +145,7 @@ function loadWidget() {
                     <div dir="ltr" class="callback-widget-button-wrapper callback-widget-button-position-bottom-right callback-widget-button-visible display-chat">
                         <div class="callback-widget-button-social callback-widget-button-hide">
                             <a
-                                class="callback-widget-button-social-item callback-widget-button-openline_livechat ui-icon-srvice-chat"
+                                  class="callback-widget-button-social-item callback-widget-button-openline_livechat ui-icon-service-chat"
                                 title=""
                                 onclick="displayChat()"
                             >
