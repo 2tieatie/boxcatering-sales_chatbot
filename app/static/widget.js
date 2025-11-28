@@ -317,6 +317,12 @@ async function initI18N() {
   }
 }
 
+function sleepBlock(ms) {
+  const end = Date.now() + ms
+  while (Date.now() < end) {}
+}
+
+sleepBlock(5000)
 loadWidget()
 
 document.addEventListener("i18n:languageChanged", () => {
