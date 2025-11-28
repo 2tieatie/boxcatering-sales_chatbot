@@ -72,7 +72,7 @@ function loadChatWidget() {
         const styles = ["call_style.min.css", "live_chat.css"]
         await loadStyles(homeLink, styles)
         await loadScripts()
-
+        document.getElementById("callback-widget").innerHTML = ""
         const widget = document.createElement("div")
         widget.id = "callback-widget"
         widget.innerHTML = ""
