@@ -75,6 +75,7 @@ function loadChatWidget() {
 
         const widget = document.createElement("div")
         widget.id = "callback-widget"
+        widget.innerHTML = ""
         await initI18N()
 
         widget.innerHTML = `
