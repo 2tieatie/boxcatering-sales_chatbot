@@ -32,7 +32,6 @@ function loadStyles(base, files) {
 function loadScripts() {
   const scripts = [
     "https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js",
-    "https://example.com/path/to/i18n.js",
   ]
 
   const loaders = scripts.map(
