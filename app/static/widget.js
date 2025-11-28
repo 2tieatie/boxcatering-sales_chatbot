@@ -318,13 +318,15 @@ async function initI18N() {
   }
 }
 
-function sleepBlock(ms) {
-  const end = Date.now() + ms
-  while (Date.now() < end) {}
-}
+// function sleepBlock(ms) {
+//   const end = Date.now() + ms
+//   while (Date.now() < end) {}
+// }
+//
+// sleepBlock(5000)
+// loadChatWidget()
 
-sleepBlock(5000)
-loadChatWidget()
+document.addEventListener("DOMContentLoaded", loadChatWidget)
 
 document.addEventListener("i18n:languageChanged", () => {
   const placeholder = document.getElementById("chat-input")
